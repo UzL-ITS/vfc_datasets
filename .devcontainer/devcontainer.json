@@ -1,0 +1,25 @@
+{
+  "name": "vfc-data DevContainer",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "python.defaultInterpreterPath": "/home/vscode/.venv/bin/python",
+        "python.analysis.typeCheckingMode": "basic"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "onCreateCommand": "sudo chgrp -R users /workspace && sudo chmod -R g+rw /workspace",
+  "postCreateCommand": "echo 'source /home/vscode/.venv/bin/activate' >> ~/.bashrc && /home/vscode/.venv/bin/pip install -e /workspace",
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "containerUser": "vscode"
+}
