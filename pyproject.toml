@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vfc_datasets"
+version = "0.1.0"
+description = "Framework for managing vulnerability-fixing commit datasets"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.2.0",
+    "tqdm>=4.66.0",
+    "gitpython>=3.1.40",
+    "gdown>=5.0.0",
+    "python-dotenv>=1.0.0",
+    "httpx[http2]>=0.26.0",
+    "psycopg2-binary>=2.9.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.8.0",
+    "pandas-stubs>=2.2.0",
+    "types-tqdm>=4.66.0",
+    "ruff>=0.3.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "pytest-xdist>=3.5.0",
+    "pre-commit>=3.6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["examples*", "*.egg-info"]
+
+[tool.setuptools.package-data]
+"transformations.enrichment.project_urls" = ["data/*.json"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
+ignore = ["E501", "SIM108", "RUF012", "RUF022"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["config", "dataset_entry", "datasets", "transformations", "utils"]
+
+[tool.mypy]
+mypy_path = ["src"]
+packages = ["transformations", "datasets", "utils"]
+modules = ["config", "dataset_entry"]
+check_untyped_defs = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = ["-x", "-m", "not integration"]
+markers = [
+    "asyncio: async tests",
+    "integration: integration tests",
+    "slow: slow tests that download datasets",
+]

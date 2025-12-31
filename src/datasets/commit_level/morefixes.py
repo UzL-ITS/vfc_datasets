@@ -1,0 +1,184 @@
+import json
+import logging
+from functools import cache
+from pathlib import Path
+from typing import Any
+
+import pandas as pd
+import psycopg2
+
+from config import MOREFIXES_DB_HOST, MOREFIXES_DB_PORT
+from dataset_entry import DatasetEntry
+from datasets.base_dataset import BaseDataset, DatasetMetadata
+from datasets.parsing_helpers import (
+    normalize_cve_ids,
+    normalize_cwe_ids,
+    normalize_or_resolve_commit,
+)
+from utils.git.url import GitURL
+
+logger = logging.getLogger(__name__)
+
+
+class MorefixesDataset(BaseDataset):
+    metadata = DatasetMetadata(
+        name="morefixes",
+        granularity="commit",
+        paper_title="MoreFixes: A Large-Scale Dataset of CVE Fix Commits Mined through Enhanced Repository Discovery",
+        paper_url="https://doi.org/10.1145/3663533.3664036",
+        download_url="https://github.com/JafarAkhondali/Morefixes",
+        publication_year=2024,
+        paper_quotes=(
+            # Page 1 (Abstract)
+            "Our dataset containing 26,617 unique CVEs coming from 6,945 unique GitHub projects is, "
+            "to the best of our knowledge, by far the biggest CVE vulnerability dataset with fix commits "
+            "available today. These CVEs are associated with 31,883 unique commits that fixed those "
+            "vulnerabilities.",
+            # Table 5: MoreFixes | 26,617 CVEs | 6,945 Projects | 31,883 Commits | CVE Years 1999-2024
+        ),
+        vfcs=31883,
+        projects=6945,
+    )
+
+    @staticmethod
+    @cache
+    def _get_url_corrections() -> dict[str, str]:
+        with open(Path(__file__).parent / "morefixes_url_corrections.json", encoding="utf-8") as f:
+            return json.load(f)
+
+    def _load_data(self) -> pd.DataFrame:
+        """
+        Extract VFC data from MoreFixes PostgreSQL dump.
+
+        Requires a local PostgreSQL instance with the MoreFixes dump imported.
+        See: https://github.com/JafarAkhondali/Morefixes
+        """
+        connection_parameters = {
+            "dbname": "postgrescvedumper",
+            "user": "postgrescvedumper",
+            "password": "a42a18537d74c3b7e584c769152c3d",
+            "host": MOREFIXES_DB_HOST,
+            "port": MOREFIXES_DB_PORT,
+        }
+
+        try:
+            connection = psycopg2.connect(**connection_parameters)
+        except psycopg2.OperationalError as e:
+            raise ConnectionError(
+                f"Failed to connect to MoreFixes database. "
+                f"Please check your database configuration in .env or environment variables. "
+                f"Connection parameters: host={connection_parameters['host']}, "
+                f"port={connection_parameters['port']}, "
+                f"dbname={connection_parameters['dbname']}"
+            ) from e
+
+        try:
+            with connection:
+                base_query = """
+                    FROM public.commits c
+                    JOIN public.fixes f ON c.hash = f.hash
+                    JOIN public.cwe_classification cw ON f.cve_id = cw.cve_id
+                    WHERE score >= 65
+                """
+
+                # Get total count for progress bar
+                with connection.cursor() as count_cur:
+                    # Use string concatenation instead of f-string for static SQL
+                    count_cur.execute("SELECT COUNT(*) " + base_query)
+                    total_rows = count_cur.fetchone()[0]
+
+                # Use server-side cursor for memory efficiency
+                with connection.cursor(name="morefixes_cursor") as cur:
+                    cur.itersize = 1000  # Fetch 1000 rows at a time
+                    # Use string concatenation instead of f-string for static SQL
+                    cur.execute("SELECT * " + base_query)
+
+                    vfcs = []
+                    from tqdm.auto import tqdm
+
+                    for entry in tqdm(
+                        cur,
+                        total=total_rows,
+                        desc="Parsing MOREFIXES",
+                        dynamic_ncols=True,
+                    ):
+                        vfc = {
+                            "commit_id": entry[0],
+                            "project_url": entry[1],
+                            "cve_id": entry[22],
+                            "cwe_id": entry[23],
+                        }
+                        vfcs.append(vfc)
+
+                df = pd.DataFrame(vfcs)
+        except psycopg2.Error as e:
+            raise RuntimeError(
+                f"Database query failed for MOREFIXES dataset. "
+                f"This may indicate an issue with the database schema or permissions. "
+                f"Error: {e}"
+            ) from e
+        finally:
+            connection.close()
+
+        if df.empty:
+            raise ValueError(f"Failed to extract data from {self.metadata.name} dump")
+        return df
+
+    def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
+        raw_cve_id = row.get("cve_id")
+        cve_ids = normalize_cve_ids(raw_cve_id)
+
+        raw_cwe_id = row.get("cwe_id")
+        cwe_ids = normalize_cwe_ids(
+            raw_cwe_id
+            if isinstance(raw_cwe_id, str) and raw_cwe_id and raw_cwe_id.startswith("CWE-")
+            else None
+        )
+
+        project_url = row.get("project_url")
+        if not project_url:
+            logger.debug("[%s] Skipping row: missing project_url", self.metadata.name)
+            return None
+
+        git_url = GitURL.parse(project_url)
+        raw_commit_id = git_url.commit_id if git_url else None
+        project_url = git_url.to_https_url() if git_url else None
+
+        url_corrections = self._get_url_corrections()
+        if project_url in url_corrections:
+            project_url = url_corrections[project_url]
+
+        # If we didn't get commit_id from project_url, try the commit_id field
+        if not raw_commit_id:
+            raw_commit_id = row.get("commit_id")
+
+        if not project_url or not raw_commit_id:
+            logger.debug(
+                "[%s] Skipping row: missing project_url=%s or commit_id=%s",
+                self.metadata.name,
+                project_url,
+                raw_commit_id,
+            )
+            return None
+
+        # Fix known data issue: some commit IDs have trailing 'C' appended (40-char SHA + 1)
+        if raw_commit_id.endswith("C") and len(raw_commit_id) == 41:
+            logger.warning(
+                "Correcting commit_id ending with 'C': %s -> %s",
+                raw_commit_id,
+                raw_commit_id[:-1],
+            )
+            raw_commit_id = raw_commit_id[:-1]
+
+        commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+        if not commit_id:
+            return None
+
+        return DatasetEntry(
+            project_url=project_url,
+            commit_id=commit_id,
+            src_datasets={self.metadata.name},
+            is_vfc=True,
+            cve_ids=cve_ids,
+            cwe_ids=cwe_ids,
+        )

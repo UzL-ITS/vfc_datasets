@@ -1,0 +1,280 @@
+{
+    "https://git.eclipse.org/r/hudson/org.eclipse.hudson.core": {
+        "reason": "deleted",
+        "checked": "2024-12-16",
+        "note": "Eclipse Hudson project discontinued"
+    },
+    "https://github.com/amrishc/crimemap": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/andrepolischuk/servst": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/apache/axis1-java": {
+        "reason": "deleted",
+        "checked": "2024-12-16",
+        "note": "Apache Axis1 archived/removed from GitHub"
+    },
+    "https://github.com/apache/axis2-java": {
+        "reason": "deleted",
+        "checked": "2024-12-16",
+        "note": "Apache Axis2 archived/removed from GitHub"
+    },
+    "https://github.com/apache/wss4j": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/assfugil/nickchanbot": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/benjjvi/pybb": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/calesanz/gibb-modul-151": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/capnsquarepants/wordcraft": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/chrisd1100/uncurl": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/cnpm/node-operadriver": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/diversen/gallery": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/dream0x01/weblogic-framework": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/enviragallery/envira-gallery-lite": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/favoritesexactly/sos": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/finastra/finastra-nodejs-libs": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/finastra/ssr-pages": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/flitbit/json-ptr": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/fujita": {
+        "reason": "invalid",
+        "checked": "2025-12-18",
+        "note": "User profile URL, not a repository"
+    },
+    "https://github.com/glfusion/glfusion": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/gogentooss/samlbase": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/groupon/selenium-download": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/harrystech/dynosaur-rails": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/havok89/hoosk": {
+        "reason": "deleted",
+        "checked": "2025-12-28"
+    },
+    "https://github.com/highfivery/zero-spam-for-wordpress": {
+        "reason": "private",
+        "checked": "2025-12-18",
+        "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/inputmice/conversations": {
+        "reason": "private",
+        "checked": "2025-12-16",
+        "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/ivywe/geeklog-ivywe": {
+        "reason": "private",
+        "checked": "2025-12-16",
+        "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/jeff-kelley/opensim-utils": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/kasperskylab/tinycheck": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/kedi/electroncord": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/keymaker-mx/keymaker": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/kiduswb/minimati": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/kiorky/soappy": {
+        "reason": "private",
+        "checked": "2025-12-18",
+        "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/luchua-bc/greenbrowser": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/lukas-masuch/streamlit": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/lunary-ai/lunary": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/madnetm/pillow-replica": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/mangoraft/git": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/merces/libpe": {
+        "reason": "private",
+        "checked": "2025-12-16",
+        "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/minerstat/minerstat-os": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/mnbikeways/database": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/ndlib/sipity": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/ninj4c0d3r/ocomon-research": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/opcode1300/sopel-karma": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/orangescrum/orangescrum": {
+        "reason": "private",
+        "checked": "2025-12-18",
+        "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/otrs/faq": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/philippk-de/collabtive": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/rcook/rgpg": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/robertbachmann/openbsd-libssl": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/robsalasco/simple-file-manager": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/saiberseqiurity/repository": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/sarahkcaplan/tournament": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/sourcegraph/cody": {
+        "reason": "private",
+        "checked": "2025-12-18",
+        "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/sunbines/squid": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/tasbir49/breadwinner": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/tsingsee/easyplayerpro-win": {
+        "reason": "private",
+        "checked": "2025-12-16",
+        "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/ubertidavide/fastbots": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/vinchain/vinchain-python-api-backend": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/wcdfilll/defender-cogs": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/wireapp/wire-ios-data-model": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/wireapp/wire-ios-transport": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/wizkunde/samlbase": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://github.com/xjsv/basil": {
+        "reason": "deleted",
+        "checked": "2024-12-16"
+    },
+    "https://gitlab.freedesktop.org/drm/misc": {
+        "reason": "auth_required",
+        "checked": "2025-12-16",
+        "note": "Internal GitLab project - requires freedesktop.org credentials"
+    },
+    "https://gitlab.freedesktop.org/geoclue/gypsy": {
+        "reason": "auth_required",
+        "checked": "2025-12-18",
+        "note": "GitLab project requires freedesktop.org credentials"
+    }
+}

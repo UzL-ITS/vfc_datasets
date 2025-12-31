@@ -1,0 +1,87 @@
+"""Enrich dataset entries with commit data from GitHub API."""
+
+import asyncio
+import logging
+from collections.abc import Collection
+from typing import Any
+
+from tqdm.asyncio import tqdm
+
+from dataset_entry import DatasetEntry
+from utils.git.github_client import AsyncGitHubClient
+from utils.git.url import GitURL
+
+logger = logging.getLogger(__name__)
+
+
+async def _enrich_entry(entry: DatasetEntry, client: AsyncGitHubClient) -> bool:
+    """Fetch commit info from GitHub API and populate entry in-place."""
+    git_url = GitURL.parse(entry.project_url)
+    if not git_url or git_url.host != "github.com":
+        return False
+
+    owner, repo = git_url.owner, git_url.repo
+    if not owner or not repo:
+        return False
+
+    api_url = f"https://api.github.com/repos/{owner}/{repo}/commits/{entry.commit_id}"
+    try:
+        data = await client.query_api(api_url)
+    except Exception as e:
+        logger.warning("API error for %s/%s@%s: %s", owner, repo, entry.commit_id, e)
+        return False
+
+    if not data:
+        return False
+
+    _populate_entry(entry, data)
+    return True
+
+
+def _populate_entry(entry: DatasetEntry, data: dict[str, Any]) -> None:
+    """Extract commit data from API response into entry."""
+    commit = data.get("commit", {})
+    entry.commit_message = commit.get("message")
+    entry.commit_timestamp_utc = commit.get("author", {}).get("date")
+
+    files = data.get("files", [])
+    if not files:
+        return
+
+    entry.files_changed = {f["filename"] for f in files if f.get("filename")}
+
+    patches = [f["patch"] for f in files if f.get("patch")]
+    if patches:
+        entry.commit_diff = "\n".join(patches)
+
+
+async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
+    """Enrich entries via GitHub API. Returns (success_count, fail_count)."""
+    async with AsyncGitHubClient() as client:
+        tasks = [_enrich_entry(e, client) for e in entries]
+
+        success = 0
+        with tqdm(total=len(tasks), desc="API enrichment", dynamic_ncols=True, unit="commits") as pbar:
+            for coro in asyncio.as_completed(tasks):
+                if await coro:
+                    success += 1
+                pbar.set_postfix_str(f"{client.get_rate_limit_status()} | OK: {success}")
+                pbar.update(1)
+
+    return success, len(entries) - success
+
+
+def add_commit_information_api(collection: Collection[DatasetEntry]) -> None:
+    """Enrich entries with commit data from GitHub API (in-place)."""
+    entries = [
+        e for e in collection
+        if not (e.commit_message and e.commit_diff) and e.project_url and e.commit_id
+    ]
+
+    if not entries:
+        logger.info("No entries need API enrichment")
+        return
+
+    logger.info("Enriching %d entries via GitHub API", len(entries))
+    success, failed = asyncio.run(_enrich_entries_async(entries))
+    logger.info("API enrichment complete: %d succeeded, %d failed", success, failed)
