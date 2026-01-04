@@ -80,7 +80,7 @@
     },
     "https://github.com/fujita": {
         "reason": "invalid",
-        "checked": "2025-12-18",
+        "checked": "2026-01-04",
         "note": "User profile URL, not a repository"
     },
     "https://github.com/glfusion/glfusion": {
@@ -117,6 +117,10 @@
         "reason": "private",
         "checked": "2025-12-16",
         "note": "Auth failure - repo is private or deleted"
+    },
+    "https://github.com/jcampbell1/simple-file-manager": {
+        "reason": "deleted",
+        "checked": "2026-01-04"
     },
     "https://github.com/jeff-kelley/opensim-utils": {
         "reason": "deleted",
@@ -248,14 +252,6 @@
         "checked": "2024-12-16"
     },
     "https://github.com/wcdfilll/defender-cogs": {
-        "reason": "deleted",
-        "checked": "2024-12-16"
-    },
-    "https://github.com/wireapp/wire-ios-data-model": {
-        "reason": "deleted",
-        "checked": "2024-12-16"
-    },
-    "https://github.com/wireapp/wire-ios-transport": {
         "reason": "deleted",
         "checked": "2024-12-16"
     },

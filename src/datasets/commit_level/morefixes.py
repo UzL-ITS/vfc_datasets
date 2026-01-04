@@ -1,7 +1,4 @@
-import json
 import logging
-from functools import cache
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -39,12 +36,6 @@ class MorefixesDataset(BaseDataset):
         vfcs=31883,
         projects=6945,
     )
-
-    @staticmethod
-    @cache
-    def _get_url_corrections() -> dict[str, str]:
-        with open(Path(__file__).parent / "morefixes_url_corrections.json", encoding="utf-8") as f:
-            return json.load(f)
 
     def _load_data(self) -> pd.DataFrame:
         """
@@ -104,7 +95,7 @@ class MorefixesDataset(BaseDataset):
                     ):
                         vfc = {
                             "commit_id": entry[0],
-                            "project_url": entry[1],
+                            "project_url": entry[18],
                             "cve_id": entry[22],
                             "cwe_id": entry[23],
                         }
@@ -143,10 +134,6 @@ class MorefixesDataset(BaseDataset):
         git_url = GitURL.parse(project_url)
         raw_commit_id = git_url.commit_id if git_url else None
         project_url = git_url.to_https_url() if git_url else None
-
-        url_corrections = self._get_url_corrections()
-        if project_url in url_corrections:
-            project_url = url_corrections[project_url]
 
         # If we didn't get commit_id from project_url, try the commit_id field
         if not raw_commit_id:
