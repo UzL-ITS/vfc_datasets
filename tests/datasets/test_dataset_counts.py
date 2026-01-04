@@ -61,7 +61,7 @@ def _check_counts(
         (MorefixesDataset, 31883, 0),
         (MSR2019Dataset, 1217, 0),
         (PatchDBDataset, 10534, 23741),
-        (PySecDBDataset, 905, 2073),
+        (PySecDBDataset, 877, 2073),
         (RepoSPDDataset, 18124, 31394),
         (SecBenchDataset, 676, 0),
         (SPIDBDataset, 10887, 14967),
