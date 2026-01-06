@@ -99,7 +99,7 @@ class AsyncGitHubClient:
         """Wait until rate limit resets."""
         if (retry_after := headers.get("retry-after")) and retry_after.isdigit():
             wait = int(retry_after)
-            logger.debug("Rate limited, waiting %d seconds (Retry-After)", wait)
+            logger.warning("GitHub API rate limited, waiting %d seconds (Retry-After)", wait)
             await asyncio.sleep(wait)
             return
 
@@ -107,11 +107,11 @@ class AsyncGitHubClient:
             server_time = self._parse_date_header(headers.get("date"))
             wait = int(reset) - server_time
             if wait > 0:
-                logger.debug("Rate limited, waiting %d seconds", wait)
+                logger.warning("GitHub API rate limited, waiting %d seconds", wait)
                 await asyncio.sleep(wait)
             return
 
-        logger.debug("Rate limited, waiting %d seconds (default)", self.default_rate_limit_wait)
+        logger.warning("GitHub API rate limited, waiting %d seconds (default)", self.default_rate_limit_wait)
         await asyncio.sleep(self.default_rate_limit_wait)
 
     def _update_rate_limit(self, headers: httpx.Headers) -> None:
