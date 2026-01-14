@@ -1,3 +1,5 @@
+from collections.abc import Callable
+
 from dotenv import load_dotenv
 
 import datasets
@@ -41,7 +43,7 @@ ADVISORY_BASED_DATASETS: list[type[datasets.BaseDataset]] = [
 TOOL_BASED_DATASETS: list[type[datasets.BaseDataset]] = [datasets.MorefixesDataset]
 
 
-TRANSFORMATION_PIPELINE = [
+TRANSFORMATION_PIPELINE: list[Callable[[list[DatasetEntry]], list[DatasetEntry]]] = [
     transformations.update_project_urls_inplace,
     transformations.filter_unreachable_project_urls,
     transformations.extend_commit_ids_local,
