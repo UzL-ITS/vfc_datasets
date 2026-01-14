@@ -13,12 +13,12 @@ def collapse_to_commit_level(entries: list[DatasetEntry]) -> list[DatasetEntry]:
 
     commits: dict[tuple[str, str], dict] = {}
 
-    for e in entries:
-        key = (e.project_url, e.commit_id)
+    for entry in entries:
+        key = (entry.project_url, entry.commit_id)
         if key not in commits:
             commits[key] = {
-                "project_url": e.project_url,
-                "commit_id": e.commit_id,
+                "project_url": entry.project_url,
+                "commit_id": entry.commit_id,
                 "is_vfc": False,
                 "src_datasets": set(),
                 "cve_ids": set(),
@@ -31,32 +31,32 @@ def collapse_to_commit_level(entries: list[DatasetEntry]) -> list[DatasetEntry]:
                 "commit_timestamp_utc": None,
             }
 
-        c = commits[key]
-        c["is_vfc"] = c["is_vfc"] or e.is_vfc
-        c["src_datasets"] |= e.src_datasets
-        c["cve_ids"] |= e.cve_ids
-        c["cwe_ids"] |= e.cwe_ids
-        c["owasp_categories"] |= e.owasp_categories or set()
-        c["files_changed"] |= e.files_changed or set()
-        c["commit_message"] = c["commit_message"] or e.commit_message
-        c["commit_diff"] = c["commit_diff"] or e.commit_diff
-        c["ghsa_id"] = c["ghsa_id"] or e.ghsa_id
-        c["commit_timestamp_utc"] = c["commit_timestamp_utc"] or e.commit_timestamp_utc
+        commit_data = commits[key]
+        commit_data["is_vfc"] = commit_data["is_vfc"] or entry.is_vfc
+        commit_data["src_datasets"] |= entry.src_datasets
+        commit_data["cve_ids"] |= entry.cve_ids
+        commit_data["cwe_ids"] |= entry.cwe_ids
+        commit_data["owasp_categories"] |= entry.owasp_categories or set()
+        commit_data["files_changed"] |= entry.files_changed or set()
+        commit_data["commit_message"] = commit_data["commit_message"] or entry.commit_message
+        commit_data["commit_diff"] = commit_data["commit_diff"] or entry.commit_diff
+        commit_data["ghsa_id"] = commit_data["ghsa_id"] or entry.ghsa_id
+        commit_data["commit_timestamp_utc"] = commit_data["commit_timestamp_utc"] or entry.commit_timestamp_utc
 
     return [
         DatasetEntry(
-            project_url=c["project_url"],
-            commit_id=c["commit_id"],
-            src_datasets=c["src_datasets"],
-            is_vfc=c["is_vfc"],
-            cve_ids=c["cve_ids"],
-            cwe_ids=c["cwe_ids"],
-            owasp_categories=c["owasp_categories"] or None,
-            files_changed=c["files_changed"],
-            commit_message=c["commit_message"],
-            commit_diff=c["commit_diff"],
-            ghsa_id=c["ghsa_id"],
-            commit_timestamp_utc=c["commit_timestamp_utc"],
+            project_url=commit_data["project_url"],
+            commit_id=commit_data["commit_id"],
+            src_datasets=commit_data["src_datasets"],
+            is_vfc=commit_data["is_vfc"],
+            cve_ids=commit_data["cve_ids"],
+            cwe_ids=commit_data["cwe_ids"],
+            owasp_categories=commit_data["owasp_categories"] or None,
+            files_changed=commit_data["files_changed"],
+            commit_message=commit_data["commit_message"],
+            commit_diff=commit_data["commit_diff"],
+            ghsa_id=commit_data["ghsa_id"],
+            commit_timestamp_utc=commit_data["commit_timestamp_utc"],
         )
-        for c in commits.values()
+        for commit_data in commits.values()
     ]
