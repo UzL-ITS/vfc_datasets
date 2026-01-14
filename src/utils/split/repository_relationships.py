@@ -315,16 +315,16 @@ def _find_related_by_local_history(
         repo_tasks = []
         for url, commits in url_to_commits.items():
             if repo := url_to_repo[url]:
-                repo_tasks.append((url, repo.working_dir, commits, min_files_changed))
+                repo_tasks.append((url, Path(repo.working_dir), commits, min_files_changed))
 
         max_workers = min(multiprocessing.cpu_count(), len(repo_tasks))
 
-        with ProcessPoolExecutor(max_workers=max_workers) as executor:
-            futures = {executor.submit(_compute_signatures_for_repo, task): task[0] for task in repo_tasks}
+        with ProcessPoolExecutor(max_workers=max_workers) as pool:
+            sig_futures = {pool.submit(_compute_signatures_for_repo, task): task[0] for task in repo_tasks}
             with tqdm(total=total_sigs, desc="Computing signatures", unit="sigs") as pbar:
-                for future in as_completed(futures):
-                    url = futures[future]
-                    results = future.result()
+                for sig_future in as_completed(sig_futures):
+                    url = sig_futures[sig_future]
+                    results = sig_future.result()
                     for result_url, commit_id, sig in results:
                         sig_cache[(result_url, commit_id)] = sig
                         pbar.update(1)
