@@ -325,6 +325,7 @@ class TestGitURL:
     def test_github_lowercase_conversion(self):
         url = "https://github.com/Owner/REPO"
         git_url = GitURL.parse(url)
+        assert git_url is not None
 
         # Original case is preserved in the GitURL object
         assert git_url.owner == "Owner"

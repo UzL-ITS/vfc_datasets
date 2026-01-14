@@ -106,7 +106,7 @@ class TestPopulateEntry:
             commit_id="abc1234",
             src_datasets={"test"},
         )
-        api_data = {"files": []}
+        api_data: dict[str, list[str]] = {"files": []}
 
         _populate_entry(entry, api_data)
 
