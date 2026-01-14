@@ -3,16 +3,17 @@
 import asyncio
 import logging
 import time
+from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
 from typing import Any
 
 import httpx
+from tqdm.asyncio import tqdm as async_tqdm
 
 from config import GITHUB_TOKEN
+from utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
-
-# Suppress verbose per-request httpx logs
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
@@ -147,3 +148,87 @@ def query_github_api_sync(api_url: str) -> dict[str, Any] | None:
             return await client.query_api(api_url)
 
     return asyncio.run(_query())
+
+
+@dataclass
+class ForkInfo:
+    """Fork relationship info for a GitHub repository."""
+
+    parent: str | None = None
+    source: str | None = None
+    is_fork: bool = False
+
+
+async def _fetch_single_repo_info(
+    project_url: str,
+    client: AsyncGitHubClient,
+) -> tuple[str, ForkInfo]:
+    """Fetch fork info for a single GitHub repository."""
+    result = ForkInfo()
+
+    git_url = GitURL.parse(project_url)
+    if not git_url or git_url.host != "github.com":
+        return project_url, result
+
+    owner, repo = git_url.owner, git_url.repo
+    if not owner or not repo:
+        return project_url, result
+
+    try:
+        api_url = f"https://api.github.com/repos/{owner}/{repo}"
+        data = await client.query_api(api_url)
+
+        if data:
+            result.is_fork = data.get("fork", False)
+
+            if data.get("fork") and data.get("parent"):
+                parent_url = data["parent"].get("html_url")
+                if parent_url:
+                    result.parent = parent_url.lower()
+
+            if data.get("source"):
+                source_url = data["source"].get("html_url")
+                if source_url:
+                    result.source = source_url.lower()
+
+    except Exception as e:
+        logger.debug("Failed to fetch repo info for %s: %s", project_url, e)
+
+    return project_url, result
+
+
+async def fetch_github_fork_info(project_urls: set[str]) -> dict[str, ForkInfo]:
+    """Fetch fork info for multiple GitHub URLs."""
+    result: dict[str, ForkInfo] = {}
+
+    github_urls = {
+        url for url in project_urls
+        if (parsed := GitURL.parse(url)) and parsed.host == "github.com"
+    }
+
+    for url in project_urls - github_urls:
+        result[url] = ForkInfo()
+
+    if not github_urls:
+        logger.info("No GitHub URLs to check for fork relationships")
+        return result
+
+    async with AsyncGitHubClient() as client:
+        tasks = [_fetch_single_repo_info(url, client) for url in github_urls]
+
+        pbar = async_tqdm(
+            total=len(tasks),
+            desc="Fetching GitHub repo info",
+            dynamic_ncols=True,
+            unit="repos",
+        )
+
+        for task in asyncio.as_completed(tasks):
+            url, info = await task
+            pbar.update(1)
+            pbar.set_postfix_str(client.get_rate_limit_status())
+            result[url] = info
+
+        pbar.close()
+
+    return result

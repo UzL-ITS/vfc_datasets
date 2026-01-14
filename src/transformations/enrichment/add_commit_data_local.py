@@ -89,9 +89,10 @@ def _process_batch(args: tuple[str, list[str], int]) -> dict[str, dict[str, Any]
     return results
 
 
-def add_commit_information_local(entries: list[DatasetEntry]) -> None:
+def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """
-    Enriches DatasetEntry objects with commit information using GitPython + ProcessPoolExecutor.
+    Enriches DatasetEntry objects with commit information using GitPython + ProcessPoolExecutor
+    and returns the enriched list of entries.
     """
     logger.info("Add commit information [LOCAL]")
 
@@ -106,7 +107,7 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> None:
     ]
     if not entries_to_process:
         logger.info("All entries already have commit information.")
-        return
+        return entries
 
     # 2. Group commit IDs by project_url
     commits_by_project_url = defaultdict(set)
@@ -225,3 +226,5 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> None:
             if repo is not None:
                 repo.close()
         repo_objects.clear()
+
+    return entries

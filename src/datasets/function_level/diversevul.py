@@ -31,7 +31,7 @@ class DiverseVulDataset(BaseDataset):
         # NOTE: Paper reports 7,514 commits; released dataset on GitHub has 7,512
         # 18,945 = vulnerable functions (function-level granularity)
         vfcs=7514,
-        non_vfcs=330492,
+        non_vfcs=0, # TODO: check non-vfc count
         projects=797,
         vulnerable_functions=18945,
         benign_functions=330492,

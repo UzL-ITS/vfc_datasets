@@ -5,7 +5,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from urllib.parse import ParseResult, parse_qs, urlparse
+from urllib.parse import ParseResult, parse_qs, unquote, urlparse
 
 from config import REPOSITORY_PATH
 
@@ -33,7 +33,7 @@ class GitURL:
         if not url:
             return None
 
-        url = url.strip()
+        url = unquote(url.strip())
         git_url: GitURL | None = None
 
         # Handle SSH URLs
@@ -95,6 +95,12 @@ class GitURL:
                 self._extract_bitbucket(path)
             case host if host.endswith("googlesource.com"):
                 self._extract_googlesource(path)
+            case host if host.startswith("git.savannah."):
+                self._extract_savannah(path, parsed_url)
+            case "git.kernel.org":
+                self._extract_kernel_org(parsed_url)
+            case "cgit.freedesktop.org":
+                self._extract_cgit_freedesktop(parsed_url)
             case _:
                 self._extract_generic(path, parsed_url)
 
@@ -149,6 +155,107 @@ class GitURL:
             path = repo_path
         self.repo = path.lstrip("/")
 
+    def _extract_savannah(self, path: str, parsed_url: ParseResult | None) -> None:
+        """Extract repo from GNU Savannah URLs (cgit, gitweb, or direct git paths)."""
+        # Handle gitweb URLs: ?p=project.git
+        if parsed_url and parsed_url.query and "p=" in parsed_url.query:
+            query = parsed_url.query.replace(";", "&")
+            params = parse_qs(query)
+            if "p" in params:
+                repo = params["p"][0]
+                if repo.endswith(".git"):
+                    repo = repo[:-4]
+                self.repo = repo
+                self._is_gitweb = True
+                return
+
+        # Handle cgit URLs: /cgit/project.git or /cgit/group/project.git
+        if "/cgit/" in path:
+            cgit_path = path[path.index("/cgit/") + 6 :]
+            # Remove /commit suffix if present
+            if "/commit" in cgit_path:
+                cgit_path = cgit_path[: cgit_path.index("/commit")]
+            # Extract commit hash if present
+            if "/commit/" in path:
+                commit_part = path[path.index("/commit/") + 8 :].split("/")[0]
+                if COMMIT_HASH_PATTERN.fullmatch(commit_part):
+                    self.commit_id = commit_part.lower()
+            self.repo = cgit_path.removesuffix(".git") if cgit_path else None
+            return
+
+        # Handle direct git URLs: /git/project.git
+        if "/git/" in path:
+            git_path = path[path.index("/git/") + 5 :]
+            self.repo = git_path.removesuffix(".git") if git_path else None
+            return
+
+        # Fallback to generic extraction
+        self._extract_generic(path, parsed_url)
+
+    def _extract_kernel_org(self, parsed_url: ParseResult | None) -> None:
+        """Extract repo from git.kernel.org URLs.
+
+        Clone URL:  https://git.kernel.org/pub/scm/PATH.git
+        Web URL:    https://git.kernel.org/pub/scm/PATH.git/commit/?id=HASH
+        cgit URL:   https://git.kernel.org/cgit/PATH.git
+        gitweb URL: https://git.kernel.org/?p=PATH.git
+        """
+        path = self.path
+
+        # Extract commit ID from query string (?id=HASH) or path (/commit/HASH)
+        if parsed_url and parsed_url.query:
+            query = parsed_url.query.replace(";", "&")
+            params = parse_qs(query)
+            if "id" in params and COMMIT_HASH_PATTERN.fullmatch(params["id"][0]):
+                self.commit_id = params["id"][0].lower()
+
+            # Handle gitweb-style URLs: ?p=linux/kernel/git/torvalds/linux.git;h=HASH
+            if "p" in params:
+                repo = params["p"][0]
+                if repo.endswith(".git"):
+                    repo = repo[:-4]
+                self.repo = repo
+                self._is_gitweb = True
+                # Extract commit from h parameter (gitweb uses h= for commit hash)
+                if "h" in params and COMMIT_HASH_PATTERN.fullmatch(params["h"][0]):
+                    self.commit_id = params["h"][0].lower()
+                return
+
+        if "/commit/" in path:
+            commit_part = path[path.index("/commit/") + 8:].split("/")[0].split("?")[0]
+            if COMMIT_HASH_PATTERN.fullmatch(commit_part):
+                self.commit_id = commit_part.lower()
+
+        # Extract repo path from /pub/scm/ or /cgit/ format
+        if "/pub/scm/" in path and ".git" in path:
+            start = path.index("/pub/scm/") + 9
+            end = path.index(".git")
+            self.repo = path[start:end]
+        elif "/cgit/" in path and ".git" in path:
+            start = path.index("/cgit/") + 6
+            end = path.index(".git")
+            self.repo = path[start:end]
+
+    def _extract_cgit_freedesktop(self, parsed_url: ParseResult | None) -> None:
+        """Extract repo from cgit.freedesktop.org URLs, stripping web paths."""
+        path = self.path.rstrip("/")
+
+        # Extract commit ID from query string (?id=HASH)
+        if parsed_url and parsed_url.query:
+            params = parse_qs(parsed_url.query)
+            if "id" in params and COMMIT_HASH_PATTERN.fullmatch(params["id"][0]):
+                self.commit_id = params["id"][0].lower()
+
+        # Strip cgit web paths to get repo
+        for suffix in ("/commit", "/tree", "/log", "/diff", "/refs", "/snapshot", "/patch"):
+            if suffix in path:
+                path = path[:path.index(suffix)]
+                break
+
+        # Update self.path to the normalized form for to_https_url()
+        self.path = path
+        self.repo = path.lstrip("/") if path and path != "/" else None
+
     def _extract_generic(self, path: str, parsed_url: ParseResult | None) -> None:
         if parsed_url and parsed_url.query and "p=" in parsed_url.query:
             query = parsed_url.query.replace(";", "&")
@@ -185,7 +292,19 @@ class GitURL:
         """Convert to HTTPS URL format."""
         base_url = f"https://{self.host}"
 
-        # Special handling for gitweb URLs
+        # GNU Savannah: always return the clone URL format (/git/repo.git)
+        if self.host.startswith("git.savannah.") and self.repo:
+            return f"{base_url}/git/{self.repo}.git"
+
+        # git.kernel.org: clone URL is /pub/scm/REPO.git
+        if self.host == "git.kernel.org" and self.repo:
+            return f"{base_url}/pub/scm/{self.repo}.git"
+
+        # cgit.freedesktop.org: return normalized URL (repos moved to gitlab)
+        if self.host == "cgit.freedesktop.org" and self.repo:
+            return f"{base_url}/{self.repo}"
+
+        # Special handling for gitweb URLs (non-Savannah)
         if self._is_gitweb and self.repo:
             return f"{base_url}/?p={self.repo}.git"
 

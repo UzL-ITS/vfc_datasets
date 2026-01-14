@@ -2,7 +2,6 @@
 
 import asyncio
 import logging
-from collections.abc import Collection
 from typing import Any
 
 from tqdm.asyncio import tqdm
@@ -71,17 +70,18 @@ async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
     return success, len(entries) - success
 
 
-def add_commit_information_api(collection: Collection[DatasetEntry]) -> None:
-    """Enrich entries with commit data from GitHub API (in-place)."""
-    entries = [
-        e for e in collection
+def add_commit_information_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+    """Enrich entries with commit data from the GitHub API and return the modified list."""
+    entries_to_process = [
+        e for e in entries
         if not (e.commit_message and e.commit_diff) and e.project_url and e.commit_id
     ]
 
-    if not entries:
+    if not entries_to_process:
         logger.info("No entries need API enrichment")
-        return
+        return entries
 
-    logger.info("Enriching %d entries via GitHub API", len(entries))
-    success, failed = asyncio.run(_enrich_entries_async(entries))
+    logger.info("Enriching %d entries via GitHub API", len(entries_to_process))
+    success, failed = asyncio.run(_enrich_entries_async(entries_to_process))
     logger.info("API enrichment complete: %d succeeded, %d failed", success, failed)
+    return entries

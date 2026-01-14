@@ -16,7 +16,7 @@ from transformations.enrichment.project_urls.url_mappings import (
 logger = logging.getLogger(__name__)
 
 
-def rm_entries_w_unreachable_project_urls(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def filter_unreachable_project_urls(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Remove entries with unreachable project_url's"""
     filtered_entries: list[DatasetEntry] = []
     logger.info("REMOVE unreachable project_urls")
@@ -28,8 +28,8 @@ def rm_entries_w_unreachable_project_urls(entries: list[DatasetEntry]) -> list[D
     return filtered_entries
 
 
-def update_project_urls_inplace(entries: list[DatasetEntry]) -> None:
-    """Update moved or fixed project_url's in-place."""
+def update_project_urls_inplace(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+    """Update moved or fixed project_url's in-place and return the modified entries."""
     logger.info("UPDATE project_urls")
     changed_urls = 0
     moved_urls = get_moved_urls()
@@ -40,3 +40,4 @@ def update_project_urls_inplace(entries: list[DatasetEntry]) -> None:
             changed_urls += 1
 
     logger.info("%d project_urls were updated", changed_urls)
+    return entries

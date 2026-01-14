@@ -131,8 +131,8 @@ async def _extend_commit_id_api_async(
     return entry, entry.commit_id, False
 
 
-def extend_commit_ids_api(entries: list[DatasetEntry]) -> None:
-    """Extend commit IDs in-place using GitHub API (async)."""
+def extend_commit_ids_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+    """Extend commit IDs using the GitHub API (async) and return the (possibly) modified list of entries."""
     # Filter entries that need extension
     entries_to_process = [
         entry for entry in entries if entry.commit_id and len(entry.commit_id) < 40
@@ -140,7 +140,7 @@ def extend_commit_ids_api(entries: list[DatasetEntry]) -> None:
 
     if not entries_to_process:
         logger.info("No commit IDs need extension")
-        return
+        return entries
 
     logger.info("Extending %d commit IDs using API", len(entries_to_process))
 
@@ -153,10 +153,11 @@ def extend_commit_ids_api(entries: list[DatasetEntry]) -> None:
         updated_count,
         len(api_failed_entries),
     )
+    return entries
 
 
-def extend_commit_ids_local(entries: list[DatasetEntry]) -> None:
-    """Extend commit IDs in-place by cloning repositories locally."""
+def extend_commit_ids_local(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+    """Extend commit IDs in-place by cloning repositories locally and return the list of modified entries."""
     # Filter entries that need extension
     entries_to_process = [
         entry for entry in entries if entry.commit_id and len(entry.commit_id) < 40
@@ -164,7 +165,7 @@ def extend_commit_ids_local(entries: list[DatasetEntry]) -> None:
 
     if not entries_to_process:
         logger.info("No commit IDs need extension")
-        return
+        return entries
 
     logger.info("Extending %d commit IDs using local repositories", len(entries_to_process))
 
@@ -219,3 +220,4 @@ def extend_commit_ids_local(entries: list[DatasetEntry]) -> None:
                 pbar.set_postfix_str(f"Total updated: {updated_count}")
 
     logger.info("Local extension complete: %d updated", updated_count)
+    return entries

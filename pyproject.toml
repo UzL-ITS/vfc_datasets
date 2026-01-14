@@ -35,7 +35,7 @@ where = ["src"]
 exclude = ["examples*", "*.egg-info"]
 
 [tool.setuptools.package-data]
-"transformations.enrichment.project_urls" = ["data/*.json"]
+"transformations.enrichment.project_urls" = ["*.json"]
 
 [tool.ruff]
 line-length = 100
@@ -59,9 +59,10 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = ["-x", "-m", "not integration"]
+addopts = ["-x", "-m", "not integration and not slow"]
 markers = [
     "asyncio: async tests",
     "integration: integration tests",
     "slow: slow tests that download datasets",
+    "network: tests that require network access",
 ]

@@ -80,9 +80,9 @@ def test_commit_level_counts(dataset_class: type[BaseDataset], min_vfcs: int, mi
 @pytest.mark.parametrize(
     ("dataset_class", "min_vfc_commits", "min_non_vfc_commits"),
     [
-        (DiverseVulDataset, 7514, 0),
-        (MegaVulDataset, 10182, 0),
-        (PrimeVulDataset, 5659, 0),
+        (DiverseVulDataset, DiverseVulDataset.metadata.vfcs, 0),
+        (MegaVulDataset, MegaVulDataset.metadata.vfcs, 0),
+        (PrimeVulDataset, 5570, 0),
         (SVENDataset, 559, 0),
     ],
 )

@@ -6,6 +6,11 @@ from collections.abc import Callable
 from tqdm.auto import tqdm
 
 from dataset_entry import DatasetEntry
+from utils.split.repository_relationships import (
+    RepositoryGroup,
+    RepositoryRelationships,
+    discover_repository_relationships,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +101,7 @@ def deduplicate_function_level(entries: list[DatasetEntry]) -> list[DatasetEntry
     )
 
 
-def deduplicate_commit_level(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def deduplicate_within_repository(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Deduplicate by (project_url, commit_id). Clears function_name."""
     return _merge_duplicates(
         entries,
@@ -106,7 +111,7 @@ def deduplicate_commit_level(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     )
 
 
-def filter_by_has_unique_diff(collection: list[DatasetEntry]) -> list[DatasetEntry]:
+def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Remove entries with duplicate (diff, files_changed) pairs. Entries without diff are kept."""
     # Use hash as key to avoid storing full diff strings twice in memory
     seen_combinations: dict[tuple[str, tuple[str, ...] | None], DatasetEntry] = {}
@@ -114,7 +119,7 @@ def filter_by_has_unique_diff(collection: list[DatasetEntry]) -> list[DatasetEnt
     entries_without_diff: list[DatasetEntry] = []
     duplicates_removed = 0
 
-    sorted_entries = sorted(collection, key=lambda e: (e.project_url, e.commit_id))
+    sorted_entries = sorted(entries, key=lambda e: (e.project_url, e.commit_id))
 
     for entry in tqdm(sorted_entries, desc="Filtering duplicate diffs", dynamic_ncols=True):
         if entry.commit_diff is None:
@@ -153,5 +158,63 @@ def filter_by_has_unique_diff(collection: list[DatasetEntry]) -> list[DatasetEnt
         len(seen_combinations),
         duplicates_removed,
         len(entries_without_diff),
+    )
+    return result
+
+
+def deduplicate_across_related_repositories(
+    entries: list[DatasetEntry],
+    relationships: RepositoryRelationships | None = None,
+) -> list[DatasetEntry]:
+    """Remove duplicate commits across related repositories.
+
+    When the same commit exists in multiple related repos (forks/mirrors),
+    keep only one entry, preferring the canonical URL.
+
+    If relationships is None, discovers them automatically.
+    """
+    if relationships is None:
+        relationships = discover_repository_relationships(entries)
+
+    commit_to_entries: dict[str, list[DatasetEntry]] = defaultdict(list)
+    for entry in entries:
+        commit_to_entries[entry.commit_id].append(entry)
+
+    result: list[DatasetEntry] = []
+    duplicates_removed = 0
+
+    for commit_entries in commit_to_entries.values():
+        if len(commit_entries) == 1:
+            result.append(commit_entries[0])
+            continue
+
+        # Group by relationship group
+        entries_by_group_id: dict[int, tuple[RepositoryGroup, list[DatasetEntry]]] = {}
+        standalone: list[DatasetEntry] = []
+
+        for entry in commit_entries:
+            group = relationships.get_group(entry.project_url)
+            if group:
+                if group.group_id not in entries_by_group_id:
+                    entries_by_group_id[group.group_id] = (group, [])
+                entries_by_group_id[group.group_id][1].append(entry)
+            else:
+                standalone.append(entry)
+
+        # For each group, keep only the entry from the canonical URL (or first)
+        for group, group_entries in entries_by_group_id.values():
+            preferred_entry = next(
+                (e for e in group_entries if e.project_url == group.canonical_url),
+                group_entries[0],
+            )
+            result.append(preferred_entry)
+            duplicates_removed += len(group_entries) - 1
+
+        result.extend(standalone)
+
+    logger.info(
+        "Relationship dedup: %d duplicates removed, %d entries remaining",
+        duplicates_removed,
+        len(result),
     )
     return result

@@ -14,13 +14,13 @@ Requires Python 3.12+.
 
 ```python
 from datasets import BigVulDataset, CVEFixesDataset
-from transformations.filters.duplicates import deduplicate_commit_level
+from transformations.filters.duplicates import deduplicate_within_repository
 
 # Load and combine datasets
 entries = BigVulDataset() + CVEFixesDataset()
 
 # Apply transformations
-entries = deduplicate_commit_level(entries)
+entries = deduplicate_within_repository(entries)
 ```
 
 See [`src/examples/create_custom_dataset.py`](src/examples/create_custom_dataset.py) for a complete example.

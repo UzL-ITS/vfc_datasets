@@ -8,7 +8,7 @@ from .enrichment import (
     extend_commit_ids_local,
     get_moved_urls,
     get_unreachable_urls,
-    rm_entries_w_unreachable_project_urls,
+    filter_unreachable_project_urls,
     update_project_urls_inplace,
 )
 from .filters import (
@@ -19,7 +19,8 @@ from .filters import (
     PYTHON_EXTENSIONS,
     RUST_EXTENSIONS,
     collapse_to_commit_level,
-    deduplicate_commit_level,
+    deduplicate_across_related_repositories,
+    deduplicate_within_repository,
     deduplicate_function_level,
     filter_by_extension,
     filter_by_has_unique_diff,
@@ -27,8 +28,9 @@ from .filters import (
 
 __all__ = [
     # Deduplication
+    "deduplicate_across_related_repositories",
+    "deduplicate_within_repository",
     "deduplicate_function_level",
-    "deduplicate_commit_level",
     # Filters
     "collapse_to_commit_level",
     "filter_by_extension",
@@ -47,6 +49,6 @@ __all__ = [
     "extend_commit_ids_local",
     "get_moved_urls",
     "get_unreachable_urls",
-    "rm_entries_w_unreachable_project_urls",
+    "filter_unreachable_project_urls",
     "update_project_urls_inplace",
 ]

@@ -1,5 +1,5 @@
 from dataset_entry import DatasetEntry
-from transformations.filters.duplicates import deduplicate_commit_level, deduplicate_function_level
+from transformations.filters.duplicates import deduplicate_within_repository, deduplicate_function_level
 
 
 def test_vfc_conflict_excludes_entries():
@@ -177,7 +177,7 @@ def test_commit_level_merges_different_functions():
         ),
     ]
 
-    result = deduplicate_commit_level(entries)
+    result = deduplicate_within_repository(entries)
 
     # Same commit merged, function_name cleared
     assert len(result) == 1

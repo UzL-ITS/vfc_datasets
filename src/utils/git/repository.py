@@ -138,6 +138,8 @@ def _clone_new_repo(
         "--filter",
         "blob:none",
         "--no-checkout",
+        # Disable credential helpers to prevent auth prompts
+        "-c", "credential.helper=",
         # Increase network timeouts for large repos (Chromium, Linux kernel, etc.)
         "-c", "http.lowSpeedLimit=1000",   # 1KB/s minimum
         "-c", "http.lowSpeedTime=600",      # 10 min before timeout
