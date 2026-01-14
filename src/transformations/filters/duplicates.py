@@ -95,7 +95,7 @@ def deduplicate_function_level(entries: list[DatasetEntry]) -> list[DatasetEntry
     """Deduplicate by (project_url, commit_id, function_name)."""
     return _merge_duplicates(
         entries,
-        key_func=lambda e: (e.project_url, e.commit_id, e.function_name),
+        key_func=lambda entry: (entry.project_url, entry.commit_id, entry.function_name),
         clear_function_name=False,
         level_name="function",
     )
@@ -105,7 +105,7 @@ def deduplicate_within_repository(entries: list[DatasetEntry]) -> list[DatasetEn
     """Deduplicate by (project_url, commit_id). Clears function_name."""
     return _merge_duplicates(
         entries,
-        key_func=lambda e: (e.project_url, e.commit_id),
+        key_func=lambda entry: (entry.project_url, entry.commit_id),
         clear_function_name=True,
         level_name="commit",
     )
@@ -119,7 +119,7 @@ def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]
     entries_without_diff: list[DatasetEntry] = []
     duplicates_removed = 0
 
-    sorted_entries = sorted(entries, key=lambda e: (e.project_url, e.commit_id))
+    sorted_entries = sorted(entries, key=lambda entry: (entry.project_url, entry.commit_id))
 
     for entry in tqdm(sorted_entries, desc="Filtering duplicate diffs", dynamic_ncols=True):
         if entry.commit_diff is None:
@@ -204,7 +204,7 @@ def deduplicate_across_related_repositories(
         # For each group, keep only the entry from the canonical URL (or first)
         for group, group_entries in entries_by_group_id.values():
             preferred_entry = next(
-                (e for e in group_entries if e.project_url == group.canonical_url),
+                (entry for entry in group_entries if entry.project_url == group.canonical_url),
                 group_entries[0],
             )
             result.append(preferred_entry)
