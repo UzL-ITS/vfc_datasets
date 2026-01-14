@@ -208,7 +208,7 @@ class RepositoryRelationships:
 
 
 def _compute_signatures_for_repo(
-    args: tuple[str, str, list[str], int],
+    args: tuple[str, str | Path, list[str], int],
 ) -> list[tuple[str, str, tuple[str, str] | None]]:
     """Compute signatures for all commits in one repo."""
     url, repo_path, commit_ids, min_files_changed = args
@@ -390,12 +390,12 @@ async def _discover_github_forks_async(
     url_to_source: dict[str, str] = {}
 
     for url in github_urls:
-        info = repo_cache.get(url, {})
-        if info.get("parent"):
-            edges.append(RelationshipEdge(url, info["parent"], "github_fork"))
-        if info.get("source"):
-            url_to_source[url] = info["source"]
-            edges.append(RelationshipEdge(url, info["source"], "github_fork"))
+        cached_info = repo_cache.get(url, {})
+        if cached_info.get("parent"):
+            edges.append(RelationshipEdge(url, cached_info["parent"], "github_fork"))
+        if cached_info.get("source"):
+            url_to_source[url] = cached_info["source"]
+            edges.append(RelationshipEdge(url, cached_info["source"], "github_fork"))
 
     logger.info("Found %d GitHub fork edges", len(edges))
     return edges, url_to_source
