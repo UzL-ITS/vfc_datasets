@@ -6,9 +6,9 @@ from .enrichment import (
     add_commit_information_local,
     extend_commit_ids_api,
     extend_commit_ids_local,
+    filter_unreachable_project_urls,
     get_moved_urls,
     get_unreachable_urls,
-    filter_unreachable_project_urls,
     update_project_urls_inplace,
 )
 from .filters import (
@@ -20,8 +20,8 @@ from .filters import (
     RUST_EXTENSIONS,
     collapse_to_commit_level,
     deduplicate_across_related_repositories,
-    deduplicate_within_repository,
     deduplicate_function_level,
+    deduplicate_within_repository,
     filter_by_extension,
     filter_by_has_unique_diff,
 )

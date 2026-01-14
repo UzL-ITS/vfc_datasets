@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 import pytest
 from tqdm import tqdm
 
-from transformations.enrichment.project_urls.url_mappings import get_moved_urls, _load
+from transformations.enrichment.project_urls.url_mappings import _load, get_moved_urls
 from utils.git.repository import clone_repository
 
 

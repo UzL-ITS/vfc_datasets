@@ -26,7 +26,7 @@ __all__ = [
     "url_to_pathname",
     # Core
     "setup_logging",
-    # Other 
+    # Other
     "CVE_PATTERN",
     "CWE_PATTERN",
     "cwes_to_owasp",

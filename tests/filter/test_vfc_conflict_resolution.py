@@ -1,5 +1,8 @@
 from dataset_entry import DatasetEntry
-from transformations.filters.duplicates import deduplicate_within_repository, deduplicate_function_level
+from transformations.filters.duplicates import (
+    deduplicate_function_level,
+    deduplicate_within_repository,
+)
 
 
 def test_vfc_conflict_excludes_entries():

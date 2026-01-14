@@ -3,8 +3,8 @@
 from .collapse_to_commit_level import collapse_to_commit_level
 from .duplicates import (
     deduplicate_across_related_repositories,
-    deduplicate_within_repository,
     deduplicate_function_level,
+    deduplicate_within_repository,
     filter_by_has_unique_diff,
 )
 from .programming_languages import (

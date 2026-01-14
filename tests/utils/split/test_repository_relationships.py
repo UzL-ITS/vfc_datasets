@@ -2,15 +2,15 @@
 
 import pytest
 
+from utils.git.commit import TEMPLATE_FILE_PATTERNS, is_template_file
 from utils.split.repository_relationships import (
     RelationshipEdge,
     RepositoryGroup,
     RepositoryRelationships,
     _find_connected_groups,
-    _link_key,
     _find_suspicious_project_relationships,
+    _link_key,
 )
-from utils.git.commit import TEMPLATE_FILE_PATTERNS, is_template_file
 
 
 class TestLinkKey:
@@ -41,7 +41,7 @@ class TestFindConnectedGroups:
         edges = [RelationshipEdge("a", "b", "github_fork")]
         groups = _find_connected_groups(edges)
         assert len(groups) == 1
-        urls, methods, links = groups[0]
+        urls, methods, _ = groups[0]
         assert urls == {"a", "b"}
         assert methods == {"github_fork"}
 
@@ -60,7 +60,7 @@ class TestFindConnectedGroups:
         ]
         groups = _find_connected_groups(edges)
         assert len(groups) == 1
-        urls, methods, links = groups[0]
+        urls, methods, _ = groups[0]
         assert urls == {"a", "b", "c"}
         assert methods == {"github_fork", "local_history"}
 
@@ -70,7 +70,7 @@ class TestFindConnectedGroups:
         ]
         groups = _find_connected_groups(edges)
         assert len(groups) == 1
-        urls, methods, links = groups[0]
+        _, _, links = groups[0]
         assert links["c1"] == {"a", "b"}
         assert links["c2"] == {"a", "b"}
 
@@ -81,7 +81,7 @@ class TestFindConnectedGroups:
         ]
         groups = _find_connected_groups(edges)
         assert len(groups) == 1
-        urls, methods, links = groups[0]
+        _, _, links = groups[0]
         assert links["c1"] == {"a", "b", "c"}
 
 
