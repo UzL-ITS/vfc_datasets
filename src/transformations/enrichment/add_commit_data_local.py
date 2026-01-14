@@ -17,22 +17,16 @@ logger = logging.getLogger(__name__)
 BATCH_SIZE = 200
 
 
-def _update_entry_with_commit_data(entry: DatasetEntry, data: dict[str, Any]) -> bool:
-    """Update entry fields from commit data. Returns True if any field was updated."""
-    updated = False
+def _apply_commit_data(entry: DatasetEntry, data: dict[str, Any]) -> None:
+    """Update entry fields from commit data."""
     if entry.commit_message is None:
         entry.commit_message = data["message"]
-        updated = True
     if entry.commit_timestamp_utc is None:
         entry.commit_timestamp_utc = data["timestamp"]
-        updated = True
     if entry.commit_diff is None:
         entry.commit_diff = data["diff"]
-        updated = True
     if not entry.files_changed:
         entry.files_changed = data["files_changed"]
-        updated = True
-    return updated
 
 
 def _get_commit_info_gitpython(
@@ -78,7 +72,7 @@ def _get_commit_info_gitpython(
             repo.close()
 
 
-def _process_batch(args: tuple[str, list[str], int]) -> dict[str, dict[str, Any]]:
+def _process_commit_batch(args: tuple[str, list[str], int]) -> dict[str, dict[str, Any]]:
     """Process a batch of commits. Must be top-level for pickling."""
     repo_path, commit_ids, max_diff_size = args
     results = {}
@@ -170,11 +164,10 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEnt
 
     # 6. Process with ProcessPoolExecutor - stream processing mode
     # Update entries immediately as results arrive, then discard results to free memory
-    total_updated = 0
     failed_batches = 0
 
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        future_to_batch = {executor.submit(_process_batch, batch): batch for batch in batches}
+        future_to_batch = {executor.submit(_process_commit_batch, batch): batch for batch in batches}
 
         with tqdm(
             total=total_commits,
@@ -192,8 +185,7 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEnt
                     # Update entries immediately - no accumulation!
                     for commit_id, data in result_dict.items():
                         for entry in entries_by_commit.get((project_url, commit_id), []):
-                            if _update_entry_with_commit_data(entry, data):
-                                total_updated += 1
+                            _apply_commit_data(entry, data)
 
                     # result_dict goes out of scope here - memory freed immediately
 
@@ -211,11 +203,7 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEnt
 
                 pbar.update(len(batch_commit_ids))
 
-    logger.info(
-        "Local enrichment complete: %d/%d entries updated.",
-        total_updated,
-        len(entries_to_process),
-    )
+    logger.info("Local enrichment complete for %d entries.", len(entries_to_process))
     if failed_batches:
         logger.warning("%d batches failed during processing", failed_batches)
 

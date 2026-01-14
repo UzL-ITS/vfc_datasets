@@ -6,13 +6,13 @@ import pytest
 
 from dataset_entry import DatasetEntry
 from transformations.enrichment.add_commit_data_local import (
-    _update_entry_with_commit_data,
+    _apply_commit_data,
     add_commit_information_local,
 )
 
 
-class TestUpdateEntryWithCommitData:
-    """Tests for _update_entry_with_commit_data helper."""
+class TestApplyCommitData:
+    """Tests for _apply_commit_data helper."""
 
     def test_updates_all_empty_fields(self):
         entry = DatasetEntry(
@@ -27,9 +27,8 @@ class TestUpdateEntryWithCommitData:
             "files_changed": {"file.py", "test.py"},
         }
 
-        updated = _update_entry_with_commit_data(entry, data)
+        _apply_commit_data(entry, data)
 
-        assert updated is True
         assert entry.commit_message == "Fix bug"
         assert entry.commit_timestamp_utc == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
         assert entry.commit_diff == "diff --git a/file.py"
@@ -52,9 +51,8 @@ class TestUpdateEntryWithCommitData:
             "files_changed": {"new.py"},
         }
 
-        updated = _update_entry_with_commit_data(entry, data)
+        _apply_commit_data(entry, data)
 
-        assert updated is False
         assert entry.commit_message == "Original message"
         assert entry.commit_timestamp_utc == datetime(2023, 6, 1, 12, 0, 0, tzinfo=UTC)
         assert entry.commit_diff == "original diff"
@@ -74,9 +72,8 @@ class TestUpdateEntryWithCommitData:
             "files_changed": {"new.py"},
         }
 
-        updated = _update_entry_with_commit_data(entry, data)
+        _apply_commit_data(entry, data)
 
-        assert updated is True
         assert entry.commit_message == "Existing message"  # Not overwritten
         assert entry.commit_timestamp_utc == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
         assert entry.commit_diff == "new diff"
@@ -96,9 +93,8 @@ class TestUpdateEntryWithCommitData:
             "files_changed": {"new.py"},
         }
 
-        updated = _update_entry_with_commit_data(entry, data)
+        _apply_commit_data(entry, data)
 
-        assert updated is True
         assert entry.commit_message == "New message"
         assert entry.commit_diff == "Existing diff"  # Not overwritten
 
@@ -117,9 +113,8 @@ class TestUpdateEntryWithCommitData:
             "files_changed": {"file.py"},
         }
 
-        updated = _update_entry_with_commit_data(entry, data)
+        _apply_commit_data(entry, data)
 
-        assert updated is True
         assert entry.files_changed == {"file.py"}
 
     def test_non_empty_files_changed_not_overwritten(self):
@@ -136,9 +131,8 @@ class TestUpdateEntryWithCommitData:
             "files_changed": {"new.py"},
         }
 
-        updated = _update_entry_with_commit_data(entry, data)
+        _apply_commit_data(entry, data)
 
-        assert updated is True  # Other fields were updated
         assert entry.files_changed == {"existing.py"}  # Not overwritten
 
 
