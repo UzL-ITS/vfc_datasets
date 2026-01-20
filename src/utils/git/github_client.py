@@ -48,6 +48,7 @@ class AsyncGitHubClient:
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(self.request_timeout, connect=self.connect_timeout),
             headers=headers,
+            follow_redirects=True
         )
         return self
 

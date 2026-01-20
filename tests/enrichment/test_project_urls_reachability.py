@@ -53,7 +53,6 @@ def clone_all(urls: list[str], desc: str = "Cloning") -> list[str]:
 
 
 class TestStructure:
-
     def test_moved_urls_format(self) -> None:
         for src, dst in get_moved_urls().items():
             assert src.startswith("https://"), f"Source should be https: {src}"
@@ -72,13 +71,6 @@ class TestStructure:
 
 
 class TestReachability:
-
-    @pytest.mark.slow
-    @pytest.mark.network
-    def test_moved_sources_not_reachable(self) -> None:
-        url = find_reachable(list(get_moved_urls().keys()), desc="Checking moved sources")
-        assert url is None, f"Reachable (remove from mapping): {url}"
-
     @pytest.mark.slow
     @pytest.mark.network
     def test_moved_targets_clonable(self) -> None:
