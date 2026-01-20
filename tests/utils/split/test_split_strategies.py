@@ -4,7 +4,7 @@ from dataset_entry import DatasetEntry
 from utils.split.dataset_split import (
     _greedy_assign,
     _optimize_assignment,
-    train_test_split_stratified,
+    train_test_split_group_stratified,
 )
 from utils.split.repository_relationships import RepositoryRelationships
 
@@ -101,14 +101,14 @@ def test_optimize_empty():
 # --- train_test_split_stratified tests ---
 
 def test_split_stratified_empty():
-    train, test = train_test_split_stratified([], RepositoryRelationships())
+    train, test = train_test_split_group_stratified([], RepositoryRelationships())
     assert train == []
     assert test == []
 
 
 def test_split_stratified_single_group():
     entries = _make_entries("https://github.com/test/only", 100)
-    train, test = train_test_split_stratified(entries, RepositoryRelationships(), split_ratio=0.8)
+    train, test = train_test_split_group_stratified(entries, RepositoryRelationships(), split_ratio=0.8)
     assert len(train) == 100
     assert len(test) == 0
 
@@ -119,7 +119,7 @@ def test_split_stratified_preserves_total():
         + _make_entries("https://github.com/test/b", 300)
         + _make_entries("https://github.com/test/c", 100)
     )
-    train, test = train_test_split_stratified(entries, RepositoryRelationships())
+    train, test = train_test_split_group_stratified(entries, RepositoryRelationships())
     assert len(train) + len(test) == 1000
 
 
@@ -129,6 +129,6 @@ def test_split_stratified_deterministic_with_seed():
         + _make_entries("https://github.com/test/b", 50)
     )
     rel = RepositoryRelationships()
-    train1, _ = train_test_split_stratified(entries, rel, seed=42)
-    train2, _ = train_test_split_stratified(entries, rel, seed=42)
+    train1, _ = train_test_split_group_stratified(entries, rel, seed=42)
+    train2, _ = train_test_split_group_stratified(entries, rel, seed=42)
     assert len(train1) == len(train2)

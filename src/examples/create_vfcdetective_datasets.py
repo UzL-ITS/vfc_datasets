@@ -9,7 +9,7 @@ from dataset_entry import DatasetEntry
 from utils.core.logging import setup_logging
 from utils.core.serialization import save_entries, save_entries_csv
 from utils.core.statistics import print_dataset_stats
-from utils.split import train_test_split_stratified
+from utils.split import train_test_split_group_stratified
 from utils.split.repository_relationships import discover_repository_relationships
 
 load_dotenv()
@@ -50,7 +50,7 @@ TRANSFORMATION_PIPELINE: list[Callable[[list[DatasetEntry]], list[DatasetEntry]]
     transformations.collapse_to_commit_level,
     transformations.deduplicate_within_repository,
     transformations.deduplicate_across_related_repositories,
-    transformations.add_commit_information_local,
+    # transformations.add_commit_information_local,
     transformations.add_commit_information_api,
     transformations.filter_by_has_unique_diff,
 ]
@@ -101,7 +101,7 @@ def create_splits(entries: list[DatasetEntry], name: str) -> None:
     """Create multiple train/test splits with different seeds."""
     relationships = discover_repository_relationships(entries)
     for seed in range(1, 5):
-        train, test = train_test_split_stratified(entries, relationships, split_ratio=0.8, seed=seed)
+        train, test = train_test_split_group_stratified(entries, relationships, split_ratio=0.8, seed=seed)
         save_entries_csv(train, OUTPUT_PATH / f"{name}-seed{seed}-train.csv")
         save_entries_csv(test, OUTPUT_PATH / f"{name}-seed{seed}-test.csv")
 

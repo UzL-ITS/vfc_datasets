@@ -182,7 +182,7 @@ def _visualize_split(
     logging.info("Split visualization:\n%s", "\n".join(lines))
 
 
-def train_test_split_stratified(
+def train_test_split_group_stratified(
     entries: list[DatasetEntry],
     relationships: RepositoryRelationships,
     split_ratio: float = 0.8,
