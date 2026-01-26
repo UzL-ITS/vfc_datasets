@@ -7,15 +7,7 @@ from .duplicates import (
     deduplicate_within_repository,
     filter_by_has_unique_diff,
 )
-from .programming_languages import (
-    C_CPP_EXTENSIONS,
-    GO_EXTENSIONS,
-    JAVA_EXTENSIONS,
-    JAVASCRIPT_EXTENSIONS,
-    PYTHON_EXTENSIONS,
-    RUST_EXTENSIONS,
-    filter_by_extension,
-)
+from .programming_languages import filter_by_extension
 
 __all__ = [
     # Deduplication
@@ -27,10 +19,4 @@ __all__ = [
     "collapse_to_commit_level",
     # Language filtering
     "filter_by_extension",
-    "C_CPP_EXTENSIONS",
-    "GO_EXTENSIONS",
-    "JAVA_EXTENSIONS",
-    "JAVASCRIPT_EXTENSIONS",
-    "PYTHON_EXTENSIONS",
-    "RUST_EXTENSIONS",
 ]

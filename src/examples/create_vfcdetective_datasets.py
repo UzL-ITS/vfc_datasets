@@ -9,6 +9,7 @@ from dataset_entry import DatasetEntry
 from utils.core.logging import setup_logging
 from utils.core.serialization import save_entries, save_entries_csv
 from utils.core.statistics import print_dataset_stats
+from utils.extensions import extensions_for
 from utils.split import train_test_split_group_stratified
 from utils.split.repository_relationships import discover_repository_relationships
 
@@ -50,8 +51,9 @@ TRANSFORMATION_PIPELINE: list[Callable[[list[DatasetEntry]], list[DatasetEntry]]
     transformations.collapse_to_commit_level,
     transformations.deduplicate_within_repository,
     transformations.deduplicate_across_related_repositories,
-    # transformations.add_commit_information_local,
-    transformations.add_commit_information_api,
+    transformations.add_commit_information_local,
+    # transformations.add_commit_information_api,
+    transformations.add_commit_diff_no_comment,
     transformations.filter_by_has_unique_diff,
 ]
 
@@ -68,7 +70,7 @@ def build_dataset_variants(all_entries: list[DatasetEntry]) -> dict[str, list[Da
     """Build all dataset variants from the full entry set."""
     mr_names = {ds.metadata.name for ds in MANUALLY_REVIEWED_DATASETS}
     advisory_names = {ds.metadata.name for ds in ADVISORY_BASED_DATASETS}
-    cpp_entries = transformations.filter_by_extension(all_entries, extensions=transformations.C_CPP_EXTENSIONS)
+    cpp_entries = transformations.filter_by_extension(all_entries, extensions=extensions_for("c", "cpp"))
 
     return {
         "dataset1-manually-reviewed-cpp": [e for e in cpp_entries if e.src_datasets & mr_names],

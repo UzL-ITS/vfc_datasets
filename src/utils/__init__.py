@@ -3,6 +3,9 @@
 # Core utilities (no DatasetEntry dependency)
 from utils.core.logging import setup_logging
 
+# Language utilities
+from utils.extensions import EXTENSION_TO_LANGUAGE, extensions_for
+
 # Git utilities (no DatasetEntry dependency)
 from utils.git.github_client import AsyncGitHubClient, query_github_api_sync
 from utils.git.url import (
@@ -26,6 +29,9 @@ __all__ = [
     "url_to_pathname",
     # Core
     "setup_logging",
+    # Languages
+    "EXTENSION_TO_LANGUAGE",
+    "extensions_for",
     # Other
     "CVE_PATTERN",
     "CWE_PATTERN",

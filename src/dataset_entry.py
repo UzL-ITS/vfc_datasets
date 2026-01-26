@@ -19,6 +19,7 @@ class DatasetEntry:
     __slots__ = [
         "_commit_timestamp_utc",
         "commit_diff",
+        "commit_diff_no_comment",
         "commit_id",
         "commit_message",
         "cve_ids",
@@ -58,6 +59,7 @@ class DatasetEntry:
         owasp_categories: set[int] | None = None,
         commit_message: str | None = None,
         commit_diff: str | None = None,
+        commit_diff_no_comment: str | None = None,
         files_changed: set[str] | None = None,
         commit_timestamp_utc: datetime | str | None = None,
     ) -> None:
@@ -86,6 +88,7 @@ class DatasetEntry:
         self.is_vfc = is_vfc
         self.commit_message = commit_message
         self.commit_diff = commit_diff
+        self.commit_diff_no_comment = commit_diff_no_comment
         self.files_changed = files_changed or set()
         self.function_name = function_name
         self.ghsa_id = ghsa_id
