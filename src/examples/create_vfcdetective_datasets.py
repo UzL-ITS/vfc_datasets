@@ -7,11 +7,15 @@ import transformations
 from config import DATASET_PATH
 from dataset_entry import DatasetEntry
 from utils.core.logging import setup_logging
-from utils.core.serialization import save_entries, save_entries_csv
+from utils.core.serialization import load_entries, save_entries
 from utils.core.statistics import print_dataset_stats
 from utils.extensions import extensions_for
-from utils.split import train_test_split_group_stratified
-from utils.split.repository_relationships import discover_repository_relationships
+from utils.split import (
+    create_random_split,
+    create_temporal_split,
+    create_top_n_group_stratified_splits,
+    discover_repository_relationships,
+)
 
 load_dotenv()
 setup_logging("vfcdetective_datasets")
@@ -80,6 +84,15 @@ def build_dataset_variants(all_entries: list[DatasetEntry]) -> dict[str, list[Da
     }
 
 
+def load_vfc_datasets_if_exist() -> dict[str, list[DatasetEntry]] | None:
+    """Load datasets from disk if they exist, otherwise return None."""
+    dataset_names = ["dataset1-manually-reviewed-cpp", "dataset2-mr-advisory-cpp", "dataset3-all-cpp", "dataset4-all"]
+    if all((OUTPUT_PATH / f"{name}.jsonl").exists() for name in dataset_names):
+        print("Datasets already exist, loading from disk...")
+        return {name: load_entries(OUTPUT_PATH / f"{name}.jsonl") for name in dataset_names}
+    return None
+
+
 def create_vfc_datasets() -> dict[str, list[DatasetEntry]]:
     """Load all datasets, apply transformations, and save variants to disk."""
     # Load raw datasets
@@ -98,17 +111,24 @@ def create_vfc_datasets() -> dict[str, list[DatasetEntry]]:
 
     return vfc_datasets
 
-
 def create_splits(entries: list[DatasetEntry], name: str) -> None:
-    """Create multiple train/test splits with different seeds."""
+    """Create all split variants: random, temporal, and group-stratified."""
     relationships = discover_repository_relationships(entries)
-    for seed in range(1, 5):
-        train, test = train_test_split_group_stratified(entries, relationships, split_ratio=0.8, seed=seed)
-        save_entries_csv(train, OUTPUT_PATH / f"{name}-seed{seed}-train.csv")
-        save_entries_csv(test, OUTPUT_PATH / f"{name}-seed{seed}-test.csv")
+
+    # Create 3 random splits
+    for seed in [1, 2, 3]:
+        create_random_split(entries, name, OUTPUT_PATH, seed)
+
+    # Create 1 temporal split
+    create_temporal_split(entries, name, OUTPUT_PATH)
+
+    # Create 3 group-stratified splits (best out of 50 seeds)
+    create_top_n_group_stratified_splits(entries, name, OUTPUT_PATH, relationships)
 
 
 if __name__ == "__main__":
-    vfc_datasets = create_vfc_datasets()
+    vfc_datasets = load_vfc_datasets_if_exist()
+    if vfc_datasets is None:
+        vfc_datasets = create_vfc_datasets()
     dataset_target = "dataset3-all-cpp"
     create_splits(vfc_datasets[dataset_target], dataset_target)

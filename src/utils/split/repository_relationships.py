@@ -448,7 +448,7 @@ def _compute_config_hash(
 ) -> str:
     urls = sorted(e.project_url for e in entries if e.project_url)
     config = f"{urls}|{min_files_changed}|{num_recent_commits}|{num_early_commits}|{skip_oldest_commits}"
-    return hashlib.sha256(config.encode()).hexdigest()[:12]
+    return hashlib.sha256(config.encode()).hexdigest()[:16]
 
 
 def _find_suspicious_project_relationships(
@@ -522,6 +522,11 @@ def discover_repository_relationships(
         )
         output_path = _RELATIONSHIPS_PATH / f"relationships_{config_hash}.json"
         logger.info("Auto-generated output path: %s", output_path)
+
+    if output_path.exists():
+        logger.info("Loading existing relationships from: %s", output_path)
+        with open(output_path) as f:
+            return RepositoryRelationships.from_dict(json.load(f))
 
     project_urls = {e.project_url for e in entries if e.project_url}
     logger.info("Discovering relationships among %d entries (%d repos)", len(entries), len(project_urls))
