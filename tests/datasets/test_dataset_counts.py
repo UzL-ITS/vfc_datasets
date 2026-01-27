@@ -9,6 +9,7 @@ from datasets.commit_level.cross_vul import CrossVulDataset
 from datasets.commit_level.cvefixes import CVEFixesDataset
 from datasets.commit_level.devign import DevignDataset
 from datasets.commit_level.icvul import ICVulDataset
+from datasets.commit_level.java_vfc import JavaVFCDataset, JavaVFCDatasetExtended
 from datasets.commit_level.morefixes import MorefixesDataset
 from datasets.commit_level.msr2019 import MSR2019Dataset
 from datasets.commit_level.patchdb import PatchDBDataset
@@ -56,6 +57,8 @@ def _check_counts(
         (CVEFixesDataset, 12093, 0),
         (DevignDataset, 10894, 14978),
         (ICVulDataset, 4605, 0),
+        (JavaVFCDataset, JavaVFCDataset.metadata.vfcs, JavaVFCDataset.metadata.non_vfcs),
+        (JavaVFCDatasetExtended, JavaVFCDatasetExtended.metadata.vfcs, JavaVFCDatasetExtended.metadata.non_vfcs),
         (MorefixesDataset, 31883, 0),
         (MSR2019Dataset, 1217, 0),
         (PatchDBDataset, 10534, 23741),

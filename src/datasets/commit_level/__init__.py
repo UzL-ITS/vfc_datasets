@@ -6,6 +6,7 @@ from .cross_vul import CrossVulDataset
 from .cvefixes import CVEFixesDataset
 from .devign import DevignDataset
 from .icvul import ICVulDataset
+from .java_vfc import JavaVFCDataset, JavaVFCDatasetExtended
 from .morefixes import MorefixesDataset
 from .msr2019 import MSR2019Dataset
 from .patchdb import PatchDBDataset
@@ -25,6 +26,8 @@ __all__ = [
     "CVEFixesDataset",
     "DevignDataset",
     "ICVulDataset",
+    "JavaVFCDataset",
+    "JavaVFCDatasetExtended",
     "MorefixesDataset",
     "MSR2019Dataset",
     "PatchDBDataset",
