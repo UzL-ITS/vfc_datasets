@@ -15,12 +15,12 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "httpx[http2]>=0.26.0",
     "psycopg2-binary>=2.9.9",
-    "tree-sitter>=0.23.0",
-    "tree-sitter-python>=0.23.0",
-    "tree-sitter-java>=0.23.0",
-    "tree-sitter-javascript>=0.23.0",
-    "tree-sitter-c>=0.21.0",
-    "tree-sitter-cpp>=0.23.0",
+    "tree-sitter~=0.23.0",
+    "tree-sitter-python~=0.23.0",
+    "tree-sitter-java~=0.23.0",
+    "tree-sitter-javascript~=0.23.0",
+    "tree-sitter-c~=0.21.0",
+    "tree-sitter-cpp~=0.23.0",
 ]
 
 [project.optional-dependencies]
