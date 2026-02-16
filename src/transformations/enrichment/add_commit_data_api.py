@@ -38,20 +38,24 @@ async def _enrich_entry(entry: DatasetEntry, client: AsyncGitHubClient) -> bool:
 
 
 def _populate_entry(entry: DatasetEntry, data: dict[str, Any]) -> None:
-    """Extract commit data from API response into entry."""
+    """Extract commit data from API response into entry (only update missing fields)."""
     commit = data.get("commit", {})
-    entry.commit_message = commit.get("message")
-    entry.commit_timestamp_utc = commit.get("author", {}).get("date")
+    if entry.commit_message is None:
+        entry.commit_message = commit.get("message")
+    if entry.commit_timestamp_utc is None:
+        entry.commit_timestamp_utc = commit.get("author", {}).get("date")
 
     files = data.get("files", [])
     if not files:
         return
 
-    entry.files_changed = {f["filename"] for f in files if f.get("filename")}
+    if not entry.files_changed:
+        entry.files_changed = {f["filename"] for f in files if f.get("filename")}
 
-    patches = [f["patch"] for f in files if f.get("patch")]
-    if patches:
-        entry.commit_diff = "\n".join(patches)
+    if entry.commit_diff is None:
+        patches = [f["patch"] for f in files if f.get("patch")]
+        if patches:
+            entry.commit_diff = "\n".join(patches)
 
 
 async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
@@ -70,12 +74,18 @@ async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
     return success, len(entries) - success
 
 
+def _needs_enrichment(entry: DatasetEntry) -> bool:
+    """Check if entry needs any field populated."""
+    return (
+        entry.commit_message is None
+        or entry.commit_diff is None
+        or entry.commit_timestamp_utc is None
+    )
+
+
 def add_commit_information_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Enrich entries with commit data from the GitHub API and return the modified list."""
-    entries_to_process = [
-        e for e in entries
-        if not (e.commit_message and e.commit_diff) and e.project_url and e.commit_id
-    ]
+    entries_to_process = [e for e in entries if _needs_enrichment(e)]
 
     if not entries_to_process:
         logger.info("No entries need API enrichment")
