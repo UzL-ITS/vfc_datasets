@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from dataset_entry import DatasetEntry
 from transformations.filters import collapse_to_commit_level
+from utils.owasp import OwaspCategory
 
 
 class TestCollapseToCommitLevel:
@@ -63,7 +64,10 @@ class TestCollapseToCommitLevel:
                 src_datasets={"ds1"},
                 cve_ids={"CVE-2021-1111"},
                 cwe_ids={"CWE-79"},
-                owasp_categories={1, 2},
+                owasp_categories={
+                    OwaspCategory.BROKEN_ACCESS_CONTROL,
+                    OwaspCategory.CRYPTOGRAPHIC_FAILURES,
+                },
                 files_changed={"file1.py"},
             ),
             DatasetEntry(
@@ -72,7 +76,7 @@ class TestCollapseToCommitLevel:
                 src_datasets={"ds2"},
                 cve_ids={"CVE-2021-2222"},
                 cwe_ids={"CWE-89"},
-                owasp_categories={3},
+                owasp_categories={OwaspCategory.INJECTION},
                 files_changed={"file2.py"},
             ),
         ]
@@ -83,7 +87,11 @@ class TestCollapseToCommitLevel:
         assert result[0].src_datasets == {"ds1", "ds2"}
         assert result[0].cve_ids == {"CVE-2021-1111", "CVE-2021-2222"}
         assert result[0].cwe_ids == {"CWE-79", "CWE-89"}
-        assert result[0].owasp_categories == {1, 2, 3}
+        assert result[0].owasp_categories == {
+            OwaspCategory.BROKEN_ACCESS_CONTROL,
+            OwaspCategory.CRYPTOGRAPHIC_FAILURES,
+            OwaspCategory.INJECTION,
+        }
         assert result[0].files_changed == {"file1.py", "file2.py"}
 
     def test_takes_first_non_none_for_scalar_fields(self):
