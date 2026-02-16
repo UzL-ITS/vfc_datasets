@@ -19,7 +19,8 @@ def train_val_test_split_temporal(
         return [], [], []
     _validate_split_ratios(train_ratio, val_ratio, test_ratio)
 
-    assert all(e.commit_timestamp_utc is not None for e in entries), "All entries must have commit_timestamp_utc for temporal split."
+    if not all(e.commit_timestamp_utc is not None for e in entries):
+        raise ValueError("All entries must have commit_timestamp_utc for temporal split")
 
     # Sort by timestamp
     sorted_entries = sorted(entries, key=lambda e: e.commit_timestamp_utc)  # type: ignore

@@ -126,7 +126,8 @@ def _binary_split_group_stratified(
     # Verify no group is split between train/test
     for urls, _ in groups:
         in_train = urls & train_urls
-        assert in_train == urls or not in_train, "Group split between train/test"
+        if in_train and in_train != urls:
+            raise RuntimeError("Group split between train/test")
 
     first = [entry for entry in entries if entry.project_url in train_urls]
     second = [entry for entry in entries if entry.project_url not in train_urls]
@@ -169,7 +170,8 @@ def train_val_test_split_group_stratified(
 
     # First split: separate test set from train+val
     trainval_ratio = train_ratio + val_ratio
-    assert trainval_ratio > 0, "train_ratio + val_ratio must be positive for three-way split"
+    if trainval_ratio <= 0:
+        raise ValueError("train_ratio + val_ratio must be positive for three-way split")
     trainval, test = _binary_split_group_stratified(
         entries,
         relationships,

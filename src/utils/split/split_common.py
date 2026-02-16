@@ -13,7 +13,8 @@ Group = tuple[set[str], int]
 
 def _validate_split_ratios(train_ratio: float, val_ratio: float, test_ratio: float) -> None:
     """Validate that split ratios sum to 1.0."""
-    assert abs(train_ratio + val_ratio + test_ratio - 1.0) <= 1e-6, "Ratios must sum to 1.0"
+    if abs(train_ratio + val_ratio + test_ratio - 1.0) > 1e-6:
+        raise ValueError("Ratios must sum to 1.0")
 
 
 def _split_by_ratio(

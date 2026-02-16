@@ -253,7 +253,7 @@ def test_three_way_split_single_group():
 def test_three_way_split_invalid_ratios():
     """Ratios must sum to 1.0."""
     entries = _make_entries("https://github.com/test/repo", 100)
-    with pytest.raises(AssertionError, match=r"Ratios must sum to 1\.0"):
+    with pytest.raises(ValueError, match=r"Ratios must sum to 1\.0"):
         train_val_test_split_group_stratified(
             entries,
             RepositoryRelationships(),
@@ -408,9 +408,9 @@ def test_temporal_split_chronological_ordering():
 
 
 def test_temporal_split_requires_timestamps():
-    """Entries without timestamps should raise an assertion error."""
+    """Entries without timestamps should raise ValueError."""
     entries = _make_entries("https://github.com/test/a", 100)  # No timestamps
-    with pytest.raises(AssertionError, match="All entries must have commit_timestamp_utc"):
+    with pytest.raises(ValueError, match="All entries must have commit_timestamp_utc"):
         train_val_test_split_temporal(entries, visualize=False)
 
 
