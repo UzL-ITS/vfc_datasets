@@ -60,13 +60,13 @@ def _populate_entry(entry: DatasetEntry, data: dict[str, Any]) -> None:
 
 async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
     """Enrich entries via GitHub API. Returns (success_count, fail_count)."""
+    success = 0
+
     async with AsyncGitHubClient() as client:
         tasks = [_enrich_entry(e, client) for e in entries]
-
-        success = 0
-        with tqdm(total=len(tasks), desc="API enrichment", dynamic_ncols=True, unit="commits") as pbar:
-            for coro in asyncio.as_completed(tasks):
-                if await coro:
+        with tqdm(total=len(entries), desc="API enrichment", dynamic_ncols=True, unit="commits") as pbar:
+            for task in asyncio.as_completed(tasks):
+                if await task:
                     success += 1
                 pbar.set_postfix_str(f"{client.get_rate_limit_status()} | OK: {success}")
                 pbar.update(1)
@@ -75,12 +75,8 @@ async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
 
 
 def _needs_enrichment(entry: DatasetEntry) -> bool:
-    """Check if entry needs any field populated."""
-    return (
-        entry.commit_message is None
-        or entry.commit_diff is None
-        or entry.commit_timestamp_utc is None
-    )
+    """Check if entry needs core fields (message/diff) from API."""
+    return entry.commit_message is None or entry.commit_diff is None
 
 
 def add_commit_information_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
