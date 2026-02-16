@@ -45,20 +45,11 @@ def _get_commit_info(repo: Repo, commit_id: str, max_diff_size: int) -> dict[str
         if len(diff_text) > max_diff_size:
             diff_data = None
 
-        # Get files changed
-        files_changed: set[str] = set()
-        if commit.parents:
-            for diff_item in commit.diff(commit.parents[0]):
-                if diff_item.a_path:
-                    files_changed.add(diff_item.a_path)
-                if diff_item.b_path:
-                    files_changed.add(diff_item.b_path)
-
         return {
             "message": commit.message,
             "timestamp": datetime.fromtimestamp(commit.committed_date, tz=UTC).isoformat(),
             "diff": diff_data,
-            "files_changed": files_changed,
+            "files_changed": set(commit.stats.files.keys()),
         }
     except Exception as e:
         logger.debug("Failed to get commit %s: %s", commit_id, e)

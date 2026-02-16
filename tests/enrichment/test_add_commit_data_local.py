@@ -7,6 +7,7 @@ import pytest
 from dataset_entry import DatasetEntry
 from transformations.enrichment.add_commit_data_local import (
     _apply_commit_data,
+    _get_commit_info,
     add_commit_information_local,
 )
 
@@ -164,6 +165,39 @@ class TestAddCommitInformationLocal:
         entries: list[DatasetEntry] = []
         result = add_commit_information_local(entries)
         assert result == []
+
+
+class TestGetCommitInfo:
+    """Tests for _get_commit_info - verifies files_changed works for all commits."""
+
+    @pytest.fixture
+    def curl_repo(self):
+        """Get curl repo (clone if needed)."""
+        from utils.git.repository import clone_repository
+
+        repo = clone_repository("https://github.com/curl/curl")
+        assert repo is not None
+        yield repo
+        repo.close()
+
+    @pytest.mark.integration
+    @pytest.mark.slow
+    def test_commit_with_parents_has_files_changed(self, curl_repo):
+        """Commit with parents should have files_changed populated."""
+        result = _get_commit_info(curl_repo, "79e63a53bb9598af863b0afe49ad662795faeef4", max_diff_size=256 * 1024)
+
+        assert result is not None
+        assert result["files_changed"]
+
+    @pytest.mark.integration
+    @pytest.mark.slow
+    def test_root_commit_has_files_changed(self, curl_repo):
+        """Root commit (no parents) should also have files_changed populated."""
+        root_commit = curl_repo.git.rev_list("--max-parents=0", "HEAD").strip().split("\n")[0]
+        result = _get_commit_info(curl_repo, root_commit, max_diff_size=256 * 1024)
+
+        assert result is not None
+        assert result["files_changed"]
 
 
 class TestAddCommitInformationLocalIntegration:
