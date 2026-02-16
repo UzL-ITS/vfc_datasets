@@ -5,6 +5,7 @@
 .coverage
 .pytest_cache/
 .mypy_cache/
+.ruff_cache/
 src/.mypy_cache/
 **/__pycache__/
 
