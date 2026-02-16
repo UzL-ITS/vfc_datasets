@@ -7,8 +7,9 @@ import tempfile
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from os import fspath
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
+import tree_sitter
 from git import Repo
 from tqdm.auto import tqdm
 
@@ -16,9 +17,6 @@ from config import MAX_DIFF_SIZE, MAX_WORKERS
 from dataset_entry import DatasetEntry
 from utils.extensions import EXTENSION_TO_LANGUAGE
 from utils.git.repository import clone_repositories
-
-if TYPE_CHECKING:
-    import tree_sitter
 
 logger = logging.getLogger(__name__)
 
@@ -46,8 +44,6 @@ def _get_parser(language: str) -> tree_sitter.Parser | None:
         return None
 
     try:
-        import tree_sitter
-
         module = __import__(f"tree_sitter_{language}")
         parser = tree_sitter.Parser(tree_sitter.Language(module.language()))
         _parsers[language] = parser
