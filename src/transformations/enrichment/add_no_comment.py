@@ -10,6 +10,11 @@ from os import fspath
 from typing import Any
 
 import tree_sitter
+import tree_sitter_c
+import tree_sitter_cpp
+import tree_sitter_java
+import tree_sitter_javascript
+import tree_sitter_python
 from git import Repo
 from tqdm.auto import tqdm
 
@@ -31,8 +36,16 @@ COMMENT_NODE_TYPES: dict[str, set[str]] = {
     "cpp": {"comment"},
 }
 
+_LANGUAGE_MODULES: dict[str, Any] = {
+    "python": tree_sitter_python,
+    "java": tree_sitter_java,
+    "javascript": tree_sitter_javascript,
+    "c": tree_sitter_c,
+    "cpp": tree_sitter_cpp,
+}
+
 # Lazy-loaded parsers cache (per-process)
-_parsers: dict[str, Any] = {}
+_parsers: dict[str, tree_sitter.Parser] = {}
 
 
 def _get_parser(language: str) -> tree_sitter.Parser | None:
@@ -43,14 +56,10 @@ def _get_parser(language: str) -> tree_sitter.Parser | None:
     if language not in COMMENT_NODE_TYPES:
         return None
 
-    try:
-        module = __import__(f"tree_sitter_{language}")
-        parser = tree_sitter.Parser(tree_sitter.Language(module.language()))
-        _parsers[language] = parser
-        return parser
-    except Exception as e:
-        logger.debug("Failed to create parser for %s: %s", language, e)
-        return None
+    module = _LANGUAGE_MODULES[language]
+    parser = tree_sitter.Parser(tree_sitter.Language(module.language()))
+    _parsers[language] = parser
+    return parser
 
 
 def _get_language(file_path: str) -> str | None:
