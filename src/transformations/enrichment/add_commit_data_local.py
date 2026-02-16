@@ -29,13 +29,9 @@ def _apply_commit_data(entry: DatasetEntry, data: dict[str, Any]) -> None:
         entry.files_changed = data["files_changed"]
 
 
-def _get_commit_info_gitpython(
-    repo_path: str, commit_id: str, max_diff_size: int
-) -> dict[str, Any] | None:
-    """Get commit info using GitPython."""
-    repo = None
+def _get_commit_info(repo: Repo, commit_id: str, max_diff_size: int) -> dict[str, Any] | None:
+    """Get commit info from an open Repo object."""
     try:
-        repo = Repo(repo_path)
         commit = repo.commit(commit_id)
 
         # Get diff
@@ -65,21 +61,19 @@ def _get_commit_info_gitpython(
             "files_changed": files_changed,
         }
     except Exception as e:
-        logger.debug("Failed to get commit %s from %s: %s", commit_id, repo_path, e)
+        logger.debug("Failed to get commit %s: %s", commit_id, e)
         return None
-    finally:
-        if repo is not None:
-            repo.close()
 
 
 def _process_commit_batch(args: tuple[str, list[str], int]) -> dict[str, dict[str, Any]]:
     """Process a batch of commits. Must be top-level for pickling."""
     repo_path, commit_ids, max_diff_size = args
     results = {}
-    for commit_id in commit_ids:
-        info = _get_commit_info_gitpython(repo_path, commit_id, max_diff_size)
-        if info:
-            results[commit_id] = info
+    with Repo(repo_path) as repo:
+        for commit_id in commit_ids:
+            info = _get_commit_info(repo, commit_id, max_diff_size)
+            if info:
+                results[commit_id] = info
     return results
 
 
