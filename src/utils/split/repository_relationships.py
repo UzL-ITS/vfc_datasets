@@ -40,6 +40,7 @@ def _link_key(url1: str, url2: str) -> tuple[str, str]:
 @dataclass
 class RelationshipEdge:
     """An edge connecting two related URLs."""
+
     url1: str
     url2: str
     method: str
@@ -115,9 +116,7 @@ class RepositoryGroup:
             "project_urls": sorted(self.project_urls),
             "canonical_url": self.canonical_url,
             "detection_methods": sorted(self.detection_methods),
-            "links": {
-                commit: sorted(urls) for commit, urls in sorted(self.links.items())
-            },
+            "links": {commit: sorted(urls) for commit, urls in sorted(self.links.items())},
         }
         if self.suspicious_urls:
             result["suspicious_urls"] = sorted(self.suspicious_urls)
@@ -219,7 +218,8 @@ def _compute_signatures_for_repo(
         for commit_id in commit_ids:
             sig = get_commit_signature_if_substantial(repo, commit_id, min_files_changed)
             results.append((url, commit_id, sig))
-    except Exception:
+    except Exception as exc:
+        logger.debug("Failed to compute signatures for %s: %s", url, exc)
         for commit_id in commit_ids:
             results.append((url, commit_id, None))
 
@@ -263,7 +263,9 @@ def _find_related_by_local_history(
     # git rev-list returns newest-first; skip oldest commits (often template/skeleton setup)
     logger.info(
         "Sampling %d recent + %d early (skipping first %d) commits per repo...",
-        num_recent_commits, num_early_commits, skip_oldest_commits,
+        num_recent_commits,
+        num_early_commits,
+        skip_oldest_commits,
     )
     sampled_commits: set[str] = set()
     for url in project_urls:
@@ -306,7 +308,8 @@ def _find_related_by_local_history(
     total_sigs = sum(len(commits) for commits in url_to_commits.values())
     logger.info(
         "Pre-computing %d signatures across %d repos in parallel...",
-        total_sigs, len(url_to_commits)
+        total_sigs,
+        len(url_to_commits),
     )
     sig_cache: dict[tuple[str, str], tuple[str, str] | None] = {}
 
@@ -320,7 +323,9 @@ def _find_related_by_local_history(
         max_workers = min(multiprocessing.cpu_count(), len(repo_tasks))
 
         with ProcessPoolExecutor(max_workers=max_workers) as pool:
-            sig_futures = {pool.submit(_compute_signatures_for_repo, task): task[0] for task in repo_tasks}
+            sig_futures = {
+                pool.submit(_compute_signatures_for_repo, task): task[0] for task in repo_tasks
+            }
             with tqdm(total=total_sigs, desc="Computing signatures", unit="sigs") as pbar:
                 for sig_future in as_completed(sig_futures):
                     url = sig_futures[sig_future]
@@ -337,7 +342,7 @@ def _find_related_by_local_history(
     for commit_id, urls in tqdm(shared_commits, desc="Matching repos", unit="commits"):
         sorted_urls = sorted(urls)
         for i, url1 in enumerate(sorted_urls):
-            for url2 in sorted_urls[i + 1:]:
+            for url2 in sorted_urls[i + 1 :]:
                 sig1 = sig_cache.get((url1, commit_id))
                 sig2 = sig_cache.get((url2, commit_id))
 
@@ -359,8 +364,7 @@ async def _discover_github_forks_async(
 ) -> tuple[list[RelationshipEdge], dict[str, str]]:
     """Discover fork relationships via GitHub API. Returns (edges, url_to_source)."""
     github_urls = {
-        url for url in project_urls
-        if (parsed := GitURL.parse(url)) and parsed.host == "github.com"
+        url for url in project_urls if (parsed := GitURL.parse(url)) and parsed.host == "github.com"
     }
 
     if not github_urls:
@@ -447,7 +451,9 @@ def _compute_config_hash(
     skip_oldest_commits: int,
 ) -> str:
     urls = sorted(e.project_url for e in entries if e.project_url)
-    config = f"{urls}|{min_files_changed}|{num_recent_commits}|{num_early_commits}|{skip_oldest_commits}"
+    config = (
+        f"{urls}|{min_files_changed}|{num_recent_commits}|{num_early_commits}|{skip_oldest_commits}"
+    )
     return hashlib.sha256(config.encode()).hexdigest()[:16]
 
 
@@ -463,7 +469,7 @@ def _find_suspicious_project_relationships(
     for fork_group in fork_relationships.groups:
         urls = sorted(fork_group.project_urls)
         for i, url1 in enumerate(urls):
-            for url2 in urls[i + 1:]:
+            for url2 in urls[i + 1 :]:
                 validated_pairs.add(frozenset([url1, url2]))
 
     for group in relationships.groups:
@@ -482,7 +488,7 @@ def _find_suspicious_project_relationships(
         for link_urls in group.links.values():
             sorted_urls = sorted(link_urls)
             for i, url1 in enumerate(sorted_urls):
-                for url2 in sorted_urls[i + 1:]:
+                for url2 in sorted_urls[i + 1 :]:
                     pair_commit_counts[frozenset([url1, url2])] += 1
 
         # Add pairs with enough shared commits as validated
@@ -529,7 +535,9 @@ def discover_repository_relationships(
             return RepositoryRelationships.from_dict(json.load(f))
 
     project_urls = {e.project_url for e in entries if e.project_url}
-    logger.info("Discovering relationships among %d entries (%d repos)", len(entries), len(project_urls))
+    logger.info(
+        "Discovering relationships among %d entries (%d repos)", len(entries), len(project_urls)
+    )
 
     url_to_repo = clone_repositories(entries)
     edges: list[RelationshipEdge] = []
@@ -540,7 +548,12 @@ def discover_repository_relationships(
 
     # Local commit history comparison
     local_edges, _ = _find_related_by_local_history(
-        entries, url_to_repo, min_files_changed, num_recent_commits, num_early_commits, skip_oldest_commits
+        entries,
+        url_to_repo,
+        min_files_changed,
+        num_recent_commits,
+        num_early_commits,
+        skip_oldest_commits,
     )
     edges.extend(local_edges)
 
@@ -576,7 +589,9 @@ def _validate_suspicious_urls(
 
         logger.info(
             "Group %d: validating %d suspicious URLs against %d validated",
-            group.group_id, len(unvalidated_urls), len(reachable)
+            group.group_id,
+            len(unvalidated_urls),
+            len(reachable),
         )
 
         for url in list(unvalidated_urls):
@@ -598,8 +613,7 @@ def _validate_suspicious_urls(
                     continue
 
                 existing_commits = sum(
-                    1 for urls in group.links.values()
-                    if url in urls and validated_url in urls
+                    1 for urls in group.links.values() if url in urls and validated_url in urls
                 )
 
                 common = list(url_commits & validated_commits - group.shared_commits)
@@ -612,7 +626,9 @@ def _validate_suspicious_urls(
                     sig1 = get_commit_signature_if_substantial(repo, commit_id, min_files_changed)
                     if not sig1:
                         continue
-                    sig2 = get_commit_signature_if_substantial(validated_repo, commit_id, min_files_changed)
+                    sig2 = get_commit_signature_if_substantial(
+                        validated_repo, commit_id, min_files_changed
+                    )
                     if sig2 and sig1 == sig2:
                         group.add_link(url, validated_url, commit_id)
                         new_commits += 1
@@ -646,7 +662,12 @@ def validate_relationships(
     url_to_repo = clone_repositories(entries)
     fork_edges, _ = asyncio.run(_discover_github_forks_async(project_urls))
     _, commit_history = _find_related_by_local_history(
-        entries, url_to_repo, min_files_changed, num_recent_commits, num_early_commits, skip_oldest_commits
+        entries,
+        url_to_repo,
+        min_files_changed,
+        num_recent_commits,
+        num_early_commits,
+        skip_oldest_commits,
     )
 
     logger.info("Finding suspicious relationships in %d groups...", len(relationships.groups))
@@ -660,7 +681,8 @@ def validate_relationships(
         total_suspicious_urls = sum(len(g.suspicious_urls) for g in relationships.groups)
         logger.warning(
             "%d groups have %d suspicious URLs after validation",
-            suspicious_count, total_suspicious_urls
+            suspicious_count,
+            total_suspicious_urls,
         )
         # Save suspicious groups for review
         suspicious_groups = [g for g in relationships.groups if g.suspicious]
