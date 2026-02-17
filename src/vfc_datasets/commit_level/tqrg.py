@@ -66,9 +66,7 @@ class TQRGDataset(BaseDataset):
             if not project_url or not commit_id:
                 return None
         else:
-            project_url, raw_commit_id = extract_from_commit_url(
-                row, "github", self.metadata.name
-            )
+            project_url, raw_commit_id = extract_from_commit_url(row, "github", self.metadata.name)
             if not project_url or not raw_commit_id:
                 return None
             commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)

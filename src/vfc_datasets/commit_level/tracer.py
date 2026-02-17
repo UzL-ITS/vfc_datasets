@@ -28,7 +28,7 @@ class TracerDataset(BaseDataset):
             "for 122 CVEs due to limited disclosed information.",
         ),
         # NOTE: paper_vfcs refers to released dataset at source_url, not paper's evaluation dataset
-        vfcs=3188, # commits in released CSV
+        vfcs=3188,  # commits in released CSV
     )
 
     def _load_data(self) -> pd.DataFrame:
@@ -45,7 +45,9 @@ class TracerDataset(BaseDataset):
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Extract project URL and raw commit ID from commit URL
-        project_url, raw_commit_id = extract_from_commit_url(row, "github_commit", self.metadata.name)
+        project_url, raw_commit_id = extract_from_commit_url(
+            row, "github_commit", self.metadata.name
+        )
         if not project_url or not raw_commit_id:
             return None
 

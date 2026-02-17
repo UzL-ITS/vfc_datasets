@@ -31,7 +31,7 @@ class DiverseVulDataset(BaseDataset):
         # NOTE: Paper reports 7,514 commits; released dataset on GitHub has 7,512
         # 18,945 = vulnerable functions (function-level granularity)
         vfcs=7514,
-        non_vfcs=0, # TODO: check non-vfc count
+        non_vfcs=0,  # TODO: check non-vfc count
         projects=797,
         vulnerable_functions=18945,
         benign_functions=330492,
@@ -45,7 +45,9 @@ class DiverseVulDataset(BaseDataset):
 
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_path = self._raw_dir / "diversevul.json"
-        download_from_gdrive(file_id="12IWKhmLhq7qn5B_iXgn5YerOQtkH-6RG", output_path=raw_dataset_path)
+        download_from_gdrive(
+            file_id="12IWKhmLhq7qn5B_iXgn5YerOQtkH-6RG", output_path=raw_dataset_path
+        )
 
         # Load JSON lines and filter vulnerable functions only
         data = []

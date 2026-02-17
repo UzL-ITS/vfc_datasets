@@ -85,9 +85,7 @@ class PrimeVulDataset(BaseDataset):
         df = pd.concat(frames, ignore_index=True)
 
         # Add resolved project URLs for proper deduplication
-        resolved_project_urls = [
-            self._resolve_project_url(dict(row)) for _, row in df.iterrows()
-        ]
+        resolved_project_urls = [self._resolve_project_url(dict(row)) for _, row in df.iterrows()]
         df["resolved_project_url"] = pd.Series(
             resolved_project_urls, index=df.index, dtype="string"
         )
@@ -105,9 +103,7 @@ class PrimeVulDataset(BaseDataset):
 
         project = row.get("project")
         if project and project in self.PROJECT_URLS:
-            mapped_project: str | None = self._normalize_candidate_url(
-                self.PROJECT_URLS[project]
-            )
+            mapped_project: str | None = self._normalize_candidate_url(self.PROJECT_URLS[project])
             if mapped_project:
                 return mapped_project
 

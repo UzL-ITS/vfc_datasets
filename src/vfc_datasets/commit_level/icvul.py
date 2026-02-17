@@ -75,7 +75,9 @@ class ICVulDataset(BaseDataset):
         git_url = GitURL.parse(repo_url)
         project_url = git_url.to_https_url() if git_url else None
         if not project_url:
-            logger.debug("[%s] Skipping row: failed to parse repo_url=%s", self.metadata.name, repo_url)
+            logger.debug(
+                "[%s] Skipping row: failed to parse repo_url=%s", self.metadata.name, repo_url
+            )
             return None
 
         fc_hash = row.get("fc_hash")

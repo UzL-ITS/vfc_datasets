@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 class CVEFixesDataset(BaseDataset):
-
     VERSION = "CVEfixes_v1.0.8"
     ZENODO_RECORD_ID = "13118970"
 
@@ -49,15 +48,11 @@ class CVEFixesDataset(BaseDataset):
         sql_file_path = self._raw_dir / "cvefixes.db"
 
         if not sql_file_path.exists():
-            cve_fixes_url = (
-                f"https://zenodo.org/records/{self.ZENODO_RECORD_ID}/files/{self.VERSION}.zip?download=1"
-            )
+            cve_fixes_url = f"https://zenodo.org/records/{self.ZENODO_RECORD_ID}/files/{self.VERSION}.zip?download=1"
 
             with tempfile.TemporaryDirectory() as tmp_folder:
                 download_and_extract_zip(url=cve_fixes_url, extract_path=tmp_folder)
-                db_gz_path = (
-                    Path(tmp_folder) / self.VERSION / "Data" / f"{self.VERSION}.sql.gz"
-                )
+                db_gz_path = Path(tmp_folder) / self.VERSION / "Data" / f"{self.VERSION}.sql.gz"
 
                 # Stream SQL from gzip directly to SQLite
                 compressed_size = db_gz_path.stat().st_size
@@ -114,7 +109,9 @@ class CVEFixesDataset(BaseDataset):
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Extract and validate project URL and commit ID
-        project_url, commit_id = extract_url_and_commit(row, "repo_url", "commit_id", self.metadata.name)
+        project_url, commit_id = extract_url_and_commit(
+            row, "repo_url", "commit_id", self.metadata.name
+        )
         if not project_url or not commit_id:
             return None
 

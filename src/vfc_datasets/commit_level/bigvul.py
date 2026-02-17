@@ -44,7 +44,9 @@ class BigVulDataset(BaseDataset):
         )
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
-        project_url, commit_id = extract_url_and_commit(row, "ref_link", "commit_id", self.metadata.name)
+        project_url, commit_id = extract_url_and_commit(
+            row, "ref_link", "commit_id", self.metadata.name
+        )
         if not project_url or not commit_id:
             return None
 

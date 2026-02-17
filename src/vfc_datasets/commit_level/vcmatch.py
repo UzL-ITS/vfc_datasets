@@ -67,7 +67,9 @@ class VCMatchDataset(BaseDataset):
 
         if not project_url:
             logger.debug(
-                "[%s] Skipping row: unknown or missing project name=%s", self.metadata.name, project_name
+                "[%s] Skipping row: unknown or missing project name=%s",
+                self.metadata.name,
+                project_name,
             )
             return None
 

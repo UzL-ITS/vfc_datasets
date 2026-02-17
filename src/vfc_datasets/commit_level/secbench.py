@@ -46,7 +46,10 @@ class SecBenchDataset(BaseDataset):
         project = row.get("project")
         if not isinstance(owner, str) or not owner or not isinstance(project, str) or not project:
             logger.debug(
-                "[%s] Skipping row: missing owner=%s or project=%s", self.metadata.name, owner, project
+                "[%s] Skipping row: missing owner=%s or project=%s",
+                self.metadata.name,
+                owner,
+                project,
             )
             return None
 

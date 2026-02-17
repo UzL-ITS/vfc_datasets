@@ -73,9 +73,7 @@ class RepoSPDDataset(BaseDataset):
 
     def _download_if_missing(self, dataset_path: Path) -> None:
         expected = [
-            dataset_path / subset / fname
-            for subset in self.SUBSETS
-            for fname in self.FILENAMES
+            dataset_path / subset / fname for subset in self.SUBSETS for fname in self.FILENAMES
         ]
         if all(p.exists() for p in expected):
             return

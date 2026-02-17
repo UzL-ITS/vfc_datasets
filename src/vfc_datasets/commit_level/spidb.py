@@ -46,7 +46,7 @@ class SPIDBDataset(BaseDataset):
             "We use four popular and diversified open source libraries, i.e., Linux, FFmpeg, Qemu, "
             "and Wireshark. They are popular OSS from different applications.",
         ),
-        projects=2, # NOTE: 2 of 4 projects were released
+        projects=2,  # NOTE: 2 of 4 projects were released
         # Data from the released files:
         vfcs=10894,
         non_vfcs=14979,
@@ -72,7 +72,9 @@ class SPIDBDataset(BaseDataset):
     def _read_clean_csv(self, path: Path) -> pd.DataFrame:
         return self._drop_unnamed_columns(pd.read_csv(path))
 
-    def _load_all_commit_messages(self, project_url: str) -> tuple[dict[str, list[str]], Repo | None]:
+    def _load_all_commit_messages(
+        self, project_url: str
+    ) -> tuple[dict[str, list[str]], Repo | None]:
         repo = clone_repository(project_url)
         repo_dict: dict[str, list[str]] = {}
         if repo:
@@ -117,7 +119,9 @@ class SPIDBDataset(BaseDataset):
                 .strip()
             )
             if normalized_message not in commit_dict:
-                logger.warning("[spidb] Skipping row %d: commit message not found in repo", row_position)
+                logger.warning(
+                    "[spidb] Skipping row %d: commit message not found in repo", row_position
+                )
                 continue
 
             candidate_shas = commit_dict[normalized_message]
@@ -127,13 +131,17 @@ class SPIDBDataset(BaseDataset):
                 resolved_commit_id = candidate_shas[0]
             else:
                 if len(candidate_shas) > 2:
-                    logger.warning("[spidb] Skipping row %d: >2 commits match message", row_position)
+                    logger.warning(
+                        "[spidb] Skipping row %d: >2 commits match message", row_position
+                    )
                     continue
 
                 if repo is None:
                     repo = clone_repository(project_url)
                 if repo is None:
-                    logger.warning("[spidb] Skipping row %d: unable to clone %s", row_position, project_url)
+                    logger.warning(
+                        "[spidb] Skipping row %d: unable to clone %s", row_position, project_url
+                    )
                     continue
 
                 patch = row.get("patch")
@@ -161,16 +169,22 @@ class SPIDBDataset(BaseDataset):
                         continue
 
                 if resolved_commit_id is None:
-                    logger.warning("[spidb] Skipping row %d: unable to disambiguate commit", row_position)
+                    logger.warning(
+                        "[spidb] Skipping row %d: unable to disambiguate commit", row_position
+                    )
                     continue
 
             project_dataframe.iat[row_position, commit_col_idx] = resolved_commit_id
 
         return project_dataframe
 
-    def _add_project_data(self, file_id: str, project_url: str, raw_dataset_dir: Path) -> pd.DataFrame:
+    def _add_project_data(
+        self, file_id: str, project_url: str, raw_dataset_dir: Path
+    ) -> pd.DataFrame:
         git_url = GitURL.parse(project_url)
-        project_name = git_url.repo.lower() if git_url and git_url.repo else project_url.split("/")[-1].lower()
+        project_name = (
+            git_url.repo.lower() if git_url and git_url.repo else project_url.split("/")[-1].lower()
+        )
         csv_path = raw_dataset_dir / f"{project_name}.csv"
         download_from_gdrive(file_id, csv_path)
 

@@ -133,7 +133,11 @@ def _repo_url_from_search_result(
         first_line = message.splitlines()[0].strip()
         # Accept if subject matches
         first_line_norm = _normalize_subject(first_line)
-        if not subject_norm or first_line_norm.startswith(subject_norm) or subject_norm.startswith(first_line_norm):
+        if (
+            not subject_norm
+            or first_line_norm.startswith(subject_norm)
+            or subject_norm.startswith(first_line_norm)
+        ):
             verified.append(item)
 
     if not verified:
@@ -141,7 +145,8 @@ def _repo_url_from_search_result(
 
     # Among verified, prefer non-fork repos
     non_forks = [
-        item for item in verified
+        item
+        for item in verified
         if isinstance(item.get("repository"), dict) and not item["repository"].get("fork", False)
     ]
 
