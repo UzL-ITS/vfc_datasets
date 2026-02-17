@@ -27,6 +27,7 @@ dependencies = [
 dev = [
     "mypy>=1.8.0",
     "pandas-stubs>=2.2.0",
+    "types-psycopg2>=2.9.0",
     "types-tqdm>=4.66.0",
     "ruff>=0.3.0",
     "pytest>=8.0.0",
@@ -60,7 +61,22 @@ packages = ["transformations", "datasets", "utils"]
 modules = ["config", "dataset_entry"]
 check_untyped_defs = true
 warn_unused_ignores = true
+ignore_missing_imports = false
+
+[[tool.mypy.overrides]]
+module = ["gdown"]
 ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/examples/*"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "if __name__ == .__main__.",
+    "pragma: no cover",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
