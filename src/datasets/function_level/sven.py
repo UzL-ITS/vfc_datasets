@@ -41,24 +41,21 @@ class SVENDataset(BaseDataset):
         self.sven_repo_path: str | None = None
 
     def _load_data(self) -> pd.DataFrame:
-        repo_url = "https://github.com/eth-sri/sven"
-        self.sven_repo_path = url_to_pathname(repo_url)
-        clone_repository(repo_url, branch="master")
+        self.sven_repo_path = url_to_pathname(self.metadata.download_url)
+        clone_repository(self.metadata.download_url, branch="master")
 
         if not os.path.exists(self.sven_repo_path):
-            logger.error("Failed to clone repository: %s", repo_url)
+            logger.error("Failed to clone repository: %s", self.metadata.download_url)
             return pd.DataFrame()
 
         # Load all jsonl files from train and val directories
-        all_data = []
+        all_data: list[dict[str, Any]] = []
         subdirs = ["data_train_val/train", "data_train_val/val"]
 
         for sub_dir in subdirs:
-            for file in Path(self.sven_repo_path).rglob(sub_dir + "/*"):
-                if file.suffix == ".jsonl":
-                    with open(file, encoding="utf-8", errors="replace") as f:
-                        data = [json.loads(line) for line in f]
-                        all_data.extend(data)
+            for file in (Path(self.sven_repo_path) / sub_dir).glob("*.jsonl"):
+                with open(file, encoding="utf-8", errors="replace") as f:
+                    all_data.extend(json.loads(line) for line in f)
 
         return pd.DataFrame(all_data)
 

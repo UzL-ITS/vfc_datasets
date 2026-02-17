@@ -69,7 +69,9 @@ class PatchDBDataset(BaseDataset):
         raw_commit_id = row.get("commit_id")
         if not raw_commit_id:
             logger.debug(
-                "[%s] Skipping row: missing commit_id for project=%s", self.metadata.name, project_url
+                "[%s] Skipping row: missing commit_id for project=%s",
+                self.metadata.name,
+                project_url,
             )
             return None
 
@@ -106,7 +108,7 @@ class PatchDBDataset(BaseDataset):
             project_url=project_url,
             commit_id=commit_id,
             src_datasets={self.metadata.name},
-            is_vfc="non-security" not in str(row.get("category") or ""),
+            is_vfc="non-security" not in str(row.get("category", "")),
             cve_ids=normalize_cve_ids(row.get("CVE_ID")),
             cwe_ids=normalize_cwe_ids(cwe_input),
         )

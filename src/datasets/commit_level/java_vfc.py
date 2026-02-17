@@ -13,16 +13,18 @@ from datasets.parsing_helpers import (
 
 logger = logging.getLogger(__name__)
 
-class _JavaVFCBase(BaseDataset):
 
+class _JavaVFCBase(BaseDataset):
     _ZENODO_RECORD_ID = "13731781"
 
     def _load_data(self) -> pd.DataFrame:
         file_name = f"{self.metadata.name}.jsonl"
         raw_dataset_path = self._raw_dir / "javavfc" / file_name
         if not raw_dataset_path.exists():
-            url = f"https://zenodo.org/records/{self._ZENODO_RECORD_ID}/files/{file_name}?download=1"
-            logger.info(f"Downloading {file_name}...")
+            url = (
+                f"https://zenodo.org/records/{self._ZENODO_RECORD_ID}/files/{file_name}?download=1"
+            )
+            logger.info("Downloading %s...", file_name)
             download_from_url(url=url, output_path=raw_dataset_path)
         return pd.read_json(raw_dataset_path, lines=True)
 
@@ -44,7 +46,6 @@ class _JavaVFCBase(BaseDataset):
 
 
 class JavaVFCDataset(_JavaVFCBase):
-
     metadata = DatasetMetadata(
         name="javavfc",
         granularity="commit",
@@ -63,7 +64,6 @@ class JavaVFCDataset(_JavaVFCBase):
 
 
 class JavaVFCDatasetExtended(_JavaVFCBase):
-
     metadata = DatasetMetadata(
         name="javavfc_extended",
         granularity="commit",

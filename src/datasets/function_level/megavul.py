@@ -52,20 +52,12 @@ class MegaVulDataset(BaseDataset):
                 "You can find the files here: https://1drv.ms/f/s!AtzrzuojQf5sgeISZ9zN_4owVnUn9g."
             )
 
-        # Load and combine both JSON files
-        all_data = []
-        # Load C/CPP data
         with open(cpp_json_path, encoding="utf-8") as f:
             cpp_data = json.load(f)
-        # Load Java data
         with open(java_json_path, encoding="utf-8") as f:
             java_data = json.load(f)
-        # Combine both datasets
-        all_data.extend(cpp_data)
-        all_data.extend(java_data)
 
-        # Convert to DataFrame
-        return pd.DataFrame(all_data)
+        return pd.DataFrame(cpp_data + java_data)
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         git_url_value = row.get("git_url")
@@ -77,13 +69,15 @@ class MegaVulDataset(BaseDataset):
 
         # Special case: ffmpeg URLs in MegaVul are malformed
         repo_name = row.get("repo_name")
-        if repo_name and repo_name == "ffmpeg":
+        if repo_name == "ffmpeg":
             project_url: str | None = "https://github.com/ffmpeg/ffmpeg"
         else:
             parsed_git_url = GitURL.parse(str(git_url_value))
             if not parsed_git_url:
                 logger.debug(
-                    "[%s] Skipping row: failed to parse git_url=%s", self.metadata.name, git_url_value
+                    "[%s] Skipping row: failed to parse git_url=%s",
+                    self.metadata.name,
+                    git_url_value,
                 )
                 return None
             project_url = parsed_git_url.to_https_url()
