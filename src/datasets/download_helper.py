@@ -2,6 +2,7 @@ import hashlib
 import logging
 import re
 import tempfile
+import time
 import zipfile
 from pathlib import Path
 from typing import Any, cast
@@ -117,10 +118,16 @@ def _download_file(
         file_id = _extract_gdrive_file_id(url)
         if not file_id:
             raise RuntimeError(f"Could not extract Google Drive file ID from URL: {url}")
-        return download_from_gdrive(file_id, output_path, force_download=force_download, checksum=checksum)
+        return download_from_gdrive(
+            file_id, output_path, force_download=force_download, checksum=checksum
+        )
     if "huggingface.co" in parsed_url.netloc:
-        return download_from_huggingface(url, output_path, force_download=force_download, checksum=checksum, **kwargs)
-    return download_from_url(url, output_path, force_download=force_download, checksum=checksum, **kwargs)
+        return download_from_huggingface(
+            url, output_path, force_download=force_download, checksum=checksum, **kwargs
+        )
+    return download_from_url(
+        url, output_path, force_download=force_download, checksum=checksum, **kwargs
+    )
 
 
 def download_from_url(
@@ -129,6 +136,7 @@ def download_from_url(
     force_download: bool = False,
     headers: dict[str, str] | None = None,
     checksum: str | None = None,
+    max_retries: int = 3,
     **kwargs: Any,
 ) -> Path:
     """Download file from a direct URL with progress bar and retry logic."""
@@ -139,20 +147,23 @@ def download_from_url(
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     request_headers = headers.copy() if headers else {}
-
-    max_retries = 3
     last_exception = None
 
     for attempt in range(max_retries):
         try:
-            logger.info("Downloading %s to %s (attempt %d/%d)", url, output_path, attempt + 1, max_retries)
+            logger.info(
+                "Downloading %s to %s (attempt %d/%d)", url, output_path, attempt + 1, max_retries
+            )
 
-            with httpx.Client(
-                http2=True,
-                timeout=httpx.Timeout(300, connect=30.0),
-                headers=request_headers,
-                follow_redirects=True,
-            ) as client, client.stream("GET", url, **kwargs) as response:
+            with (
+                httpx.Client(
+                    http2=True,
+                    timeout=httpx.Timeout(300, connect=30.0),
+                    headers=request_headers,
+                    follow_redirects=True,
+                ) as client,
+                client.stream("GET", url, **kwargs) as response,
+            ):
                 response.raise_for_status()
                 total_size = int(response.headers.get("content-length", 0))
 
@@ -195,8 +206,6 @@ def download_from_url(
                 output_path.unlink()
 
             if attempt < max_retries - 1:
-                import time
-
                 wait_minutes = 2 ** (attempt + 1)  # Exponential backoff: 2, 4, 8... minutes
                 logger.info("Waiting %d minute(s) before retry...", wait_minutes)
                 time.sleep(wait_minutes * 60)
