@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 MIN_COMMIT_LENGTH = 5
 COMMIT_HASH_PATTERN = re.compile(rf"^[a-f0-9]{{{MIN_COMMIT_LENGTH},40}}$", re.IGNORECASE)
 
+
 @dataclass(slots=True)
 class GitURL:
     """Unified representation of a Git repository URL."""
@@ -57,13 +58,12 @@ class GitURL:
                 hostname = parsed.hostname.removeprefix("www.")
                 git_url = cls(scheme=parsed.scheme, host=hostname, path=parsed.path)
                 git_url._extract_components(parsed)
-            except Exception:
+            except (ValueError, TypeError, AttributeError):
                 logger.exception("Failed to parse URL: %s", url)
                 return None
 
-        # Single validation point for all parsed URLs
         if git_url and not git_url.is_valid():
-            logger.debug("Incomplete URL: %s (owner=%s, repo=%s)", url, git_url.owner, git_url.repo)
+            logger.debug("Invalid URL: %s (owner=%s, repo=%s)", url, git_url.owner, git_url.repo)
 
         return git_url
 
@@ -222,7 +222,7 @@ class GitURL:
                 return
 
         if "/commit/" in path:
-            commit_part = path[path.index("/commit/") + 8:].split("/")[0].split("?")[0]
+            commit_part = path[path.index("/commit/") + 8 :].split("/")[0].split("?")[0]
             if COMMIT_HASH_PATTERN.fullmatch(commit_part):
                 self.commit_id = commit_part.lower()
 
@@ -249,7 +249,7 @@ class GitURL:
         # Strip cgit web paths to get repo
         for suffix in ("/commit", "/tree", "/log", "/diff", "/refs", "/snapshot", "/patch"):
             if suffix in path:
-                path = path[:path.index(suffix)]
+                path = path[: path.index(suffix)]
                 break
 
         # Update self.path to the normalized form for to_https_url()
