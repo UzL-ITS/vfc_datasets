@@ -1,3 +1,4 @@
+import errno
 import logging
 import multiprocessing
 import os
@@ -139,10 +140,13 @@ def _clone_new_repo(
         "blob:none",
         "--no-checkout",
         # Disable credential helpers to prevent auth prompts
-        "-c", "credential.helper=",
+        "-c",
+        "credential.helper=",
         # Increase network timeouts for large repos (Chromium, Linux kernel, etc.)
-        "-c", "http.lowSpeedLimit=1000",   # 1KB/s minimum
-        "-c", "http.lowSpeedTime=600",      # 10 min before timeout
+        "-c",
+        "http.lowSpeedLimit=1000",  # 1KB/s minimum
+        "-c",
+        "http.lowSpeedTime=600",  # 10 min before timeout
     ]
 
     try:
@@ -169,7 +173,7 @@ def _clone_new_repo(
     except OSError as exc:
         # Pattern matching for OS errors
         match exc.errno:
-            case 28:  # No space left on device
+            case errno.ENOSPC:
                 logger.error("No disk space available to clone %s", git_url)
             case _:
                 logger.error("OS error cloning %s: %s", git_url, exc)
