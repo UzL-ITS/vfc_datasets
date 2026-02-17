@@ -20,15 +20,20 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 class AsyncGitHubClient:
     """Async client for GitHub API with rate limiting."""
 
-    __slots__ = ("_rate_limit_limit", "_rate_limit_remaining", "client", "semaphore", "token")
+    __slots__ = (
+        "_rate_limit_limit",
+        "_rate_limit_remaining",
+        "client",
+        "max_retries",
+        "semaphore",
+    )
 
-    max_retries = 3
     default_rate_limit_wait = 60  # seconds
     request_timeout = 120.0  # seconds
     connect_timeout = 30.0  # seconds
 
-    def __init__(self, max_concurrent: int = 30) -> None:
-        self.token = GITHUB_TOKEN
+    def __init__(self, max_concurrent: int = 30, max_retries: int = 3) -> None:
+        self.max_retries = max_retries
         self.semaphore = asyncio.Semaphore(max_concurrent)
         self.client: httpx.AsyncClient | None = None
         self._rate_limit_remaining: int | None = None
@@ -40,15 +45,17 @@ class AsyncGitHubClient:
             "User-Agent": "vfc-datasets/2.0",
             "X-GitHub-Api-Version": "2022-11-28",
         }
-        if self.token:
-            headers["Authorization"] = f"Bearer {self.token}"
+        if GITHUB_TOKEN:
+            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
         else:
-            logger.warning("No GITHUB_TOKEN configured - rate limits will be very low")
+            logger.warning(
+                "No GITHUB_TOKEN configured - API rate limits will be severely restricted"
+            )
 
         self.client = httpx.AsyncClient(
             timeout=httpx.Timeout(self.request_timeout, connect=self.connect_timeout),
             headers=headers,
-            follow_redirects=True
+            follow_redirects=True,
         )
         return self
 
@@ -81,7 +88,9 @@ class AsyncGitHubClient:
                                 await asyncio.sleep(1 << attempt)
                                 continue
                         case _:
-                            logger.warning("Unexpected status %d for: %s", response.status_code, api_url)
+                            logger.warning(
+                                "Unexpected status %d for: %s", response.status_code, api_url
+                            )
                             return None
 
                 except httpx.TimeoutException:
@@ -113,7 +122,9 @@ class AsyncGitHubClient:
                 await asyncio.sleep(wait)
             return
 
-        logger.warning("GitHub API rate limited, waiting %d seconds (default)", self.default_rate_limit_wait)
+        logger.warning(
+            "GitHub API rate limited, waiting %d seconds (default)", self.default_rate_limit_wait
+        )
         await asyncio.sleep(self.default_rate_limit_wait)
 
     def _update_rate_limit(self, headers: httpx.Headers) -> None:
@@ -203,8 +214,7 @@ async def fetch_github_fork_info(project_urls: set[str]) -> dict[str, ForkInfo]:
     result: dict[str, ForkInfo] = {}
 
     github_urls = {
-        url for url in project_urls
-        if (parsed := GitURL.parse(url)) and parsed.host == "github.com"
+        url for url in project_urls if (parsed := GitURL.parse(url)) and parsed.host == "github.com"
     }
 
     for url in project_urls - github_urls:
