@@ -3,6 +3,7 @@ from typing import Any
 
 import pandas as pd
 import psycopg2
+from tqdm.auto import tqdm
 
 from config import MOREFIXES_DB_HOST, MOREFIXES_DB_PORT
 from dataset_entry import DatasetEntry
@@ -18,6 +19,8 @@ logger = logging.getLogger(__name__)
 
 
 class MorefixesDataset(BaseDataset):
+    min_prospector_score: int = 65
+
     metadata = DatasetMetadata(
         name="morefixes",
         granularity="commit",
@@ -44,62 +47,57 @@ class MorefixesDataset(BaseDataset):
         Requires a local PostgreSQL instance with the MoreFixes dump imported.
         See: https://github.com/JafarAkhondali/Morefixes
         """
-        connection_parameters = {
+        # Default credentials from the public MoreFixes DB dump
+        connection_params: dict[str, Any] = {
             "dbname": "postgrescvedumper",
             "user": "postgrescvedumper",
             "password": "a42a18537d74c3b7e584c769152c3d",
             "host": MOREFIXES_DB_HOST,
             "port": MOREFIXES_DB_PORT,
         }
-
         try:
-            connection = psycopg2.connect(**connection_parameters)
+            connection = psycopg2.connect(**connection_params)
         except psycopg2.OperationalError as e:
             raise ConnectionError(
                 f"Failed to connect to MoreFixes database. "
                 f"Please check your database configuration in .env or environment variables. "
-                f"Connection parameters: host={connection_parameters['host']}, "
-                f"port={connection_parameters['port']}, "
-                f"dbname={connection_parameters['dbname']}"
+                f"Connection parameters: {connection_params}"
             ) from e
+
+        query_from = f"""
+            FROM public.commits c
+            JOIN public.fixes f ON c.hash = f.hash
+            JOIN public.cwe_classification cw ON f.cve_id = cw.cve_id
+            WHERE score >= {self.min_prospector_score}
+        """
 
         try:
             with connection:
-                base_query = """
-                    FROM public.commits c
-                    JOIN public.fixes f ON c.hash = f.hash
-                    JOIN public.cwe_classification cw ON f.cve_id = cw.cve_id
-                    WHERE score >= 65
-                """
-
-                # Get total count for progress bar
                 with connection.cursor() as count_cur:
-                    # Use string concatenation instead of f-string for static SQL
-                    count_cur.execute("SELECT COUNT(*) " + base_query)
-                    total_rows = count_cur.fetchone()[0]
+                    count_cur.execute("SELECT COUNT(*) " + query_from)
+                    row = count_cur.fetchone()
+                    total_rows = row[0] if row else 0
 
-                # Use server-side cursor for memory efficiency
+                # Server-side cursor for memory efficiency
                 with connection.cursor(name="morefixes_cursor") as cur:
-                    cur.itersize = 1000  # Fetch 1000 rows at a time
-                    # Use string concatenation instead of f-string for static SQL
-                    cur.execute("SELECT * " + base_query)
+                    cur.itersize = 1000
+                    cur.execute("SELECT c.hash, f.repo_url, f.cve_id, cw.cwe_id " + query_from)
 
                     vfcs = []
-                    from tqdm.auto import tqdm
-
-                    for entry in tqdm(
+                    for commit_id, repo_url, cve_id, cwe_id in tqdm(
                         cur,
                         total=total_rows,
                         desc="Parsing MOREFIXES",
                         dynamic_ncols=True,
                     ):
-                        vfc = {
-                            "commit_id": entry[0],
-                            "project_url": entry[18],
-                            "cve_id": entry[22],
-                            "cwe_id": entry[23],
-                        }
-                        vfcs.append(vfc)
+                        vfcs.append(
+                            {
+                                "commit_id": commit_id,
+                                "project_url": repo_url,
+                                "cve_id": cve_id,
+                                "cwe_id": cwe_id,
+                            }
+                        )
 
                 df = pd.DataFrame(vfcs)
         except psycopg2.Error as e:
