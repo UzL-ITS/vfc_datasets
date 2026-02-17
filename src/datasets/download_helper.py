@@ -262,15 +262,10 @@ def download_from_huggingface(
     checksum: str | None = None,
     **kwargs: Any,
 ) -> Path:
-    """Download file from HuggingFace datasets. Requires HF_TOKEN environment variable."""
-    if not HF_TOKEN:
-        raise RuntimeError(
-            "HF_TOKEN environment variable is required for HuggingFace downloads. "
-            "Set HF_TOKEN in your .env file or environment."
-        )
-
+    """Download file from HuggingFace datasets. Uses HF_TOKEN if available for private datasets."""
     headers = kwargs.pop("headers", {})
-    headers["Authorization"] = f"Bearer {HF_TOKEN}"
+    if HF_TOKEN:
+        headers["Authorization"] = f"Bearer {HF_TOKEN}"
 
     return download_from_url(
         url,
