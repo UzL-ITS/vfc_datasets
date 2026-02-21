@@ -2,8 +2,8 @@ from collections.abc import Callable
 
 from dotenv import load_dotenv
 
-import datasets
 import transformations
+import vfc_datasets
 from config import DATASET_PATH
 from dataset_entry import DatasetEntry
 from utils.core.logging import setup_logging
@@ -22,30 +22,30 @@ setup_logging("vfcdetective_datasets")
 
 OUTPUT_PATH = DATASET_PATH / "new"
 
-MANUALLY_REVIEWED_DATASETS: list[type[datasets.BaseDataset]] = [
-    datasets.SecBenchDataset,
-    datasets.DevignDataset,
-    datasets.MSR2019Dataset,
-    datasets.SPIDBDataset,
-    datasets.PatchDBDataset,
-    datasets.TracerDataset,
-    datasets.SVENDataset,
-    datasets.PySecDBDataset,
-    datasets.RepoSPDDataset,
+MANUALLY_REVIEWED_DATASETS: list[type[vfc_datasets.BaseDataset]] = [
+    vfc_datasets.SecBenchDataset,
+    vfc_datasets.DevignDataset,
+    vfc_datasets.MSR2019Dataset,
+    vfc_datasets.SPIDBDataset,
+    vfc_datasets.PatchDBDataset,
+    vfc_datasets.TracerDataset,
+    vfc_datasets.SVENDataset,
+    vfc_datasets.PySecDBDataset,
+    vfc_datasets.RepoSPDDataset,
 ]
 
-ADVISORY_BASED_DATASETS: list[type[datasets.BaseDataset]] = [
-    datasets.ICVulDataset,
-    datasets.BigVulDataset,
-    datasets.CVEFixesDataset,
-    datasets.CC900Dataset,
-    datasets.CrossVulDataset,
-    datasets.TQRGDataset,
-    datasets.VCMatchDataset,
-    datasets.MegaVulDataset,
+ADVISORY_BASED_DATASETS: list[type[vfc_datasets.BaseDataset]] = [
+    vfc_datasets.ICVulDataset,
+    vfc_datasets.BigVulDataset,
+    vfc_datasets.CVEFixesDataset,
+    vfc_datasets.CC900Dataset,
+    vfc_datasets.CrossVulDataset,
+    vfc_datasets.TQRGDataset,
+    vfc_datasets.VCMatchDataset,
+    vfc_datasets.MegaVulDataset,
 ]
 
-TOOL_BASED_DATASETS: list[type[datasets.BaseDataset]] = [datasets.MorefixesDataset]
+TOOL_BASED_DATASETS: list[type[vfc_datasets.BaseDataset]] = [vfc_datasets.MorefixesDataset]
 
 
 TRANSFORMATION_PIPELINE: list[Callable[[list[DatasetEntry]], list[DatasetEntry]]] = [
@@ -74,11 +74,15 @@ def build_dataset_variants(all_entries: list[DatasetEntry]) -> dict[str, list[Da
     """Build all dataset variants from the full entry set."""
     mr_names = {ds.metadata.name for ds in MANUALLY_REVIEWED_DATASETS}
     advisory_names = {ds.metadata.name for ds in ADVISORY_BASED_DATASETS}
-    cpp_entries = transformations.filter_by_extension(all_entries, extensions=extensions_for("c", "cpp"))
+    cpp_entries = transformations.filter_by_extension(
+        all_entries, extensions=extensions_for("c", "cpp")
+    )
 
     return {
         "dataset1-manually-reviewed-cpp": [e for e in cpp_entries if e.src_datasets & mr_names],
-        "dataset2-mr-advisory-cpp": [e for e in cpp_entries if e.src_datasets & (mr_names | advisory_names)],
+        "dataset2-mr-advisory-cpp": [
+            e for e in cpp_entries if e.src_datasets & (mr_names | advisory_names)
+        ],
         "dataset3-all-cpp": cpp_entries,
         "dataset4-all": all_entries,
     }
@@ -86,7 +90,12 @@ def build_dataset_variants(all_entries: list[DatasetEntry]) -> dict[str, list[Da
 
 def load_vfc_datasets_if_exist() -> dict[str, list[DatasetEntry]] | None:
     """Load datasets from disk if they exist, otherwise return None."""
-    dataset_names = ["dataset1-manually-reviewed-cpp", "dataset2-mr-advisory-cpp", "dataset3-all-cpp", "dataset4-all"]
+    dataset_names = [
+        "dataset1-manually-reviewed-cpp",
+        "dataset2-mr-advisory-cpp",
+        "dataset3-all-cpp",
+        "dataset4-all",
+    ]
     if all((OUTPUT_PATH / f"{name}.jsonl").exists() for name in dataset_names):
         print("Datasets already exist, loading from disk...")
         return {name: load_entries(OUTPUT_PATH / f"{name}.jsonl") for name in dataset_names}
@@ -105,11 +114,12 @@ def create_vfc_datasets() -> dict[str, list[DatasetEntry]]:
     print_dataset_stats(entries)
 
     # Build and save variants
-    vfc_datasets = build_dataset_variants(entries)
-    for name, variant_entries in vfc_datasets.items():
+    vfc_dataset_variants = build_dataset_variants(entries)
+    for name, variant_entries in vfc_dataset_variants.items():
         save_entries(variant_entries, OUTPUT_PATH / f"{name}.jsonl")
 
-    return vfc_datasets
+    return vfc_dataset_variants
+
 
 def create_splits(entries: list[DatasetEntry], name: str) -> None:
     """Create all split variants: random, temporal, and group-stratified."""
@@ -127,8 +137,8 @@ def create_splits(entries: list[DatasetEntry], name: str) -> None:
 
 
 if __name__ == "__main__":
-    vfc_datasets = load_vfc_datasets_if_exist()
-    if vfc_datasets is None:
-        vfc_datasets = create_vfc_datasets()
+    dataset_variants = load_vfc_datasets_if_exist()
+    if dataset_variants is None:
+        dataset_variants = create_vfc_datasets()
     dataset_target = "dataset3-all-cpp"
-    create_splits(vfc_datasets[dataset_target], dataset_target)
+    create_splits(dataset_variants[dataset_target], dataset_target)

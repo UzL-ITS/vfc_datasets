@@ -2,7 +2,7 @@
 
 import pytest
 
-from datasets.commit_level.devign import DevignDataset
+from vfc_datasets.commit_level.devign import DevignDataset
 
 pytestmark = [pytest.mark.slow]
 

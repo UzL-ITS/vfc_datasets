@@ -7,13 +7,13 @@ from tqdm.auto import tqdm
 
 from config import MOREFIXES_DB_HOST, MOREFIXES_DB_PORT
 from dataset_entry import DatasetEntry
-from datasets.base_dataset import BaseDataset, DatasetMetadata
-from datasets.parsing_helpers import (
+from utils.git.url import GitURL
+from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.parsing_helpers import (
     normalize_cve_ids,
     normalize_cwe_ids,
     normalize_or_resolve_commit,
 )
-from utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
 

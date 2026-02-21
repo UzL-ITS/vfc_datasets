@@ -9,9 +9,13 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from dataset_entry import DatasetEntry
-from datasets.base_dataset import BaseDataset, DatasetMetadata
-from datasets.download_helper import download_and_extract_zip
-from datasets.parsing_helpers import extract_url_and_commit, normalize_cve_ids, normalize_cwe_ids
+from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.download_helper import download_and_extract_zip
+from vfc_datasets.parsing_helpers import (
+    extract_url_and_commit,
+    normalize_cve_ids,
+    normalize_cwe_ids,
+)
 
 logger = logging.getLogger(__name__)
 

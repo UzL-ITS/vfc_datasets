@@ -53,11 +53,11 @@ select = ["E", "W", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
 ignore = ["E501", "SIM108", "RUF012", "RUF022"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["config", "dataset_entry", "datasets", "transformations", "utils"]
+known-first-party = ["config", "dataset_entry", "vfc_datasets", "transformations", "utils"]
 
 [tool.mypy]
 mypy_path = ["src"]
-packages = ["transformations", "datasets", "utils"]
+packages = ["transformations", "vfc_datasets", "utils"]
 modules = ["config", "dataset_entry"]
 check_untyped_defs = true
 warn_unused_ignores = true

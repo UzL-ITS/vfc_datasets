@@ -5,9 +5,9 @@ from typing import Any
 import pandas as pd
 
 from dataset_entry import DatasetEntry
-from datasets.base_dataset import BaseDataset, DatasetMetadata
-from datasets.parsing_helpers import normalize_commit_id, normalize_cve_ids, normalize_cwe_ids
 from utils.git.url import GitURL
+from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cve_ids, normalize_cwe_ids
 
 logger = logging.getLogger(__name__)
 

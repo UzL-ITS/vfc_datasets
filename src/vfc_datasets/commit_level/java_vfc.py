@@ -4,9 +4,9 @@ from typing import Any
 import pandas as pd
 
 from dataset_entry import DatasetEntry
-from datasets.base_dataset import BaseDataset, DatasetMetadata
-from datasets.download_helper import download_from_url
-from datasets.parsing_helpers import (
+from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.download_helper import download_from_url
+from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
     normalize_or_resolve_commit,
 )

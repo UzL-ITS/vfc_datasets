@@ -1,9 +1,9 @@
 from dataset_entry import DatasetEntry
-from datasets.function_level.diversevul import DiverseVulDataset
 from transformations.enrichment.project_urls.update_project_urls import (
     filter_unreachable_project_urls,
     update_project_urls_inplace,
 )
+from vfc_datasets.function_level.diversevul import DiverseVulDataset
 
 
 def test_diverse_vul_urls_loaded_from_json() -> None:
@@ -35,4 +35,3 @@ def test_filter_unreachable_project_urls_filters_entries() -> None:
 
     filtered = filter_unreachable_project_urls([unreachable, ok])
     assert [entry.project_url for entry in filtered] == [ok.project_url]
-

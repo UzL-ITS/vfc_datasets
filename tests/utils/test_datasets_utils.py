@@ -1,6 +1,10 @@
 import pytest
 
-from datasets.parsing_helpers import _resolve_symbolic_ref, normalize_commit_id, normalize_cwe_ids
+from vfc_datasets.parsing_helpers import (
+    _resolve_symbolic_ref,
+    normalize_commit_id,
+    normalize_cwe_ids,
+)
 
 
 class TestNormalizeCweIds:

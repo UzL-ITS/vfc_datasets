@@ -6,11 +6,11 @@ from typing import Any
 import pandas as pd
 
 from dataset_entry import DatasetEntry
-from datasets.base_dataset import BaseDataset, DatasetMetadata
-from datasets.download_helper import download_from_gdrive
-from datasets.parsing_helpers import normalize_commit_id, normalize_cve_ids, normalize_cwe_ids
 from transformations.enrichment.project_urls.url_mappings import get_moved_urls
 from utils.git.url import GitURL
+from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.download_helper import download_from_gdrive
+from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cve_ids, normalize_cwe_ids
 
 logger = logging.getLogger(__name__)
 
