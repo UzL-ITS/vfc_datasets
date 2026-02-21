@@ -21,6 +21,7 @@ dependencies = [
     "tree-sitter-javascript~=0.23.0",
     "tree-sitter-c~=0.21.0",
     "tree-sitter-cpp~=0.23.0",
+    "datasets>=2.0.0",
 ]
 
 [project.optional-dependencies]
@@ -65,6 +66,10 @@ ignore_missing_imports = false
 
 [[tool.mypy.overrides]]
 module = ["gdown"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["datasets"]
 ignore_missing_imports = true
 
 [tool.coverage.run]
