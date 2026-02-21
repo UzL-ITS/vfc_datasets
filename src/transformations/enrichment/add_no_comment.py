@@ -64,7 +64,9 @@ def _get_parser(language: str) -> tree_sitter.Parser | None:
 
 def _get_language(file_path: str) -> str | None:
     """Get language from file extension."""
-    return next((lang for ext, lang in EXTENSION_TO_LANGUAGE.items() if file_path.endswith(ext)), None)
+    return next(
+        (lang for ext, lang in EXTENSION_TO_LANGUAGE.items() if file_path.endswith(ext)), None
+    )
 
 
 def _strip_comments(source_code: str, language: str) -> str | None:
@@ -128,7 +130,9 @@ def _strip_comments(source_code: str, language: str) -> str | None:
         return None
 
 
-def _generate_diff(repo: Repo, content_a: str, content_b: str, path: str, mode: str = "100644") -> str:
+def _generate_diff(
+    repo: Repo, content_a: str, content_b: str, path: str, mode: str = "100644"
+) -> str:
     """Generate git-style unified diff between two contents using git diff --no-index."""
     if content_a == content_b:
         return ""
@@ -199,7 +203,10 @@ def _process_diff_item(diff_item: Any, repo: Repo) -> tuple[str | None, bool]:
         return None, True
 
     # Check for binary
-    if any(b and b.mime_type and "text" not in b.mime_type for b in [diff_item.a_blob, diff_item.b_blob]):
+    if any(
+        b and b.mime_type and "text" not in b.mime_type
+        for b in [diff_item.a_blob, diff_item.b_blob]
+    ):
         return None, True
 
     try:
@@ -222,7 +229,9 @@ def _process_diff_item(diff_item: Any, repo: Repo) -> tuple[str | None, bool]:
     return _generate_diff(repo, stripped_a, stripped_b, file_path, mode), False
 
 
-def _get_diff_no_comments(repo: Repo, commit_id: str, include_unsupported: bool = True) -> str | None:
+def _get_diff_no_comments(
+    repo: Repo, commit_id: str, include_unsupported: bool = True
+) -> str | None:
     """Generate diff with comments stripped.
 
     Args:
@@ -256,7 +265,11 @@ def _get_diff_no_comments(repo: Repo, commit_id: str, include_unsupported: bool 
                         f"+++ b/{path}\n"
                     )
                     raw_diff = diff_item.diff
-                    diff_text = raw_diff.decode("utf-8", errors="replace") if isinstance(raw_diff, bytes) else raw_diff
+                    diff_text = (
+                        raw_diff.decode("utf-8", errors="replace")
+                        if isinstance(raw_diff, bytes)
+                        else raw_diff
+                    )
                     file_diffs.append(header + diff_text)
             elif diff_str:
                 file_diffs.append(diff_str)
@@ -296,7 +309,9 @@ def add_commit_diff_no_comment(
 
     # Filter entries needing processing
     needs_processing = [e for e in entries if e.commit_diff and e.commit_diff_no_comment is None]
-    to_process = [e for e in needs_processing if e.commit_diff and len(e.commit_diff) <= MAX_DIFF_SIZE]
+    to_process = [
+        e for e in needs_processing if e.commit_diff and len(e.commit_diff) <= MAX_DIFF_SIZE
+    ]
 
     if skipped := len(needs_processing) - len(to_process):
         logger.info("Skipped %d entries exceeding size limit", skipped)
@@ -349,8 +364,8 @@ def add_commit_diff_no_comment(
                     for commit_id, diff in future.result().items():
                         for entry in entries_by_commit.get((url, commit_id), []):
                             entry.commit_diff_no_comment = diff
-                except Exception:
-                    logger.exception("Batch failed for %s", path)
+                except Exception as exc:
+                    logger.error("Batch failed for %s: %s: %s", path, type(exc).__name__, exc)
 
                 pbar.update(len(batch_ids))
 
