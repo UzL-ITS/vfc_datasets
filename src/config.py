@@ -18,7 +18,9 @@ def _env_optional(name: str) -> str | None:
     return os.getenv(name)
 
 
-def _env_int(name: str, default: int, *, minimum: int | None = None, maximum: int | None = None) -> int:
+def _env_int(
+    name: str, default: int, *, minimum: int | None = None, maximum: int | None = None
+) -> int:
     """Get integer env var with validation."""
     value = os.getenv(name)
     if value is None:
@@ -59,6 +61,9 @@ GITHUB_TOKEN = _env_optional("GITHUB_TOKEN")
 
 # Git Operations
 GIT_CLONE_TIMEOUT = _env_int("GIT_CLONE_TIMEOUT", 3600, minimum=1)  # 1 hour default
+
+# Dataset Caching
+USE_DATASET_CACHE = os.getenv("USE_DATASET_CACHE", "true").lower() in ("true", "yes")
 
 # Max diff size in bytes
 MAX_DIFF_SIZE = _env_int("MAX_DIFF_SIZE", 256 * 1024, minimum=0)  # 256 KB default

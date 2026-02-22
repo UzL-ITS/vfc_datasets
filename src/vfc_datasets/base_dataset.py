@@ -10,7 +10,7 @@ from typing import Any, Literal, cast
 import pandas as pd
 from tqdm.auto import tqdm
 
-from config import DATASET_PATH, RAW_DATA_PATH
+from config import DATASET_PATH, RAW_DATA_PATH, USE_DATASET_CACHE
 from dataset_entry import DatasetEntry
 from utils.core.serialization import load_cache, save_cache
 
@@ -82,10 +82,11 @@ class BaseDataset(ABC):
 
         name = self.metadata.name
 
-        cached: list[DatasetEntry] | None = load_cache(name, DATASET_PATH)
-        if cached is not None:
-            self._entries = cached
-            return cached
+        if USE_DATASET_CACHE:
+            cached: list[DatasetEntry] | None = load_cache(name, DATASET_PATH)
+            if cached is not None:
+                self._entries = cached
+                return cached
 
         df = self._load_data()
 
@@ -101,7 +102,8 @@ class BaseDataset(ABC):
             self._entries = entries
             return entries
 
-        save_cache(entries, name)
+        if USE_DATASET_CACHE:
+            save_cache(entries, name)
         self._entries = entries
         return entries
 
