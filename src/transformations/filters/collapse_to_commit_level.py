@@ -8,6 +8,7 @@ def collapse_to_commit_level(entries: list[DatasetEntry]) -> list[DatasetEntry]:
 
     If any function in a commit is vulnerable, the commit is marked vulnerable.
     """
+    # TODO: What happens when a dataset only includes benign functions of a VFC?
     if not entries:
         return []
 
@@ -41,7 +42,9 @@ def collapse_to_commit_level(entries: list[DatasetEntry]) -> list[DatasetEntry]:
         commit_data["commit_message"] = commit_data["commit_message"] or entry.commit_message
         commit_data["commit_diff"] = commit_data["commit_diff"] or entry.commit_diff
         commit_data["ghsa_id"] = commit_data["ghsa_id"] or entry.ghsa_id
-        commit_data["commit_timestamp_utc"] = commit_data["commit_timestamp_utc"] or entry.commit_timestamp_utc
+        commit_data["commit_timestamp_utc"] = (
+            commit_data["commit_timestamp_utc"] or entry.commit_timestamp_utc
+        )
 
     return [
         DatasetEntry(
