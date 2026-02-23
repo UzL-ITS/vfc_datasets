@@ -27,6 +27,7 @@ from .commit_level import (
 
 # Function-level datasets
 from .function_level import (
+    CleanVulDataset,
     DiverseVulDataset,
     MegaVulDataset,
     PrimeVulDataset,
@@ -58,6 +59,7 @@ __all__ = [
     "VCMatchDataset",
     "VUDEncDataset",
     # Function-level datasets
+    "CleanVulDataset",
     "DiverseVulDataset",
     "MegaVulDataset",
     "PrimeVulDataset",
