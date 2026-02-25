@@ -15,7 +15,7 @@ from vfc_datasets.parsing_helpers import (
 class BigVulDataset(BaseDataset):
     metadata = DatasetMetadata(
         name="bigvul",
-        granularity="commit",
+        granularity="commit",  # TODO: add the function-level data as well?
         paper_title="A C/C++ Code Vulnerability Dataset with Code Changes and CVE Summaries",
         paper_url="https://doi.org/10.1145/3379597.3387501",
         download_url="https://github.com/ZeoVan/MSR_20_Code_vulnerability_CSV_Dataset",
@@ -32,9 +32,10 @@ class BigVulDataset(BaseDataset):
             # Number of Commits: 4432, Vulnerable Functions: 11823, Non-vulnerable Functions: 253096
         ),
         vfcs=4432,
+        non_vfcs=0,
         projects=348,
-        vulnerable_functions=11823,
-        benign_functions=253096,
+        # vulnerable_functions=11823,
+        # benign_functions=253096,
     )
 
     def _load_data(self) -> pd.DataFrame:
@@ -43,10 +44,29 @@ class BigVulDataset(BaseDataset):
             url="https://raw.githubusercontent.com/ZeoVan/MSR_20_Code_Vulnerability_CSV_Dataset/master/all_c_cpp_release2.0.csv",
         )
 
+    def _handle_broken_entries(self, row: dict[str, Any]) -> tuple[str | None, str | None]:
+        """Manual overrides for known broken entries in BigVul."""
+        ref_link = row.get("ref_link", "")
+        cve_id = str(row.get("cve_id", ""))
+
+        # Envoy CVE-2019-15226: ref_link points to /commits/master
+        if "envoyproxy/envoy" in ref_link and "CVE-2019-15226" in cve_id:
+            return "https://github.com/envoyproxy/envoy", "afc39bea36fd436e54262f150c009e8d72db5014"
+
+        # Curl broken tag-describe link: 3ab3c16 doesn't resolve correctly
+        if "github.com/curl/curl" in ref_link and "3ab3c16" in ref_link:
+            return "https://github.com/curl/curl", "3ab3c16db6a5674f53cf23d5654366663f734493"
+
+        return None, None
+
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
-        project_url, commit_id = extract_url_and_commit(
-            row, "ref_link", "commit_id", self.metadata.name
-        )
+        project_url, commit_id = self._handle_broken_entries(row)
+
+        if not project_url or not commit_id:
+            project_url, commit_id = extract_url_and_commit(
+                row, "ref_link", "commit_id", self.metadata.name
+            )
+
         if not project_url or not commit_id:
             return None
 

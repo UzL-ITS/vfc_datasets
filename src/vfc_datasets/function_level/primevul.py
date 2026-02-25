@@ -10,7 +10,11 @@ from transformations.enrichment.project_urls.url_mappings import get_moved_urls
 from utils.git.url import GitURL
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.download_helper import download_from_gdrive
-from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cve_ids, normalize_cwe_ids
+from vfc_datasets.parsing_helpers import (
+    normalize_cve_ids,
+    normalize_cwe_ids,
+    normalize_or_resolve_commit,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -29,11 +33,12 @@ class PrimeVulDataset(BaseDataset):
             "Our pipeline results in a collection of 6,968 vulnerable and 228,800 benign functions "
             "across 755 projects and 6,827 commits.",
         ),
-        # NOTE: 6,968 vulnerable + 228,800 benign = 235,768 total functions from 6,827 commits
-        vfcs=6968,
+        # NOTE: Currently used version (v0.1 from GDrive) has 224,533 total functions.
+        vfcs=5658,
+        non_vfcs=0,
         projects=755,
-        vulnerable_functions=6968,
-        benign_functions=228800,
+        vulnerable_functions=6004,
+        benign_functions=218529,
     )
 
     # Special project name mappings for entries missing proper URLs
@@ -140,12 +145,11 @@ class PrimeVulDataset(BaseDataset):
         return normalized
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
-        commit_id = normalize_commit_id(row.get("commit_id"))
-
-        # Use the already resolved project URL from load_data()
         project_url = row.get("project_url")
         if project_url == "None" or not project_url:
             project_url = row.get("resolved_project_url")
+
+        commit_id = normalize_or_resolve_commit(row.get("commit_id"), project_url)
 
         # TODO: get function name from func (function code)
         # WORKAROUND: use func_hash as function name

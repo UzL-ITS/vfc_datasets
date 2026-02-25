@@ -27,27 +27,28 @@ class TracerDataset(BaseDataset):
             "Finally, they successfully found patches for 1,295 CVEs, while they were still uncertain "
             "for 122 CVEs due to limited disclosed information.",
         ),
-        # NOTE: paper_vfcs refers to released dataset at source_url, not paper's evaluation dataset
-        vfcs=3188,  # commits in released CSV
+        vfcs=2989,  # NOTE: -> 3188 (SVN or unsupported git urls)
+        non_vfcs=0,
     )
 
     def _load_data(self) -> pd.DataFrame:
-        tracer_csv_data = self._raw_dir / "tracer_depth_dataset.csv"
-
-        try:
-            return load_or_download_csv(output_path=tracer_csv_data, url=TRACER_CSV_URL)
-        except Exception as e:
-            raise RuntimeError(
-                f"Failed to load TRACER dataset from {TRACER_CSV_URL}. "
-                f"This may be due to a network error or invalid file format. "
-                f"Error: {e}"
-            ) from e
+        return load_or_download_csv(
+            output_path=self._raw_dir / "tracer_depth_dataset.csv",
+            url=TRACER_CSV_URL,
+        )
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
-        # Extract project URL and raw commit ID from commit URL
+        # Try github_commit first
         project_url, raw_commit_id = extract_from_commit_url(
             row, "github_commit", self.metadata.name
         )
+
+        # Fallback to other_platform_git_commit
+        if not project_url or not raw_commit_id:
+            project_url, raw_commit_id = extract_from_commit_url(
+                row, "other_platform_git_commit", self.metadata.name
+            )
+
         if not project_url or not raw_commit_id:
             return None
 

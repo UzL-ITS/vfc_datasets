@@ -28,13 +28,11 @@ class DiverseVulDataset(BaseDataset):
             "In total, we have collected 7,514 commits from 797 projects, which result in 18,945 "
             "vulnerable functions and 330,492 non-vulnerable functions, covering 150 CWEs.",
         ),
-        # NOTE: Paper reports 7,514 commits; released dataset on GitHub has 7,512
-        # 18,945 = vulnerable functions (function-level granularity)
         vfcs=7514,
-        non_vfcs=0,  # TODO: check non-vfc count
+        non_vfcs=0,
         projects=797,
         vulnerable_functions=18945,
-        benign_functions=330492,
+        benign_functions=311547,
     )
 
     @staticmethod
@@ -54,9 +52,9 @@ class DiverseVulDataset(BaseDataset):
         with open(raw_dataset_path, encoding="utf-8", errors="replace") as f:
             for line in f:
                 entry = json.loads(line)
-                # Only include vulnerable functions (target = 1)
-                if entry.get("target"):
-                    data.append(entry)
+                # TODO: Do not only include vulnerable functions (target = 1)
+                # if entry.get("target"):
+                data.append(entry)
 
         return pd.DataFrame(data)
 
@@ -104,7 +102,7 @@ class DiverseVulDataset(BaseDataset):
             project_url=project_url,
             commit_id=commit_id,
             src_datasets={self.metadata.name},
-            is_vfc=True,
+            is_vfc=row.get("target") == 1,
             cwe_ids=normalize_cwe_ids(row.get("cwe", [])),
             commit_message=row.get("message"),
         )

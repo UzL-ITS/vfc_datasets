@@ -29,13 +29,12 @@ class MegaVulDataset(BaseDataset):
             "In conclusion, MegaVul has gathered high-quality functions from 9,019 commits, including "
             "17,380 vulnerable and 322,168 non-vulnerable functions.",
         ),
-        # NOTE: Paper is C/C++ focused but released dataset includes Java
-        # 9,019 = vulnerability-fixing commits, 17,380 = vulnerable functions (Table 1)
-        vfcs=9019,
-        non_vfcs=322168,
+        # NOTE: Paper has C/CPP and Java dataset
+        vfcs=10182,
+        non_vfcs=0,
         projects=992,
-        vulnerable_functions=17380,
-        benign_functions=322168,
+        vulnerable_functions=20267,
+        benign_functions=367147,
     )
 
     def _load_data(self) -> pd.DataFrame:
@@ -109,10 +108,13 @@ class MegaVulDataset(BaseDataset):
             )
             return None
 
+        file_path = row.get("file_path")
+
         return DatasetEntry(
             project_url=project_url,
             commit_id=commit_id,
             src_datasets={self.metadata.name},
+            files_changed={file_path} if file_path else set(),
             is_vfc=row.get("is_vul") is True,
             cve_ids=normalize_cve_ids(row.get("cve_id")),
             cwe_ids=normalize_cwe_ids(row.get("cwe_ids")),

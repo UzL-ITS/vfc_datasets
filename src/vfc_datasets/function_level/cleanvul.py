@@ -32,7 +32,7 @@ class CleanVulDataset(BaseDataset):
             "We developed CleanVul, a high-quality dataset comprising 8,198 functions using our LLM heuristic enhancement approach (...)",
             "Increasing the threshold to 4 results in 6,368 vulnerability-fixing changes (...)",
         ),
-        vfcs=4500,  # TODO: ... verify
+        vfcs=4500,
         non_vfcs=0,
         vulnerable_functions=8198,
         benign_functions=0,
@@ -59,12 +59,15 @@ class CleanVulDataset(BaseDataset):
         # TODO: Use function name instead of hash.
         function_name = hashlib.md5(function_after.encode()).hexdigest()
 
+        file_name = row.get("file_name")
+
         return DatasetEntry(
             project_url=project_url,
             commit_id=commit_id,
             src_datasets={self.metadata.name},
             function_name=function_name,
             is_vfc=True,
+            files_changed={file_name} if file_name else set(),
             cve_ids=normalize_cve_ids(row.get("cve_id")),
             cwe_ids=normalize_cwe_ids(row.get("cwe_id")),
             commit_message=row.get("commit_msg"),

@@ -32,7 +32,7 @@ class CC900Dataset(BaseDataset):
             "that we refer to as 900Repo.",
         ),
         vfcs=3765,
-        non_vfcs=6300,
+        non_vfcs=6347,
         projects=910,
     )
 

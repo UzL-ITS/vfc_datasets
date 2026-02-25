@@ -43,8 +43,9 @@ class CVEFixesDataset(BaseDataset):
             # Page 6 (Table 1 - Summary statistics)
             # CVEs: 5,365 | CWEs: 180 | projects: 1,754 | commits: 5,495 | files: 18,249 | methods: 50,322
         ),
-        # NOTE: vfcs and projects reflect the Zenodo v1.0.8 dataset content.
-        vfcs=12107,
+        # NOTE: vfcs and projects reflect the Zenodo v1.0.8 dataset content without deduplication.
+        vfcs=13297,
+        non_vfcs=0,
         projects=4249,
     )
 

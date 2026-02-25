@@ -239,8 +239,8 @@ class PySecDBDataset(BaseDataset):
             "covering 119 more CWEs.",
             # Page 6 (Table II): Base 729 + Pilot 400 + Augmented 129 = 1,258 security commits
         ),
-        vfcs=1258,
-        non_vfcs=2791,
+        vfcs=1100,  # 1258 NOTE: not all available yet
+        non_vfcs=2607,  # 2791, NOTE: not all available yet
         projects=351,
     )
 

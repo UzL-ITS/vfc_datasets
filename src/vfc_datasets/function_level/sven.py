@@ -32,8 +32,10 @@ class SVENDataset(BaseDataset):
             "Our data construction relies on manual effort and deliberately excludes samples that do not meet "
             "our quality criteria, thus prioritizing quality over quantity.",
         ),
-        # NOTE: 1,606 pairs = func_src_before and func_src_after => Actual VFCs = 803.
-        vfcs=803,
+        vfcs=559,
+        non_vfcs=0,
+        vulnerable_functions=800,
+        benign_functions=0,
     )
 
     def __init__(self) -> None:
@@ -92,11 +94,14 @@ class SVENDataset(BaseDataset):
             )
             return None
 
+        file_name = row.get("file_name")
+
         return DatasetEntry(
             function_name=function_name,
             project_url=project_url,
             commit_id=commit_id,
             src_datasets={self.metadata.name},
             is_vfc=True,
+            files_changed={file_name} if file_name else set(),
             cwe_ids=normalize_cwe_ids(row.get("vul_type")),
         )

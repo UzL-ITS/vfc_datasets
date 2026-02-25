@@ -28,7 +28,8 @@ class SecBenchDataset(BaseDataset):
             "We mined 248 projects - accounting to almost 2M commits - for 16 different vulnerability patterns, "
             "yielding a Database with 682 real security vulnerabilities.",
         ),
-        vfcs=682,
+        vfcs=676,  # "Dataset of 676 security vulnerabilities patches." https://tqrg.github.io/secbench
+        non_vfcs=0,
         projects=248,
     )
 

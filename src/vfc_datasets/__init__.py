@@ -9,7 +9,6 @@ from .commit_level import (
     CrossVulDataset,
     CVEFixesDataset,
     DevignDataset,
-    ICVulDataset,
     JavaVFCDataset,
     JavaVFCDatasetExtended,
     MorefixesDataset,
@@ -29,6 +28,7 @@ from .commit_level import (
 from .function_level import (
     CleanVulDataset,
     DiverseVulDataset,
+    ICVulDataset,
     MegaVulDataset,
     PrimeVulDataset,
     SVENDataset,
@@ -44,7 +44,6 @@ __all__ = [
     "CrossVulDataset",
     "CVEFixesDataset",
     "DevignDataset",
-    "ICVulDataset",
     "JavaVFCDataset",
     "JavaVFCDatasetExtended",
     "MorefixesDataset",
@@ -61,6 +60,7 @@ __all__ = [
     # Function-level datasets
     "CleanVulDataset",
     "DiverseVulDataset",
+    "ICVulDataset",
     "MegaVulDataset",
     "PrimeVulDataset",
     "SVENDataset",

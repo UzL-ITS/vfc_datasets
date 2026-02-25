@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from utils.git.url import GitURL, normalize_commit_id
+from utils.git.url import COMMIT_HASH_PATTERN, GitURL, normalize_commit_id
 from utils.patterns import CVE_PATTERN
 
 logger = logging.getLogger(__name__)
@@ -146,13 +146,16 @@ def normalize_or_resolve_commit(
     project_url: str | None,
 ) -> str | None:
     """Normalize commit ID, falling back to symbolic ref resolution if needed."""
+
     commit_id = normalize_commit_id(raw_commit_id)
-    if commit_id:
+
+    if commit_id and COMMIT_HASH_PATTERN.fullmatch(commit_id):
         return commit_id
 
-    commit_id = _resolve_symbolic_ref(raw_commit_id, project_url)
-    if commit_id:
-        return commit_id
+    ref_to_resolve = commit_id or raw_commit_id
+    resolved_commit_id = _resolve_symbolic_ref(ref_to_resolve, project_url)
+    if resolved_commit_id:
+        return resolved_commit_id
 
     logger.debug(
         "Failed to normalize or resolve commit_id=%s for project=%s",
@@ -188,6 +191,11 @@ def extract_url_and_commit(
     # Extract and normalize commit ID
     raw_commit_id = row.get(commit_field)
     commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+
+    # Fallback: try extracting from URL if the explicit field is missing/invalid
+    if not commit_id and git_url.commit_id:
+        commit_id = normalize_or_resolve_commit(git_url.commit_id, project_url)
+
     if not commit_id:
         return None, None
 

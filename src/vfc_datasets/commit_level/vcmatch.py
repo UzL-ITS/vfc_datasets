@@ -28,6 +28,7 @@ class VCMatchDataset(BaseDataset):
             "commits from 10 popular OSS projects.",
         ),
         vfcs=1669,
+        non_vfcs=0,
         projects=10,
     )
 

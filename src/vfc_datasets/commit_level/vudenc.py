@@ -36,6 +36,7 @@ class VUDEncDataset(BaseDataset):
             "fixes in the commit history of a software repository.",
         ),
         vfcs=1009,
+        non_vfcs=0,
     )
 
     # File names for the 7 vulnerability types in the dataset

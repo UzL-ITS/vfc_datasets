@@ -46,6 +46,7 @@ class CrossVulDataset(BaseDataset):
             # All files: 27476, Vulnerable files: 13738, Non-vulnerable files: 13738
         ),
         vfcs=5877,
+        non_vfcs=0,
         projects=1675,
     )
 
@@ -82,6 +83,7 @@ class CrossVulDataset(BaseDataset):
 
         commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
         if not commit_id:
+            # TODO: fix broken entries: 'commit_url': 'https://github.com/curl/curl/commit/curl-7_51_0-162-g3ab3c16'
             return None
 
         return DatasetEntry(

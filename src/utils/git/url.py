@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 MIN_COMMIT_LENGTH = 5
 COMMIT_HASH_PATTERN = re.compile(rf"^[a-f0-9]{{{MIN_COMMIT_LENGTH},40}}$", re.IGNORECASE)
 
+# Pattern for git-describe style identifiers: tag-N-g<hash>
+GIT_DESCRIBE_PATTERN = re.compile(r".+-g(?P<hash>[a-f0-9]{7,40})$", re.IGNORECASE)
+
 
 @dataclass(slots=True)
 class GitURL:
@@ -114,8 +117,14 @@ class GitURL:
         parts = [p for p in path.split("/") if p]
         if len(parts) >= 2:
             self.owner, self.repo = parts[0], parts[1]
-        if len(parts) >= 4 and parts[2] == "commit" and COMMIT_HASH_PATTERN.fullmatch(parts[3]):
-            self.commit_id = parts[3].lower()
+        if len(parts) >= 4 and parts[2] == "commit":
+            commit_part = parts[3]
+            if COMMIT_HASH_PATTERN.fullmatch(commit_part):
+                self.commit_id = commit_part.lower()
+            elif match := GIT_DESCRIBE_PATTERN.fullmatch(commit_part):
+                self.commit_id = match.group("hash").lower()
+            else:
+                self.commit_id = commit_part
 
     def _extract_gitlab(self, path: str) -> None:
         path_lower = path.lower()
@@ -150,8 +159,10 @@ class GitURL:
         if "/+/" in path:
             repo_path = path[: path.index("/+/")]
             commit_part = path[path.index("/+/") + 3 :].split("/")[0]
-            if COMMIT_HASH_PATTERN.fullmatch(commit_part):
-                self.commit_id = commit_part.lower()
+            # Strip common git revision suffixes (e.g., ^!, ~1)
+            commit_hash = re.split(r"[\^~!]", commit_part)[0]
+            if COMMIT_HASH_PATTERN.fullmatch(commit_hash):
+                self.commit_id = commit_hash.lower()
             path = repo_path
         self.repo = path.lstrip("/")
 
@@ -281,6 +292,8 @@ class GitURL:
                 commit_part = path[path.index(delimiter) + len(delimiter) :].split("/")[0]
                 if COMMIT_HASH_PATTERN.fullmatch(commit_part):
                     self.commit_id = commit_part.lower()
+                elif match := GIT_DESCRIBE_PATTERN.fullmatch(commit_part):
+                    self.commit_id = match.group("hash").lower()
                 break
 
         if not self.repo and path:

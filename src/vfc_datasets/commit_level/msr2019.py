@@ -29,6 +29,7 @@ class MSR2019Dataset(BaseDataset):
             # 205 projects | 1282 commits | 624 vulnerabilities | 29 without CVE | 46 not in NVD
         ),
         vfcs=1282,
+        non_vfcs=0,
         projects=205,
     )
 

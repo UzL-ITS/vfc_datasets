@@ -35,7 +35,7 @@ class PatchDBDataset(BaseDataset):
             "of 23,742 instances.",
             # Page 3 (Section III-A): 313 GitHub repositories, C/C++ patches from NVD (1999-2019)
         ),
-        vfcs=12073,
+        vfcs=10691,  # --> 12073, NOTE: Many commits without project url. Try to find the missing URLs using the CVE ID and verify them using the commit message or diff.
         non_vfcs=23742,
         projects=313,
     )

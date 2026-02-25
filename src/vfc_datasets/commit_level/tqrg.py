@@ -64,7 +64,13 @@ class TQRGDataset(BaseDataset):
                 row, "project", "sha", self.metadata.name
             )
             if not project_url or not commit_id:
-                return None
+                if "github.com/curl/curl" in row.get("project", "") and "3ab3c16" in row.get(
+                    "sha", ""
+                ):
+                    project_url = "https://github.com/curl/curl"
+                    commit_id = "3ab3c16db6a5674f53cf23d5654366663f734493"
+                else:
+                    return None
         else:
             project_url, raw_commit_id = extract_from_commit_url(row, "github", self.metadata.name)
             if not project_url or not raw_commit_id:

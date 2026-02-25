@@ -36,7 +36,8 @@ class MorefixesDataset(BaseDataset):
             "vulnerabilities.",
             # Table 5: MoreFixes | 26,617 CVEs | 6,945 Projects | 31,883 Commits | CVE Years 1999-2024
         ),
-        vfcs=31883,
+        vfcs=35130,  # NOTE: Zenodo reports 35,276
+        non_vfcs=0,
         projects=6945,
     )
 
@@ -67,7 +68,7 @@ class MorefixesDataset(BaseDataset):
         query_from = f"""
             FROM public.commits c
             JOIN public.fixes f ON c.hash = f.hash
-            JOIN public.cwe_classification cw ON f.cve_id = cw.cve_id
+            LEFT JOIN public.cwe_classification cw ON f.cve_id = cw.cve_id
             WHERE score >= {self.min_prospector_score}
         """
 
@@ -111,6 +112,9 @@ class MorefixesDataset(BaseDataset):
 
         if df.empty:
             raise ValueError(f"Failed to extract data from {self.metadata.name} dump")
+
+        df = df.drop_duplicates(subset="commit_id")
+
         return df
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
@@ -118,11 +122,7 @@ class MorefixesDataset(BaseDataset):
         cve_ids = normalize_cve_ids(raw_cve_id)
 
         raw_cwe_id = row.get("cwe_id")
-        cwe_ids = normalize_cwe_ids(
-            raw_cwe_id
-            if isinstance(raw_cwe_id, str) and raw_cwe_id and raw_cwe_id.startswith("CWE-")
-            else None
-        )
+        cwe_ids = normalize_cwe_ids(raw_cwe_id)
 
         project_url = row.get("project_url")
         if not project_url:
@@ -133,7 +133,7 @@ class MorefixesDataset(BaseDataset):
         raw_commit_id = git_url.commit_id if git_url else None
         project_url = git_url.to_https_url() if git_url else None
 
-        # If we didn't get commit_id from project_url, try the commit_id field
+        # Fall back to commit_id field
         if not raw_commit_id:
             raw_commit_id = row.get("commit_id")
 
@@ -146,7 +146,7 @@ class MorefixesDataset(BaseDataset):
             )
             return None
 
-        # Fix known data issue: some commit IDs have trailing 'C' appended (40-char SHA + 1)
+        # Some commit IDs have a trailing 'C' appended
         if raw_commit_id.endswith("C") and len(raw_commit_id) == 41:
             logger.warning(
                 "Correcting commit_id ending with 'C': %s -> %s",
