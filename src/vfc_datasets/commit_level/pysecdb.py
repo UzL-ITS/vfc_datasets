@@ -12,7 +12,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from dataset_entry import DatasetEntry
-from utils.git.github_client import AsyncGitHubClient
+from utils.git.github_client import GITHUB_API_URL, AsyncGitHubClient
 from utils.git.url import GitURL, normalize_commit_id
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.download_helper import download_from_huggingface
@@ -166,7 +166,7 @@ async def _resolve_project_urls(
                 query_parts.append(f"author-email:{quote(meta.author_email)}")
             elif meta.author_username:
                 query_parts.append(f"author:{meta.author_username}")
-            api_url = f"https://api.github.com/search/commits?q={'+'.join(query_parts)}"
+            api_url = f"{GITHUB_API_URL}/search/commits?q={'+'.join(query_parts)}"
 
             response = await client.query_api(api_url)
             repo_url = _repo_url_from_search_result(

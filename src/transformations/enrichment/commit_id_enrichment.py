@@ -7,7 +7,7 @@ from tqdm.auto import tqdm
 
 from config import MAX_WORKERS
 from dataset_entry import DatasetEntry
-from utils.git.github_client import AsyncGitHubClient
+from utils.git.github_client import GITHUB_API_URL, AsyncGitHubClient
 from utils.git.repository import clone_repository
 from utils.git.url import GitURL
 
@@ -117,7 +117,7 @@ async def _extend_commit_id_api_async(
         return entry, entry.commit_id, False
 
     try:
-        api_url = f"https://api.github.com/repos/{owner}/{name}/commits/{entry.commit_id}"
+        api_url = f"{GITHUB_API_URL}/repos/{owner}/{name}/commits/{entry.commit_id}"
         result = await client.query_api(api_url)
 
         if result and "sha" in result:

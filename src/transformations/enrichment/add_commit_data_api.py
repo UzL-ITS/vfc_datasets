@@ -7,7 +7,7 @@ from typing import Any
 from tqdm.asyncio import tqdm
 
 from dataset_entry import DatasetEntry
-from utils.git.github_client import AsyncGitHubClient
+from utils.git.github_client import GITHUB_API_URL, AsyncGitHubClient
 from utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ async def _enrich_entry(entry: DatasetEntry, client: AsyncGitHubClient) -> bool:
     if not owner or not repo:
         return False
 
-    api_url = f"https://api.github.com/repos/{owner}/{repo}/commits/{entry.commit_id}"
+    api_url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/commits/{entry.commit_id}"
     try:
         data = await client.query_api(api_url)
     except Exception as e:
@@ -64,7 +64,9 @@ async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
 
     async with AsyncGitHubClient() as client:
         tasks = [_enrich_entry(e, client) for e in entries]
-        with tqdm(total=len(entries), desc="API enrichment", dynamic_ncols=True, unit="commits") as pbar:
+        with tqdm(
+            total=len(entries), desc="API enrichment", dynamic_ncols=True, unit="commits"
+        ) as pbar:
             for task in asyncio.as_completed(tasks):
                 if await task:
                     success += 1

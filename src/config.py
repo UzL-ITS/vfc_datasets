@@ -59,6 +59,9 @@ MAX_WORKERS = _env_int("MAX_WORKERS", os.cpu_count() or 1, minimum=1)
 HF_TOKEN = _env_optional("HF_TOKEN")
 GITHUB_TOKEN = _env_optional("GITHUB_TOKEN")
 
+# API Base URLs
+GITHUB_API_URL = _env("GITHUB_API_URL", "https://api.github.com")
+
 # Git Operations
 GIT_CLONE_TIMEOUT = _env_int("GIT_CLONE_TIMEOUT", 3600, minimum=1)  # 1 hour default
 

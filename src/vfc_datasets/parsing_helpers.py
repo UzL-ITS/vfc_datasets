@@ -60,11 +60,10 @@ def _resolve_ref_via_api(ref: str, git_url: str) -> str | None:
         logger.warning("Missing owner/repo in URL: %s", git_url)
         return None
 
-    api_url = f"https://api.github.com/repos/{parsed_url.owner}/{parsed_url.repo}/commits/{ref}"
-
     try:
-        from utils.git.github_client import query_github_api_sync
+        from utils.git.github_client import GITHUB_API_URL, query_github_api_sync
 
+        api_url = f"{GITHUB_API_URL}/repos/{parsed_url.owner}/{parsed_url.repo}/commits/{ref}"
         logger.info(
             "Resolving symbolic ref %r for %s/%s via GitHub API",
             ref,
@@ -73,7 +72,7 @@ def _resolve_ref_via_api(ref: str, git_url: str) -> str | None:
         )
         commit_data = query_github_api_sync(api_url)
     except ImportError as exc:
-        logger.debug("GitHub API client not available; cannot resolve %r: %s", api_url, exc)
+        logger.debug("GitHub API client not available; cannot resolve ref %r: %s", ref, exc)
         return None
     except Exception as exc:
         logger.warning(

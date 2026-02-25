@@ -10,7 +10,7 @@ from typing import Any
 import httpx
 from tqdm.asyncio import tqdm as async_tqdm
 
-from config import GITHUB_TOKEN
+from config import GITHUB_API_URL, GITHUB_TOKEN
 from utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
@@ -187,7 +187,7 @@ async def _fetch_single_repo_info(
         return project_url, result
 
     try:
-        api_url = f"https://api.github.com/repos/{owner}/{repo}"
+        api_url = f"{GITHUB_API_URL}/repos/{owner}/{repo}"
         data = await client.query_api(api_url)
 
         if data:
