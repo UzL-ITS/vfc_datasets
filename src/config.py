@@ -1,5 +1,6 @@
 """Central configuration for VFC-datasets project."""
 
+import logging
 import os
 from pathlib import Path
 
@@ -67,6 +68,10 @@ GIT_CLONE_TIMEOUT = _env_int("GIT_CLONE_TIMEOUT", 3600, minimum=1)  # 1 hour def
 
 # Dataset Caching
 USE_DATASET_CACHE = os.getenv("USE_DATASET_CACHE", "true").lower() in ("true", "yes")
+
+# Logging
+LOG_LEVEL: int = logging.getLevelNamesMapping().get(_env("LOG_LEVEL", "INFO").upper(), logging.INFO)
+LOG_DIR = _env_path("LOG_DIR", BASE_DATA_PATH / "logs")
 
 # Max diff size in bytes
 MAX_DIFF_SIZE = _env_int("MAX_DIFF_SIZE", 256 * 1024, minimum=0)  # 256 KB default
