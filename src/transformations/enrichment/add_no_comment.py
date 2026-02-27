@@ -85,14 +85,12 @@ def _strip_comments(source_code: str, language: str) -> str | None:
 
         # Collect comment byte ranges
         comment_ranges: list[tuple[int, int]] = []
-
-        def collect_comments(node: tree_sitter.Node) -> None:
+        stack = [tree.root_node]
+        while stack:
+            node = stack.pop()
             if node.type in comment_types:
                 comment_ranges.append((node.start_byte, node.end_byte))
-            for child in node.children:
-                collect_comments(child)
-
-        collect_comments(tree.root_node)
+            stack.extend(node.children)
 
         if not comment_ranges:
             return source_code
@@ -285,11 +283,14 @@ def _process_batch(args: tuple[str, list[str], bool]) -> dict[str, str]:
     repo_path, commit_ids, include_unsupported = args
     results: dict[str, str] = {}
 
-    with Repo(repo_path) as repository:
-        for commit_id in commit_ids:
-            diff = _get_diff_no_comments(repository, commit_id, include_unsupported)
-            if diff is not None:
-                results[commit_id] = diff
+    try:
+        with Repo(repo_path) as repository:
+            for commit_id in commit_ids:
+                diff = _get_diff_no_comments(repository, commit_id, include_unsupported)
+                if diff is not None:
+                    results[commit_id] = diff
+    except Exception as e:
+        logger.error("Batch error for %s: %s: %s", repo_path, type(e).__name__, e)
 
     return results
 
