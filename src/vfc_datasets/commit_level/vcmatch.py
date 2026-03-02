@@ -1,14 +1,10 @@
 import logging
-import shutil
-import tempfile
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_and_extract_zip
 from vfc_datasets.parsing_helpers import normalize_cve_ids, normalize_or_resolve_commit
 
 logger = logging.getLogger(__name__)
@@ -49,16 +45,15 @@ class VCMatchDataset(BaseDataset):
         raw_dataset_path = self._raw_dir / "vcmatch.csv"
 
         if not raw_dataset_path.exists():
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                url = "https://figshare.com/ndownloader/files/32403518?private_link=0f3ed11f9348e2f3a9f8"
-                logger.info("Downloading VCMatch dataset...")
-
-                # Download and extract specific file
-                download_and_extract_zip(
-                    url=url, extract_path=tmp_dir, files_to_extract=["data/data.csv"]
-                )
-
-                shutil.move(src=Path(tmp_dir) / "data" / "data.csv", dst=raw_dataset_path)
+            url = (
+                "https://figshare.com/ndownloader/files/32403518?private_link=0f3ed11f9348e2f3a9f8"
+            )
+            raise FileNotFoundError(
+                f"VCMatch dataset not found at {raw_dataset_path}. "
+                f"Figshare blocks automated downloads (AWS WAF bot challenge). "
+                f"Please download manually from {url}, extract data/data.csv, "
+                f"and place it at {raw_dataset_path}"
+            )
 
         return pd.read_csv(raw_dataset_path)
 

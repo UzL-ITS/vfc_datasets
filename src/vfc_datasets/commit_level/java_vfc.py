@@ -5,7 +5,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_url
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
     normalize_or_resolve_commit,
@@ -25,7 +25,7 @@ class _JavaVFCBase(BaseDataset):
                 f"https://zenodo.org/records/{self._ZENODO_RECORD_ID}/files/{file_name}?download=1"
             )
             logger.info("Downloading %s...", file_name)
-            download_from_url(url=url, output_path=raw_dataset_path)
+            download_file(url=url, output_path=raw_dataset_path)
         return pd.read_json(raw_dataset_path, lines=True)
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:

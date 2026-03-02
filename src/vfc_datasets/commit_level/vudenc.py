@@ -9,7 +9,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_url
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import extract_url_and_commit
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ class VUDEncDataset(BaseDataset):
             json_path = vudenc_dir / f"{file_name}.json"
             if not json_path.exists():
                 with tempfile.TemporaryDirectory() as tmp_dir:
-                    download_from_url(
+                    download_file(
                         url=link,
                         output_path=Path(tmp_dir) / file_name,
                     )

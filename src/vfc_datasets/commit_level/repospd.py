@@ -9,7 +9,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_gdrive
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     normalize_cve_ids,
     normalize_cwe_ids,
@@ -82,7 +82,7 @@ class RepoSPDDataset(BaseDataset):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             zip_path = Path(tmpdir) / "repospd.zip"
-            download_from_gdrive(self.GDRIVE_FILE_ID, str(zip_path))
+            download_file(f"https://drive.google.com/uc?id={self.GDRIVE_FILE_ID}", zip_path)
 
             with zipfile.ZipFile(zip_path) as zf:
                 for subset in self.SUBSETS:

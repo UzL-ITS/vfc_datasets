@@ -8,7 +8,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_gdrive
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cwe_ids
 
 logger = logging.getLogger(__name__)
@@ -43,8 +43,8 @@ class DiverseVulDataset(BaseDataset):
 
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_path = self._raw_dir / "diversevul.json"
-        download_from_gdrive(
-            file_id="12IWKhmLhq7qn5B_iXgn5YerOQtkH-6RG", output_path=raw_dataset_path
+        download_file(
+            "https://drive.google.com/uc?id=12IWKhmLhq7qn5B_iXgn5YerOQtkH-6RG", raw_dataset_path
         )
 
         # Load JSON lines and filter vulnerable functions only

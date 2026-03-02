@@ -4,7 +4,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import load_or_download_csv
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_url_and_commit,
     normalize_cve_ids,
@@ -39,10 +39,13 @@ class BigVulDataset(BaseDataset):
     )
 
     def _load_data(self) -> pd.DataFrame:
-        return load_or_download_csv(
-            output_path=str(self._raw_dir / "bigvul.csv"),
-            url="https://raw.githubusercontent.com/ZeoVan/MSR_20_Code_Vulnerability_CSV_Dataset/master/all_c_cpp_release2.0.csv",
+        csv_path = self._raw_dir / "bigvul.csv"
+        download_file(
+            "https://raw.githubusercontent.com/ZeoVan/MSR_20_Code_Vulnerability_CSV_Dataset/master/all_c_cpp_release2.0.csv",
+            csv_path,
+            checksum="02970f6d07f22dcff4f03983a89b1fd68bebb63289eaa98f4c7e11d6218d907c",
         )
+        return pd.read_csv(csv_path)
 
     def _handle_broken_entries(self, row: dict[str, Any]) -> tuple[str | None, str | None]:
         """Manual overrides for known broken entries in BigVul."""

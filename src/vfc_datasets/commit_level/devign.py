@@ -5,7 +5,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_gdrive
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import normalize_or_resolve_commit
 
 logger = logging.getLogger(__name__)
@@ -17,9 +17,15 @@ class DevignDataset(BaseDataset):
         "qemu": "https://github.com/qemu/qemu",
     }
 
-    GDRIVE_FILE_IDS = {
-        "ffmpeg": "1Nk_U52_gVHYfnNk-pcXlnxssOBrmSllV",
-        "qemu": "1RhyA-cZl2oiNb-IJOHYw4waBgvLzViTr",
+    GDRIVE_FILES = {
+        "ffmpeg": (
+            "1Nk_U52_gVHYfnNk-pcXlnxssOBrmSllV",
+            "36b1a6d69ef6c2e84bc69764975f35aceea97b0bd194750555a63f34cb81fa12",
+        ),
+        "qemu": (
+            "1RhyA-cZl2oiNb-IJOHYw4waBgvLzViTr",
+            "976c1049e1af92f2a18d2cd322c975cd376e8e9c2de982163dc792b9cff1d9cf",
+        ),
     }
 
     metadata = DatasetMetadata(
@@ -48,9 +54,9 @@ class DevignDataset(BaseDataset):
         raw_dataset_dir = self._raw_dir / "devign"
 
         dfs = []
-        for project_name, file_id in self.GDRIVE_FILE_IDS.items():
+        for project_name, (file_id, checksum) in self.GDRIVE_FILES.items():
             csv_path = raw_dataset_dir / f"{project_name}.csv"
-            download_from_gdrive(file_id, csv_path)
+            download_file(f"https://drive.google.com/uc?id={file_id}", csv_path, checksum=checksum)
             dfs.append(pd.read_csv(csv_path))
 
         return pd.concat(dfs, ignore_index=True)

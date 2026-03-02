@@ -5,7 +5,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import load_or_download_csv
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import normalize_cve_ids, normalize_or_resolve_commit
 
 logger = logging.getLogger(__name__)
@@ -34,11 +34,13 @@ class MSR2019Dataset(BaseDataset):
     )
 
     def _load_data(self) -> pd.DataFrame:
-        return load_or_download_csv(
-            output_path=self._raw_dir / "msr2019.csv",
-            url="https://raw.githubusercontent.com/SAP/project-kb/main/MSR2019/dataset/vulas_db_msr2019_release.csv",
-            names=["cve_id", "project_url", "commit_id", "pos"],
+        csv_path = self._raw_dir / "msr2019.csv"
+        download_file(
+            "https://raw.githubusercontent.com/SAP/project-kb/main/MSR2019/dataset/vulas_db_msr2019_release.csv",
+            csv_path,
+            checksum="c00250647836aa390922759092452a6586f06fd07f48bed8c4e8a42639eeb564",
         )
+        return pd.read_csv(csv_path, names=["cve_id", "project_url", "commit_id", "pos"])
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         raw_commit_id = row.get("commit_id")

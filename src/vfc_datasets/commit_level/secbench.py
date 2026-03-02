@@ -5,7 +5,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import load_or_download_csv
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     normalize_cve_ids,
     normalize_cwe_ids,
@@ -36,10 +36,12 @@ class SecBenchDataset(BaseDataset):
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_path = self._raw_dir / "secbench.csv"
 
-        return load_or_download_csv(
-            output_path=raw_dataset_path,
-            url="https://raw.githubusercontent.com/TQRG/secbench/refs/heads/master/dataset/secbench.csv",
+        download_file(
+            "https://raw.githubusercontent.com/TQRG/secbench/refs/heads/master/dataset/secbench.csv",
+            raw_dataset_path,
+            checksum="970df88dea3d98c23e36929aa73008f127efaa43ee77aad51a3392d4a038cade",
         )
+        return pd.read_csv(raw_dataset_path)
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # project url is a github url

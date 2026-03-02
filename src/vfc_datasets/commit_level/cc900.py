@@ -4,7 +4,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import load_or_download_csv
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
     extract_url_and_commit,
@@ -40,17 +40,23 @@ class CC900Dataset(BaseDataset):
         raw_dataset_dir = self._raw_dir / "cc900"
 
         # Load positive (vulnerability fixing commits)
-        df_positive = load_or_download_csv(
-            output_path=raw_dataset_dir / "positive.csv",
-            url="https://media.githubusercontent.com/media/davidleejy/wnut21-cotrain/main/positive%2BCC-900repos.csv",
+        positive_path = raw_dataset_dir / "positive.csv"
+        download_file(
+            "https://media.githubusercontent.com/media/davidleejy/wnut21-cotrain/main/positive%2BCC-900repos.csv",
+            positive_path,
+            checksum="48d473b0e16fbb6dbfd7271c2f47304cf9ca43c808a02c77946e860bc473208d",
         )
+        df_positive = pd.read_csv(positive_path)
         df_positive["dataset_type"] = "positive"
 
         # Load negative (non-vulnerability commits)
-        df_negative = load_or_download_csv(
-            output_path=raw_dataset_dir / "negative.csv",
-            url="https://media.githubusercontent.com/media/davidleejy/wnut21-cotrain/main/negative%2BCC-900repos.csv",
+        negative_path = raw_dataset_dir / "negative.csv"
+        download_file(
+            "https://media.githubusercontent.com/media/davidleejy/wnut21-cotrain/main/negative%2BCC-900repos.csv",
+            negative_path,
+            checksum="974d2889cb71a5d45814bf62773b2a8077bc139afb5d061acaeacbffddccd982",
         )
+        df_negative = pd.read_csv(negative_path)
         df_negative["dataset_type"] = "negative"
 
         # Combine both dataframes

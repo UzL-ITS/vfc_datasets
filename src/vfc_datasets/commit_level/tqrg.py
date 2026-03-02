@@ -4,7 +4,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import load_or_download_csv
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
     extract_url_and_commit,
@@ -41,17 +41,23 @@ class TQRGDataset(BaseDataset):
         raw_dataset_dir = self._raw_dir / "tqrg"
 
         # Load positive dataset
-        df_positive = load_or_download_csv(
-            output_path=raw_dataset_dir / "positive.csv",
-            url="https://raw.githubusercontent.com/TQRG/security-patches-dataset/main/dataset/security_patches_v1.0.csv",
+        positive_path = raw_dataset_dir / "positive.csv"
+        download_file(
+            "https://raw.githubusercontent.com/TQRG/security-patches-dataset/main/dataset/security_patches_v1.0.csv",
+            positive_path,
+            checksum="6acd399813693b8714a3cfd2f1c423bb8511b022ccd5ed7311ac19015359f65e",
         )
+        df_positive = pd.read_csv(positive_path)
         df_positive["dataset_type"] = "positive"
 
         # Load negative dataset
-        df_negative = load_or_download_csv(
-            output_path=raw_dataset_dir / "negative.csv",
-            url="https://raw.githubusercontent.com/TQRG/security-patches-dataset/main/dataset/negative_commits.csv",
+        negative_path = raw_dataset_dir / "negative.csv"
+        download_file(
+            "https://raw.githubusercontent.com/TQRG/security-patches-dataset/main/dataset/negative_commits.csv",
+            negative_path,
+            checksum="fc2670c6d0971c1bc7e21939916943614b85fbaf28bef17ac4177a79254564af",
         )
+        df_negative = pd.read_csv(negative_path)
         df_negative["dataset_type"] = "negative"
 
         return pd.concat([df_positive, df_negative], ignore_index=True)

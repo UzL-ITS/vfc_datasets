@@ -11,7 +11,7 @@ from dataset_entry import DatasetEntry
 from utils.git.repository import clone_repository
 from utils.git.url import GitURL
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_gdrive
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import normalize_or_resolve_commit
 
 logger = logging.getLogger(__name__)
@@ -56,10 +56,12 @@ class SPIDBDataset(BaseDataset):
         "ffmpeg": {
             "url": "https://github.com/FFmpeg/FFmpeg",
             "file_id": "1duvUGvkdsCue7vbBmfCk2lMU4oVUIIpO",
+            "checksum": "41b493273a011492583742bb28ce20a792bad530d0a30166624f9744ce77c723",
         },
         "qemu": {
             "url": "https://github.com/qemu/qemu",
             "file_id": "1Y9aADriLx0_e8YioZiteD7cvdON0carn",
+            "checksum": "9c5ef634e1be936eb9131ff494f586957b6ab235b1a8f80d365b73583469dc8c",
         },
     }
 
@@ -179,14 +181,18 @@ class SPIDBDataset(BaseDataset):
         return project_dataframe
 
     def _add_project_data(
-        self, file_id: str, project_url: str, raw_dataset_dir: Path
+        self,
+        file_id: str,
+        project_url: str,
+        raw_dataset_dir: Path,
+        checksum: str | None = None,
     ) -> pd.DataFrame:
         git_url = GitURL.parse(project_url)
         project_name = (
             git_url.repo.lower() if git_url and git_url.repo else project_url.split("/")[-1].lower()
         )
         csv_path = raw_dataset_dir / f"{project_name}.csv"
-        download_from_gdrive(file_id, csv_path)
+        download_file(f"https://drive.google.com/uc?id={file_id}", csv_path, checksum=checksum)
 
         project_data = self._read_clean_csv(csv_path)
         commit_dict, repo = self._load_all_commit_messages(project_url)
@@ -218,6 +224,7 @@ class SPIDBDataset(BaseDataset):
                     file_id=project_info["file_id"],
                     project_url=project_info["url"],
                     raw_dataset_dir=raw_dataset_dir,
+                    checksum=project_info.get("checksum"),
                 )
                 dataframe.to_csv(processed_file, index=False)
 

@@ -9,7 +9,7 @@ from dataset_entry import DatasetEntry
 from transformations.enrichment.project_urls.url_mappings import get_moved_urls
 from utils.git.url import GitURL
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_gdrive
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     normalize_cve_ids,
     normalize_cwe_ids,
@@ -64,7 +64,7 @@ class PrimeVulDataset(BaseDataset):
         for filename, file_id in gdrive_files.items():
             jsonl_path = primevul_path / filename
             if not jsonl_path.exists():
-                download_from_gdrive(file_id, jsonl_path)
+                download_file(f"https://drive.google.com/uc?id={file_id}", jsonl_path)
 
         return primevul_path
 

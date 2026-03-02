@@ -4,7 +4,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import load_or_download_csv
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
     normalize_cve_ids,
@@ -32,10 +32,13 @@ class TracerDataset(BaseDataset):
     )
 
     def _load_data(self) -> pd.DataFrame:
-        return load_or_download_csv(
-            output_path=self._raw_dir / "tracer_depth_dataset.csv",
-            url=TRACER_CSV_URL,
+        csv_path = self._raw_dir / "tracer_depth_dataset.csv"
+        download_file(
+            TRACER_CSV_URL,
+            csv_path,
+            checksum="3202f6a4b8d491ae54cb937467d7159377b1c7ee3125f8dfd38b06d10329906b",
         )
+        return pd.read_csv(csv_path)
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Try github_commit first

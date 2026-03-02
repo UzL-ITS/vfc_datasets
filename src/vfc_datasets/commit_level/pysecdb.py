@@ -15,7 +15,7 @@ from dataset_entry import DatasetEntry
 from utils.git.github_client import GITHUB_API_URL, AsyncGitHubClient
 from utils.git.url import GitURL, normalize_commit_id
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_huggingface
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import normalize_cve_ids
 
 logger = logging.getLogger(__name__)
@@ -239,8 +239,8 @@ class PySecDBDataset(BaseDataset):
             "covering 119 more CWEs.",
             # Page 6 (Table II): Base 729 + Pilot 400 + Augmented 129 = 1,258 security commits
         ),
-        vfcs=1100,  # 1258 NOTE: not all available yet
-        non_vfcs=2607,  # 2791, NOTE: not all available yet
+        vfcs=1139,  # 1258 NOTE: not all available yet
+        non_vfcs=2703,  # 2791, NOTE: not all available yet
         projects=351,
     )
 
@@ -252,9 +252,10 @@ class PySecDBDataset(BaseDataset):
     def _load_records(raw_dir: Path) -> list[dict[str, Any]]:
         pysecdb_dump = raw_dir / "pysecdb.json"
         if not pysecdb_dump.exists():
-            download_from_huggingface(
+            download_file(
                 url="https://huggingface.co/datasets/sunlab/PySecDB/resolve/main/pysecdb.json",
                 output_path=pysecdb_dump,
+                checksum="79027471e5863d11032c27d2862800862dba53ad5173ff7aa878cd556902d7b9",
             )
         records = json.loads(pysecdb_dump.read_text(encoding="utf-8"))
         if not isinstance(records, list):

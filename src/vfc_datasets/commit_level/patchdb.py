@@ -5,7 +5,7 @@ import pandas as pd
 
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.download_helper import download_from_huggingface
+from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     normalize_cve_ids,
     normalize_cwe_ids,
@@ -44,9 +44,10 @@ class PatchDBDataset(BaseDataset):
         patch_db_dump = self._raw_dir / "patch_db.json"
 
         if not patch_db_dump.exists():
-            download_from_huggingface(
+            download_file(
                 url="https://huggingface.co/datasets/sunlab/patch_db/resolve/main/patch_db.json",
                 output_path=patch_db_dump,
+                checksum="c59e9ff76b0dd21c4fa5f3b735ba8e5eadbe3a326f93c597b8619cfa395829c6",
             )
 
         return pd.read_json(patch_db_dump)
