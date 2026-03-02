@@ -152,7 +152,9 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEnt
     failed_batches = 0
 
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        future_to_batch = {executor.submit(_process_commit_batch, batch): batch for batch in batches}
+        future_to_batch = {
+            executor.submit(_process_commit_batch, batch): batch for batch in batches
+        }
 
         with tqdm(
             total=total_commits,

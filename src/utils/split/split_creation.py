@@ -42,9 +42,14 @@ def _evaluate_split_quality(
         num_commits = len(split)
         commits_per_project.append(num_commits / num_projects if num_projects > 0 else 0)
 
-    mean_commits_per_project = sum(commits_per_project) / len(commits_per_project) if commits_per_project else 0
+    mean_commits_per_project = (
+        sum(commits_per_project) / len(commits_per_project) if commits_per_project else 0
+    )
     if mean_commits_per_project > 0:
-        commits_per_project_balance = max(abs(r - mean_commits_per_project) / mean_commits_per_project for r in commits_per_project)
+        commits_per_project_balance = max(
+            abs(r - mean_commits_per_project) / mean_commits_per_project
+            for r in commits_per_project
+        )
     else:
         commits_per_project_balance = 0.0
 

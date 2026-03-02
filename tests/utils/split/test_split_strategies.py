@@ -38,6 +38,7 @@ def _count_train(groups, train_urls):
 
 # --- _greedy_assign tests ---
 
+
 def test_greedy_simple_split():
     groups = _make_groups([100, 100, 100, 100, 100])
     target = 500 * 0.8  # 400
@@ -74,6 +75,7 @@ def test_greedy_ratio_one():
 
 # --- _optimize_assignment tests ---
 
+
 def test_optimize_finds_exact_target():
     groups = _make_groups([500, 300, 200])
     target = 1000 * 0.8
@@ -100,6 +102,7 @@ def test_optimize_empty():
 
 # --- train_test_split_stratified tests ---
 
+
 def test_split_stratified_empty():
     train, test = train_test_split_group_stratified([], RepositoryRelationships())
     assert train == []
@@ -108,7 +111,9 @@ def test_split_stratified_empty():
 
 def test_split_stratified_single_group():
     entries = _make_entries("https://github.com/test/only", 100)
-    train, test = train_test_split_group_stratified(entries, RepositoryRelationships(), split_ratio=0.8)
+    train, test = train_test_split_group_stratified(
+        entries, RepositoryRelationships(), split_ratio=0.8
+    )
     assert len(train) == 100
     assert len(test) == 0
 
@@ -124,9 +129,8 @@ def test_split_stratified_preserves_total():
 
 
 def test_split_stratified_deterministic_with_seed():
-    entries = (
-        _make_entries("https://github.com/test/a", 50)
-        + _make_entries("https://github.com/test/b", 50)
+    entries = _make_entries("https://github.com/test/a", 50) + _make_entries(
+        "https://github.com/test/b", 50
     )
     rel = RepositoryRelationships()
     train1, _ = train_test_split_group_stratified(entries, rel, seed=42)
@@ -135,6 +139,7 @@ def test_split_stratified_deterministic_with_seed():
 
 
 # --- train_val_test_split_group_stratified tests ---
+
 
 def test_three_way_split_empty():
     train, val, test = train_val_test_split_group_stratified([], RepositoryRelationships())
@@ -192,6 +197,7 @@ def test_three_way_split_deterministic_with_seed():
 def test_three_way_split_no_group_leakage():
     """Verify related repos stay in same split."""
     from utils.split.repository_relationships import RepositoryGroup
+
     # Create entries from 3 repos, where repo2 and repo3 are related
     entries = (
         _make_entries("https://github.com/test/repo1", 100)
@@ -289,6 +295,7 @@ def test_three_way_split_custom_ratios():
 
 # --- train_val_test_split_random tests ---
 
+
 def test_random_split_empty():
     train, val, test = train_val_test_split_random([], visualize=False)
     assert train == []
@@ -322,9 +329,8 @@ def test_random_split_deterministic_with_seed():
 
 
 def test_random_split_different_seeds_differ():
-    entries = (
-        _make_entries("https://github.com/test/a", 100)
-        + _make_entries("https://github.com/test/b", 100)
+    entries = _make_entries("https://github.com/test/a", 100) + _make_entries(
+        "https://github.com/test/b", 100
     )
     train1, _, _ = train_val_test_split_random(entries, seed=1, visualize=False)
     train2, _, _ = train_val_test_split_random(entries, seed=2, visualize=False)
@@ -349,7 +355,10 @@ def test_random_split_respects_ratios():
 
 # --- train_val_test_split_temporal tests ---
 
-def _make_entries_with_timestamps(project_url: str, count: int, start_date: datetime | None = None) -> list[DatasetEntry]:
+
+def _make_entries_with_timestamps(
+    project_url: str, count: int, start_date: datetime | None = None
+) -> list[DatasetEntry]:
     """Create entries with sequential timestamps."""
     if start_date is None:
         start_date = datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
@@ -374,9 +383,15 @@ def test_temporal_split_empty():
 
 def test_temporal_split_preserves_total():
     entries = (
-        _make_entries_with_timestamps("https://github.com/test/a", 600, start_date=datetime(2020, 1, 1, tzinfo=UTC))
-        + _make_entries_with_timestamps("https://github.com/test/b", 300, start_date=datetime(2020, 6, 1, tzinfo=UTC))
-        + _make_entries_with_timestamps("https://github.com/test/c", 100, start_date=datetime(2021, 1, 1, tzinfo=UTC))
+        _make_entries_with_timestamps(
+            "https://github.com/test/a", 600, start_date=datetime(2020, 1, 1, tzinfo=UTC)
+        )
+        + _make_entries_with_timestamps(
+            "https://github.com/test/b", 300, start_date=datetime(2020, 6, 1, tzinfo=UTC)
+        )
+        + _make_entries_with_timestamps(
+            "https://github.com/test/c", 100, start_date=datetime(2021, 1, 1, tzinfo=UTC)
+        )
     )
     train, val, test = train_val_test_split_temporal(entries, visualize=False)
     assert len(train) + len(val) + len(test) == 1000

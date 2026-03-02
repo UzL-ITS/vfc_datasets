@@ -184,7 +184,9 @@ class TestGetCommitInfo:
     @pytest.mark.slow
     def test_commit_with_parents_has_files_changed(self, curl_repo):
         """Commit with parents should have files_changed populated."""
-        result = _get_commit_info(curl_repo, "79e63a53bb9598af863b0afe49ad662795faeef4", max_diff_size=256 * 1024)
+        result = _get_commit_info(
+            curl_repo, "79e63a53bb9598af863b0afe49ad662795faeef4", max_diff_size=256 * 1024
+        )
 
         assert result is not None
         assert result["files_changed"]

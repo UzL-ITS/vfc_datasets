@@ -14,7 +14,6 @@ from utils.split.repository_relationships import (
 
 
 class TestLinkKey:
-
     def test_sorts_urls(self) -> None:
         assert _link_key("b", "a") == ("a", "b")
         assert _link_key("a", "b") == ("a", "b")
@@ -24,7 +23,6 @@ class TestLinkKey:
 
 
 class TestRelationshipEdge:
-
     def test_key_property(self) -> None:
         edge = RelationshipEdge("b", "a", "local_history")
         assert edge.key == ("a", "b")
@@ -36,7 +34,6 @@ class TestRelationshipEdge:
 
 
 class TestFindConnectedGroups:
-
     def test_single_edge(self) -> None:
         edges = [RelationshipEdge("a", "b", "github_fork")]
         groups = _find_connected_groups(edges)
@@ -86,7 +83,6 @@ class TestFindConnectedGroups:
 
 
 class TestRepositoryGroup:
-
     def test_to_dict_serialization(self) -> None:
         group = RepositoryGroup(
             group_id=1,
@@ -212,7 +208,6 @@ class TestRepositoryGroup:
 
 
 class TestRepositoryRelationships:
-
     def test_get_group_returns_correct_group(self) -> None:
         group = RepositoryGroup(
             group_id=0,
@@ -347,13 +342,23 @@ class TestRepositoryRelationships:
 
 
 class TestIsTemplateFile:
-
     @pytest.mark.parametrize(
         "filename",
         [
-            "README.md", "readme.md", "README", "LICENSE", "license.txt",
-            ".gitignore", "package.json", "setup.py", "pyproject.toml",
-            "requirements.txt", "Makefile", "Dockerfile", "go.mod", "Cargo.toml",
+            "README.md",
+            "readme.md",
+            "README",
+            "LICENSE",
+            "license.txt",
+            ".gitignore",
+            "package.json",
+            "setup.py",
+            "pyproject.toml",
+            "requirements.txt",
+            "Makefile",
+            "Dockerfile",
+            "go.mod",
+            "Cargo.toml",
         ],
     )
     def test_template_files_detected(self, filename: str) -> None:
@@ -381,7 +386,6 @@ class TestIsTemplateFile:
 
 
 class TestFindSuspiciousProjectRelationships:
-
     def test_github_fork_groups_not_suspicious(self) -> None:
         url1 = "https://github.com/a/foo"
         url2 = "https://github.com/b/bar"

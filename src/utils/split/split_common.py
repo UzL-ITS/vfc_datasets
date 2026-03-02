@@ -83,7 +83,10 @@ def visualize_split(
             for url in rel_group.project_urls:
                 canonical_urls[url] = rel_group.canonical_url
 
-    all_groups = [sorted(group_related_repos(part, relationships), key=lambda g: -g[1]) for part in split_parts]
+    all_groups = [
+        sorted(group_related_repos(part, relationships), key=lambda g: -g[1])
+        for part in split_parts
+    ]
     all_counts = [count for groups in all_groups for _, count in groups]
     max_count = max(all_counts, default=1)
     small_threshold = sorted(all_counts)[int(len(all_counts) * 0.75)] if all_counts else 0
@@ -125,7 +128,9 @@ def visualize_split(
 
         if len(large_groups) > 10:
             remaining_count = sum(count for _, count in large_groups[10:])
-            lines.append(f"  ... +{len(large_groups) - 10} more large projects ({remaining_count:,} commits)")
+            lines.append(
+                f"  ... +{len(large_groups) - 10} more large projects ({remaining_count:,} commits)"
+            )
         if small_groups:
             small_count = sum(count for _, count in small_groups)
             lines.append(f"  ... {len(small_groups):,} small projects ({small_count:,} commits)")

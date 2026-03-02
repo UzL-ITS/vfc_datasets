@@ -30,7 +30,9 @@ class TestExtendCommitIdApiAsync:
         )
 
         async with AsyncGitHubClient() as client:
-            result_entry, extended_id, was_updated = await _extend_commit_id_api_async(entry, client)
+            result_entry, extended_id, was_updated = await _extend_commit_id_api_async(
+                entry, client
+            )
 
         assert was_updated is True
         assert extended_id == CURL_FULL_COMMIT

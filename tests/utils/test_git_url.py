@@ -203,7 +203,10 @@ class TestGitURL:
 
         assert git_url is not None
         assert git_url.repo == "linux/kernel/git/torvalds/linux"
-        assert git_url.to_https_url() == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+        assert (
+            git_url.to_https_url()
+            == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+        )
 
     def test_kernel_org_pub_scm_url(self):
         url = "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
@@ -212,7 +215,10 @@ class TestGitURL:
         assert git_url is not None
         assert git_url.host == "git.kernel.org"
         assert git_url.repo == "linux/kernel/git/stable/linux-stable"
-        assert git_url.to_https_url() == "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+        assert (
+            git_url.to_https_url()
+            == "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+        )
 
     def test_kernel_org_pub_scm_with_commit_path(self):
         url = "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/"
@@ -220,7 +226,10 @@ class TestGitURL:
 
         assert git_url is not None
         assert git_url.repo == "linux/kernel/git/stable/linux-stable"
-        assert git_url.to_https_url() == "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+        assert (
+            git_url.to_https_url()
+            == "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+        )
 
     def test_kernel_org_pub_scm_with_commit_id(self):
         url = "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=abc123def456"
@@ -229,7 +238,10 @@ class TestGitURL:
         assert git_url is not None
         assert git_url.repo == "linux/kernel/git/torvalds/linux"
         assert git_url.commit_id == "abc123def456"
-        assert git_url.to_https_url() == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+        assert (
+            git_url.to_https_url()
+            == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+        )
 
     def test_kernel_org_gitweb_url(self):
         url = "https://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git"
@@ -238,10 +250,15 @@ class TestGitURL:
         assert git_url is not None
         assert git_url.host == "git.kernel.org"
         assert git_url.repo == "linux/kernel/git/torvalds/linux"
-        assert git_url.to_https_url() == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+        assert (
+            git_url.to_https_url()
+            == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
+        )
 
     def test_kernel_org_gitweb_url_with_params(self):
-        url = "https://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=abc123def456"
+        url = (
+            "https://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=abc123def456"
+        )
         git_url = GitURL.parse(url)
 
         assert git_url is not None
@@ -408,19 +425,46 @@ class TestGitURL:
         "input_url,expected",
         [
             # cgit URLs -> clone URLs
-            ("https://git.savannah.gnu.org/cgit/bash.git", "https://git.savannah.gnu.org/git/bash.git"),
-            ("https://git.savannah.gnu.org/cgit/emacs.git", "https://git.savannah.gnu.org/git/emacs.git"),
-            ("https://git.savannah.gnu.org/cgit/bash.git/commit", "https://git.savannah.gnu.org/git/bash.git"),
+            (
+                "https://git.savannah.gnu.org/cgit/bash.git",
+                "https://git.savannah.gnu.org/git/bash.git",
+            ),
+            (
+                "https://git.savannah.gnu.org/cgit/emacs.git",
+                "https://git.savannah.gnu.org/git/emacs.git",
+            ),
+            (
+                "https://git.savannah.gnu.org/cgit/bash.git/commit",
+                "https://git.savannah.gnu.org/git/bash.git",
+            ),
             # gitweb URLs -> clone URLs
-            ("https://git.savannah.gnu.org/?p=gnash.git", "https://git.savannah.gnu.org/git/gnash.git"),
-            ("https://git.savannah.gnu.org/gitweb/?p=bash.git", "https://git.savannah.gnu.org/git/bash.git"),
-            ("https://git.savannah.gnu.org/gitweb/?p=bash.git;a=summary", "https://git.savannah.gnu.org/git/bash.git"),
+            (
+                "https://git.savannah.gnu.org/?p=gnash.git",
+                "https://git.savannah.gnu.org/git/gnash.git",
+            ),
+            (
+                "https://git.savannah.gnu.org/gitweb/?p=bash.git",
+                "https://git.savannah.gnu.org/git/bash.git",
+            ),
+            (
+                "https://git.savannah.gnu.org/gitweb/?p=bash.git;a=summary",
+                "https://git.savannah.gnu.org/git/bash.git",
+            ),
             # direct git URLs (already correct)
-            ("https://git.savannah.gnu.org/git/bash.git", "https://git.savannah.gnu.org/git/bash.git"),
+            (
+                "https://git.savannah.gnu.org/git/bash.git",
+                "https://git.savannah.gnu.org/git/bash.git",
+            ),
             # nested repos
-            ("https://git.savannah.gnu.org/cgit/freetype/freetype2.git", "https://git.savannah.gnu.org/git/freetype/freetype2.git"),
+            (
+                "https://git.savannah.gnu.org/cgit/freetype/freetype2.git",
+                "https://git.savannah.gnu.org/git/freetype/freetype2.git",
+            ),
             # nongnu variant
-            ("https://git.savannah.nongnu.org/cgit/freetype/freetype2.git", "https://git.savannah.nongnu.org/git/freetype/freetype2.git"),
+            (
+                "https://git.savannah.nongnu.org/cgit/freetype/freetype2.git",
+                "https://git.savannah.nongnu.org/git/freetype/freetype2.git",
+            ),
         ],
     )
     def test_savannah_url_variations(self, input_url, expected):

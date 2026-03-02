@@ -12,37 +12,77 @@ logger = logging.getLogger(__name__)
 
 # Template/config files to exclude from "substantial" commit checks.
 # Commits touching ONLY these files are not considered substantial.
-TEMPLATE_FILE_PATTERNS = frozenset({
-    # Git/repo files
-    ".gitignore", ".gitattributes", ".gitmodules",
-    # Documentation
-    "readme", "readme.md", "readme.txt", "readme.rst",
-    "license", "license.md", "license.txt", "licence",
-    "changelog", "changelog.md", "changes", "history",
-    "contributing", "contributing.md",
-    "code_of_conduct", "code_of_conduct.md",
-    "authors", "authors.md", "contributors",
-    # Python
-    "setup.py", "setup.cfg", "pyproject.toml",
-    "requirements.txt", "requirements-dev.txt",
-    "manifest.in", "tox.ini", ".flake8", ".pylintrc",
-    # JavaScript/Node
-    "package.json", "package-lock.json", "yarn.lock",
-    ".npmrc", ".nvmrc", ".eslintrc", ".prettierrc",
-    "tsconfig.json", "jsconfig.json",
-    # Ruby
-    "gemfile", "gemfile.lock", ".ruby-version",
-    # Rust
-    "cargo.toml", "cargo.lock",
-    # Go
-    "go.mod", "go.sum",
-    # Build/CI
-    "makefile", "dockerfile", ".dockerignore",
-    ".travis.yml", ".github", ".gitlab-ci.yml",
-    "jenkinsfile", "azure-pipelines.yml",
-    # Editor/IDE
-    ".editorconfig", ".vscode", ".idea",
-})
+TEMPLATE_FILE_PATTERNS = frozenset(
+    {
+        # Git/repo files
+        ".gitignore",
+        ".gitattributes",
+        ".gitmodules",
+        # Documentation
+        "readme",
+        "readme.md",
+        "readme.txt",
+        "readme.rst",
+        "license",
+        "license.md",
+        "license.txt",
+        "licence",
+        "changelog",
+        "changelog.md",
+        "changes",
+        "history",
+        "contributing",
+        "contributing.md",
+        "code_of_conduct",
+        "code_of_conduct.md",
+        "authors",
+        "authors.md",
+        "contributors",
+        # Python
+        "setup.py",
+        "setup.cfg",
+        "pyproject.toml",
+        "requirements.txt",
+        "requirements-dev.txt",
+        "manifest.in",
+        "tox.ini",
+        ".flake8",
+        ".pylintrc",
+        # JavaScript/Node
+        "package.json",
+        "package-lock.json",
+        "yarn.lock",
+        ".npmrc",
+        ".nvmrc",
+        ".eslintrc",
+        ".prettierrc",
+        "tsconfig.json",
+        "jsconfig.json",
+        # Ruby
+        "gemfile",
+        "gemfile.lock",
+        ".ruby-version",
+        # Rust
+        "cargo.toml",
+        "cargo.lock",
+        # Go
+        "go.mod",
+        "go.sum",
+        # Build/CI
+        "makefile",
+        "dockerfile",
+        ".dockerignore",
+        ".travis.yml",
+        ".github",
+        ".gitlab-ci.yml",
+        "jenkinsfile",
+        "azure-pipelines.yml",
+        # Editor/IDE
+        ".editorconfig",
+        ".vscode",
+        ".idea",
+    }
+)
 
 
 def get_all_commit_ids(repo: Repo) -> list[str]:
@@ -92,9 +132,7 @@ def get_commit_signature_if_substantial(
 
         # Fast: get message + author + timestamp in one call (no diff)
         # Format: message, then separator, then author|email|timestamp
-        output = repo.git.show(
-            commit_id, format="%B%n--SIG--%n%an|%ae|%at", no_patch=True
-        ).strip()
+        output = repo.git.show(commit_id, format="%B%n--SIG--%n%an|%ae|%at", no_patch=True).strip()
         if not output or "--SIG--" not in output:
             return None
 
