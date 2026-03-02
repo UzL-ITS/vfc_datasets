@@ -76,7 +76,45 @@ class TestCppRealCommitIntegration:
         assert "THANKS" not in result[0].commit_diff_no_comment
 
         # Should still have the C files (but with comments stripped)
-        assert "lib/" in result[0].commit_diff_no_comment or ".c" in result[0].commit_diff_no_comment
+        assert (
+            "lib/" in result[0].commit_diff_no_comment or ".c" in result[0].commit_diff_no_comment
+        )
+
+
+class TestDeepNesting:
+    """Test that iterative traversal handles deeply nested ASTs."""
+
+    def test_deeply_nested_braces_with_comments(self):
+        """Deeply nested C source (2000+ levels) should not cause RecursionError."""
+        depth = 2500
+        # Build: void f() { /* c0 */ { /* c1 */ { ... } } }
+        opens = "".join(f"{{ /* comment_{i} */ " for i in range(depth))
+        closes = "} " * depth
+        source = f"void f() {opens}{closes}"
+
+        result = _strip_comments(source, "c")
+        assert result is not None
+        # All comments should be stripped
+        assert "comment_" not in result
+        # Code structure should be preserved
+        assert "void f()" in result
+
+    def test_deeply_nested_if_else_with_comments(self):
+        """Deeply nested if/else with comments should not overflow."""
+        depth = 2000
+        lines = []
+        for i in range(depth):
+            indent = "    " * i
+            lines.append(f"{indent}if (x{i}) {{ // check {i}")
+        for i in range(depth - 1, -1, -1):
+            indent = "    " * i
+            lines.append(f"{indent}}}")
+        source = "\n".join(lines)
+
+        result = _strip_comments(source, "c")
+        assert result is not None
+        assert "// check" not in result
+        assert "if (x0)" in result
 
 
 class TestEdgeCases:
@@ -151,7 +189,7 @@ int main() {
 
     def test_complex_mixed_comments_and_strings(self):
         """Test complex case with comment-like content inside strings and real comments."""
-        source = '''#include <stdio.h>
+        source = """#include <stdio.h>
 
 // This is a real comment that should be removed
 const char* url = "https://example.com/path"; // inline comment
@@ -171,7 +209,7 @@ int main() {
        url: https://test.com
        inside */
     return 0; /* trailing */
-}'''
+}"""
         result = _strip_comments(source, "c")
         assert result is not None
 
