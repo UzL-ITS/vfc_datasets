@@ -121,7 +121,7 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEnt
     total_commits = sum(len(ids) for ids in commits_by_project_url.values())
     num_workers = MAX_WORKERS
 
-    logger.info("Max diff size limit: %d KB", MAX_DIFF_SIZE // 1024)
+    logger.info("Max diff size limit: %dK chars", MAX_DIFF_SIZE // 1000)
 
     logger.info(
         "Processing %d commits across %d repos (workers=%d, batch_size=%d)",

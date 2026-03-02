@@ -73,8 +73,8 @@ USE_DATASET_CACHE = os.getenv("USE_DATASET_CACHE", "true").lower() in ("true", "
 LOG_LEVEL: int = logging.getLevelNamesMapping().get(_env("LOG_LEVEL", "INFO").upper(), logging.INFO)
 LOG_DIR = _env_path("LOG_DIR", BASE_DATA_PATH / "logs")
 
-# Max diff size in bytes
-MAX_DIFF_SIZE = _env_int("MAX_DIFF_SIZE", 256 * 1024, minimum=0)  # 256 KB default
+# Max diff size in characters
+MAX_DIFF_SIZE = _env_int("MAX_DIFF_SIZE", 100_000, minimum=0)
 
 # MoreFixes Database (optional)
 MOREFIXES_DB_HOST = _env("MOREFIXES_DB_HOST", "localhost")

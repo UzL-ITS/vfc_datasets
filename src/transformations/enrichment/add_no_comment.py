@@ -306,7 +306,7 @@ def add_commit_diff_no_comment(
                             If False, skip unsupported files entirely.
     """
     logger.info("Add commit diff without comments [LOCAL]")
-    logger.info("Max diff size: %d KB", MAX_DIFF_SIZE // 1024)
+    logger.info("Max diff size: %dK chars", MAX_DIFF_SIZE // 1000)
 
     # Filter entries needing processing
     needs_processing = [e for e in entries if e.commit_diff and e.commit_diff_no_comment is None]
