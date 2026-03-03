@@ -35,10 +35,16 @@ if __name__ == "__main__":
     else:
         base_dataset = _create_no_comment_dataset()
 
-    # no comments diff
-    base_dataset = transformations.add_commit_diff_no_comment(base_dataset)
+    # Save original diffs before stripping comments
+    original_diffs = {
+        (e.project_url, e.commit_id): e.commit_diff for e in base_dataset if e.commit_diff
+    }
+
+    base_dataset = transformations.strip_diff_comments(base_dataset)
     no_comment_dataset = [
-        e for e in base_dataset if e.commit_diff and e.commit_diff != e.commit_diff_no_comment
+        e
+        for e in base_dataset
+        if e.commit_diff and e.commit_diff != original_diffs.get((e.project_url, e.commit_id))
     ]
     random.seed(42)
     no_comment_dataset = random.sample(no_comment_dataset, min(10, len(no_comment_dataset)))
@@ -46,8 +52,9 @@ if __name__ == "__main__":
     diff_path = os.path.join(BASE_DATA_PATH, "diffs")
     os.makedirs(diff_path, exist_ok=True)
     for i, entry in enumerate(no_comment_dataset):
+        key = (entry.project_url, entry.commit_id)
         with open(os.path.join(diff_path, f"no_comment_diff_{i}_with_comments.txt"), "w") as f:
-            f.write(entry.commit_diff or "")
+            f.write(original_diffs.get(key, ""))
         with open(os.path.join(diff_path, f"no_comment_diff_{i}_no_comments.txt"), "w") as f:
-            f.write(entry.commit_diff_no_comment or "")
+            f.write(entry.commit_diff or "")
     print_dataset_stats(base_dataset)

@@ -57,7 +57,7 @@ TRANSFORMATION_PIPELINE: list[Callable[[list[DatasetEntry]], list[DatasetEntry]]
     transformations.deduplicate_across_related_repositories,
     transformations.add_commit_information_local,
     # transformations.add_commit_information_api,
-    transformations.add_commit_diff_no_comment,
+    transformations.strip_diff_comments,
     transformations.filter_by_has_unique_diff,
 ]
 

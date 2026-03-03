@@ -295,21 +295,21 @@ def _process_batch(args: tuple[str, list[str], bool]) -> dict[str, str]:
     return results
 
 
-def add_commit_diff_no_comment(
+def strip_diff_comments(
     entries: list[DatasetEntry], *, include_unsupported: bool = True
 ) -> list[DatasetEntry]:
-    """Enrich entries with comment-stripped diffs using tree-sitter.
+    """Strip comments from commit diffs in-place using tree-sitter.
 
     Args:
         entries: List of dataset entries to process
         include_unsupported: If True (default), include original diff for unsupported files.
                             If False, skip unsupported files entirely.
     """
-    logger.info("Add commit diff without comments [LOCAL]")
+    logger.info("Strip comments from commit diffs [LOCAL]")
     logger.info("Max diff size: %dK chars", MAX_DIFF_SIZE // 1000)
 
     # Filter entries needing processing
-    needs_processing = [e for e in entries if e.commit_diff and e.commit_diff_no_comment is None]
+    needs_processing = [e for e in entries if e.commit_diff]
     to_process = [
         e for e in needs_processing if e.commit_diff and len(e.commit_diff) <= MAX_DIFF_SIZE
     ]
@@ -364,7 +364,7 @@ def add_commit_diff_no_comment(
                 try:
                     for commit_id, diff in future.result().items():
                         for entry in entries_by_commit.get((url, commit_id), []):
-                            entry.commit_diff_no_comment = diff
+                            entry.commit_diff = diff
                 except Exception as exc:
                     logger.error("Batch failed for %s: %s: %s", path, type(exc).__name__, exc)
 

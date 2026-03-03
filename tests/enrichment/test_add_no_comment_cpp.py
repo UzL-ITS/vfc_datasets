@@ -5,7 +5,7 @@ import pytest
 from dataset_entry import DatasetEntry
 from transformations.enrichment.add_no_comment import (
     _strip_comments,
-    add_commit_diff_no_comment,
+    strip_diff_comments,
 )
 
 
@@ -48,37 +48,32 @@ class TestCppRealCommitIntegration:
         original_diff = entry_with_diff.commit_diff
         assert "THANKS" in original_diff
 
-        result = add_commit_diff_no_comment([entry_with_diff], include_unsupported=True)
+        result = strip_diff_comments([entry_with_diff], include_unsupported=True)
 
         assert len(result) == 1
-        assert result[0].commit_diff_no_comment is not None
+        assert result[0].commit_diff is not None
 
         # Should include the unsupported markdown file
-        assert "THANKS" in result[0].commit_diff_no_comment
+        assert "THANKS" in result[0].commit_diff
 
         # C file comments should be stripped - the diff should be smaller
         # (this commit mainly touched comments)
-        assert len(result[0].commit_diff_no_comment) < len(original_diff)
+        assert len(result[0].commit_diff) < len(original_diff)
 
     @pytest.mark.integration
     @pytest.mark.slow
     def test_include_unsupported_false(self, entry_with_diff):
         """Test include_unsupported=False skips unsupported files entirely."""
-        # Reset the no_comment field for fresh test
-        entry_with_diff.commit_diff_no_comment = None
-
-        result = add_commit_diff_no_comment([entry_with_diff], include_unsupported=False)
+        result = strip_diff_comments([entry_with_diff], include_unsupported=False)
 
         assert len(result) == 1
-        assert result[0].commit_diff_no_comment is not None
+        assert result[0].commit_diff is not None
 
         # Should NOT include the unsupported markdown file
-        assert "THANKS" not in result[0].commit_diff_no_comment
+        assert "THANKS" not in result[0].commit_diff
 
         # Should still have the C files (but with comments stripped)
-        assert (
-            "lib/" in result[0].commit_diff_no_comment or ".c" in result[0].commit_diff_no_comment
-        )
+        assert "lib/" in result[0].commit_diff or ".c" in result[0].commit_diff
 
 
 class TestDeepNesting:

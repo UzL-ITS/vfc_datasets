@@ -2,7 +2,6 @@
 
 # Re-export commonly used transformations
 from .enrichment import (
-    add_commit_diff_no_comment,
     add_commit_information_api,
     add_commit_information_local,
     extend_commit_ids_api,
@@ -10,6 +9,7 @@ from .enrichment import (
     filter_unreachable_project_urls,
     get_moved_urls,
     get_unreachable_urls,
+    strip_diff_comments,
     update_project_urls_inplace,
 )
 from .filters import (
@@ -31,7 +31,7 @@ __all__ = [
     "filter_by_extension",
     "filter_by_has_unique_diff",
     # Enrichment
-    "add_commit_diff_no_comment",
+    "strip_diff_comments",
     "add_commit_information_api",
     "add_commit_information_local",
     "extend_commit_ids_api",
