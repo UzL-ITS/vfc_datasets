@@ -52,14 +52,6 @@ def _extract_gdrive_file_id(url: str) -> str | None:
     return None
 
 
-def _check_existing_file(output_path: Path, force_download: bool) -> bool:
-    """Return True if file exists and download should be skipped."""
-    if force_download or not output_path.exists():
-        return False
-
-    logger.info("File already exists: %s", output_path)
-    return True
-
 
 def _verify_checksum(file_path: PathLike, expected_checksum: str) -> bool:
     """Verify file SHA-256 checksum. Returns True if match, False otherwise."""
@@ -184,7 +176,7 @@ def download_file(
     """Download a file from URL, auto-detecting Google Drive and HuggingFace sources."""
     output_path = Path(output_path)
 
-    if not _check_existing_file(output_path, force_download):
+    if force_download or not output_path.exists():
         output_path.parent.mkdir(parents=True, exist_ok=True)
         parsed_url = urlparse(url)
 
@@ -198,6 +190,8 @@ def download_file(
             if "huggingface.co" in parsed_url.netloc and HF_TOKEN:
                 headers = {"Authorization": f"Bearer {HF_TOKEN}"}
             _download_http(url, output_path, headers, max_retries)
+    else:
+        logger.info("File already exists: %s", output_path)
 
     if checksum and not _verify_checksum(output_path, checksum):
         raise RuntimeError(f"Checksum mismatch for {output_path}")

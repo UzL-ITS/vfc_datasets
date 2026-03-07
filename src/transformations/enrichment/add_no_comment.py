@@ -64,9 +64,8 @@ def _get_parser(language: str) -> tree_sitter.Parser | None:
 
 def _get_language(file_path: str) -> str | None:
     """Get language from file extension."""
-    return next(
-        (lang for ext, lang in EXTENSION_TO_LANGUAGE.items() if file_path.endswith(ext)), None
-    )
+    _, ext = os.path.splitext(file_path)
+    return EXTENSION_TO_LANGUAGE.get(ext.lower())
 
 
 def _strip_comments(source_code: str, language: str) -> str | None:
@@ -136,10 +135,8 @@ def _generate_diff(
         return ""
 
     basename = os.path.basename(path)
-    tmpdir_a = tmpdir_b = None
-    try:
-        tmpdir_a = tempfile.mkdtemp()
-        tmpdir_b = tempfile.mkdtemp()
+
+    with tempfile.TemporaryDirectory() as tmpdir_a, tempfile.TemporaryDirectory() as tmpdir_b:
         file_a = os.path.join(tmpdir_a, basename)
         file_b = os.path.join(tmpdir_b, basename)
 
@@ -155,37 +152,26 @@ def _generate_diff(
             with_exceptions=False,
         )
 
-        if not raw:
-            return ""
+    if not raw:
+        return ""
 
-        # Replace temp paths with canonical a/path and b/path
-        lines = raw.split("\n")
-        result: list[str] = []
-        for line in lines:
-            if line.startswith("diff --git"):
-                result.append(f"diff --git a/{path} b/{path}")
-            elif line.startswith("index "):
-                # Keep git's hash abbreviation, only fix the mode
-                hashes = line.split(" ")[1]
-                result.append(f"index {hashes} {mode}")
-            elif line.startswith("--- "):
-                result.append(f"--- a/{path}")
-            elif line.startswith("+++ "):
-                result.append(f"+++ b/{path}")
-            else:
-                result.append(line)
+    # Replace temp paths with canonical a/path and b/path
+    lines = raw.split("\n")
+    result: list[str] = []
+    for line in lines:
+        if line.startswith("diff --git"):
+            result.append(f"diff --git a/{path} b/{path}")
+        elif line.startswith("index "):
+            hashes = line.split(" ")[1]
+            result.append(f"index {hashes} {mode}")
+        elif line.startswith("--- "):
+            result.append(f"--- a/{path}")
+        elif line.startswith("+++ "):
+            result.append(f"+++ b/{path}")
+        else:
+            result.append(line)
 
-        return "\n".join(result)
-    finally:
-        for tmpdir in (tmpdir_a, tmpdir_b):
-            if tmpdir is not None:
-                try:
-                    filepath = os.path.join(tmpdir, basename)
-                    if os.path.exists(filepath):
-                        os.unlink(filepath)
-                    os.rmdir(tmpdir)
-                except OSError:
-                    pass
+    return "\n".join(result)
 
 
 def _read_blob(blob: Any) -> str:

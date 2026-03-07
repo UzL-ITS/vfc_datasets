@@ -1,8 +1,11 @@
 """Dataset statistics utilities."""
 
+import logging
 from typing import TypedDict
 
 from dataset_entry import DatasetEntry
+
+logger = logging.getLogger(__name__)
 
 
 class DatasetStats(TypedDict):
@@ -42,27 +45,25 @@ def compute_dataset_stats(entries: list[DatasetEntry]) -> dict[str, DatasetStats
 
 def print_dataset_stats(entries: list[DatasetEntry]) -> None:
     """Print dataset statistics table to logging."""
-    import logging
-
     stats = compute_dataset_stats(entries)
 
-    logging.info("")
-    logging.info("Statistics by source dataset:")
-    logging.info("  %-20s %7s %7s %8s %8s", "Dataset", "Entries", "w/Diff", "Diff%", "Projects")
-    logging.info("-" * 65)
+    logger.info("")
+    logger.info("Statistics by source dataset:")
+    logger.info("  %-20s %7s %7s %8s %8s", "Dataset", "Entries", "w/Diff", "Diff%", "Projects")
+    logger.info("-" * 65)
 
     for name, s in sorted(stats.items(), key=lambda x: -x[1]["total"]):
         pct = (s["with_diff"] / s["total"] * 100) if s["total"] > 0 else 0
-        logging.info(
+        logger.info(
             "  %-20s %7d %7d %7.1f%% %8d", name, s["total"], s["with_diff"], pct, s["projects"]
         )
 
-    logging.info("-" * 65)
+    logger.info("-" * 65)
     total = len(entries)
     with_diff = sum(1 for e in entries if e.commit_diff is not None)
     unique_projects = len({e.project_url for e in entries})
     pct = (with_diff / total * 100) if total > 0 else 0
-    logging.info(
+    logger.info(
         "  %-20s %7d %7d %7.1f%% %8d",
         "TOTAL",
         total,
@@ -70,4 +71,4 @@ def print_dataset_stats(entries: list[DatasetEntry]) -> None:
         pct,
         unique_projects,
     )
-    logging.info("=" * 65)
+    logger.info("=" * 65)

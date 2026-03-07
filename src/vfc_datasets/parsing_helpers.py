@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import math
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
@@ -238,9 +237,6 @@ def extract_from_commit_url(
 
 def normalize_cve_ids(cve_input: object) -> set[str]:
     """Normalize CVE IDs to a set of validated uppercase strings."""
-    if isinstance(cve_input, float) and math.isnan(cve_input):
-        return set()
-
     match cve_input:
         case None | float():
             return set()
@@ -260,13 +256,10 @@ def normalize_cve_ids(cve_input: object) -> set[str]:
 
 def normalize_cwe_ids(cwe_input: object) -> set[str]:
     """Normalize CWE IDs to a set of validated strings (CWE-1 to CWE-9999)."""
-    if isinstance(cwe_input, float) and math.isnan(cwe_input):
-        return set()
-
     match cwe_input:
-        case None:
+        case None | float():
             return set()
-        case float() | int() | str() as item:
+        case int() | str() as item:
             cwe_items: Iterable[str | int | float] = [item]
         case Iterable() as items:
             cwe_items = items

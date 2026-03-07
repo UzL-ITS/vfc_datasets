@@ -126,7 +126,7 @@ class DatasetEntry:
             key = "commit_timestamp_utc" if slot == "_commit_timestamp_utc" else slot
             value = getattr(self, slot, None)
             if isinstance(value, set):
-                value = list(value)
+                value = sorted(value, key=str)
             elif isinstance(value, datetime):
                 value = value.isoformat().replace("+00:00", "Z")
             d[key] = value
@@ -135,12 +135,4 @@ class DatasetEntry:
 
 def create_dataset_entry(data: dict[str, Any]) -> DatasetEntry:
     """Create DatasetEntry from dict, converting lists to sets."""
-    conversions = {
-        "src_datasets": lambda x: set(x) if isinstance(x, list) else x,
-        "cve_ids": lambda x: set(x) if isinstance(x, list) else x,
-        "cwe_ids": lambda x: set(x) if isinstance(x, list) else x,
-        "owasp_categories": lambda x: {int(i) for i in x} if isinstance(x, list) else x,
-        "files_changed": lambda x: set(x) if isinstance(x, list) else x,
-    }
-    converted = {k: conversions.get(k, lambda x: x)(v) for k, v in data.items()}
-    return DatasetEntry(**converted)  # type: ignore[arg-type]
+    return DatasetEntry(**{k: set(v) if isinstance(v, list) else v for k, v in data.items()})  # type: ignore[arg-type]

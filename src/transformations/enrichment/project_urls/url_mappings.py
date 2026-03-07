@@ -5,10 +5,11 @@ from __future__ import annotations
 import json
 from functools import cache
 from importlib.resources import files
+from typing import Any
 
 
 @cache
-def _load(filename: str) -> dict:
+def _load(filename: str) -> dict[str, Any]:
     resource = files(__package__).joinpath(filename)
     with resource.open("r", encoding="utf-8") as f:
         return json.load(f)
