@@ -89,6 +89,7 @@ class BaseDataset(ABC):
                 return cached
 
         df = self._load_data()
+        df = df.where(df.notna(), None)
 
         entries: list[DatasetEntry] = []
         records = cast(list[dict[str, Any]], df.to_dict(orient="records"))

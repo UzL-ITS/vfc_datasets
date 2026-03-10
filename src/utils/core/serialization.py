@@ -1,6 +1,5 @@
 import json
 import logging
-import math
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -34,11 +33,6 @@ def load_entries(file_path: str | Path) -> list[DatasetEntry]:
                 continue
 
             data = json.loads(line)
-
-            # Convert NaN values to None for pandas compatibility
-            for key, value in data.items():
-                if isinstance(value, float) and math.isnan(value):
-                    data[key] = None
 
             try:
                 entries.append(create_dataset_entry(data))
@@ -76,7 +70,7 @@ def save_entries(entries: Sequence[DatasetEntry], file_path: str | Path) -> None
 
     with open(file_path, "w", encoding="utf-8") as f:
         for entry in entries:
-            json.dump(entry.to_dict(), f)
+            json.dump(entry.to_dict(), f, allow_nan=False)
             f.write("\n")
 
     logger.info("Successfully saved %d entries to %s", len(entries), file_path)
