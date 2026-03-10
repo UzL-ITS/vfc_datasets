@@ -5,7 +5,7 @@ import logging
 import time
 from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
-from typing import Any
+from typing import Any, Self
 
 import httpx
 from tqdm.asyncio import tqdm as async_tqdm
@@ -38,7 +38,7 @@ class AsyncGitHubClient:
         self._rate_limit_remaining: int | None = None
         self._rate_limit_limit: int | None = None
 
-    async def __aenter__(self) -> "AsyncGitHubClient":
+    async def __aenter__(self) -> Self:
         logging.getLogger("httpx").setLevel(logging.WARNING)
         headers: dict[str, str] = {
             "Accept": "application/vnd.github+json",
