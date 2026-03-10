@@ -127,10 +127,10 @@ def create_splits(entries: list[DatasetEntry], name: str) -> None:
 
     # Create 3 random splits
     for seed in [1, 2, 3]:
-        create_random_split(entries, name, OUTPUT_PATH, seed)
+        create_random_split(entries, name, OUTPUT_PATH, seed, relationships=relationships)
 
     # Create 1 temporal split
-    create_temporal_split(entries, name, OUTPUT_PATH)
+    create_temporal_split(entries, name, OUTPUT_PATH, relationships=relationships)
 
     # Create 3 group-stratified splits (best out of 50 seeds)
     create_top_n_group_stratified_splits(entries, name, OUTPUT_PATH, relationships)

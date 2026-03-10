@@ -3,7 +3,7 @@
 import random
 
 from dataset_entry import DatasetEntry
-from utils.split.repository_relationships import discover_repository_relationships
+from utils.split.repository_relationships import RepositoryRelationships
 from utils.split.split_common import split_by_ratio, validate_split_ratios, visualize_split
 
 
@@ -13,7 +13,7 @@ def train_val_test_split_random(
     val_ratio: float = 0.2,
     test_ratio: float = 0.2,
     seed: int | None = None,
-    visualize: bool = True,
+    relationships: RepositoryRelationships | None = None,
 ) -> tuple[list[DatasetEntry], list[DatasetEntry], list[DatasetEntry]]:
     """Random split without respecting repository relationships."""
     if not entries:
@@ -28,8 +28,7 @@ def train_val_test_split_random(
     # Split according to ratios
     train, val, test = split_by_ratio(shuffled, train_ratio, val_ratio, test_ratio)
 
-    if visualize:
-        relationships = discover_repository_relationships(entries)
+    if relationships is not None:
         visualize_split(train, test, relationships, val_entries=val)
 
     return train, val, test

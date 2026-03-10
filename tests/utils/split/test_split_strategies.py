@@ -297,7 +297,7 @@ def test_three_way_split_custom_ratios():
 
 
 def test_random_split_empty():
-    train, val, test = train_val_test_split_random([], visualize=False)
+    train, val, test = train_val_test_split_random([])
     assert train == []
     assert val == []
     assert test == []
@@ -309,7 +309,7 @@ def test_random_split_preserves_total():
         + _make_entries("https://github.com/test/b", 300)
         + _make_entries("https://github.com/test/c", 100)
     )
-    train, val, test = train_val_test_split_random(entries, visualize=False)
+    train, val, test = train_val_test_split_random(entries)
     assert len(train) + len(val) + len(test) == 1000
 
 
@@ -319,8 +319,8 @@ def test_random_split_deterministic_with_seed():
         + _make_entries("https://github.com/test/b", 100)
         + _make_entries("https://github.com/test/c", 100)
     )
-    train1, val1, test1 = train_val_test_split_random(entries, seed=42, visualize=False)
-    train2, val2, test2 = train_val_test_split_random(entries, seed=42, visualize=False)
+    train1, val1, test1 = train_val_test_split_random(entries, seed=42)
+    train2, val2, test2 = train_val_test_split_random(entries, seed=42)
     assert len(train1) == len(train2)
     assert len(val1) == len(val2)
     assert len(test1) == len(test2)
@@ -332,8 +332,8 @@ def test_random_split_different_seeds_differ():
     entries = _make_entries("https://github.com/test/a", 100) + _make_entries(
         "https://github.com/test/b", 100
     )
-    train1, _, _ = train_val_test_split_random(entries, seed=1, visualize=False)
-    train2, _, _ = train_val_test_split_random(entries, seed=2, visualize=False)
+    train1, _, _ = train_val_test_split_random(entries, seed=1)
+    train2, _, _ = train_val_test_split_random(entries, seed=2)
     # Different seeds should produce different splits (with high probability)
     assert {e.commit_id for e in train1} != {e.commit_id for e in train2}
 
@@ -345,7 +345,6 @@ def test_random_split_respects_ratios():
         train_ratio=0.6,
         val_ratio=0.2,
         test_ratio=0.2,
-        visualize=False,
     )
     # With 1000 entries, ratios should be exact
     assert len(train) == 600
@@ -375,7 +374,7 @@ def _make_entries_with_timestamps(
 
 
 def test_temporal_split_empty():
-    train, val, test = train_val_test_split_temporal([], visualize=False)
+    train, val, test = train_val_test_split_temporal([])
     assert train == []
     assert val == []
     assert test == []
@@ -393,7 +392,7 @@ def test_temporal_split_preserves_total():
             "https://github.com/test/c", 100, start_date=datetime(2021, 1, 1, tzinfo=UTC)
         )
     )
-    train, val, test = train_val_test_split_temporal(entries, visualize=False)
+    train, val, test = train_val_test_split_temporal(entries)
     assert len(train) + len(val) + len(test) == 1000
 
 
@@ -405,7 +404,6 @@ def test_temporal_split_chronological_ordering():
         train_ratio=0.6,
         val_ratio=0.2,
         test_ratio=0.2,
-        visualize=False,
     )
 
     # All train timestamps should be < all val timestamps < all test timestamps
@@ -426,7 +424,7 @@ def test_temporal_split_requires_timestamps():
     """Entries without timestamps should raise ValueError."""
     entries = _make_entries("https://github.com/test/a", 100)  # No timestamps
     with pytest.raises(ValueError, match="All entries must have commit_timestamp_utc"):
-        train_val_test_split_temporal(entries, visualize=False)
+        train_val_test_split_temporal(entries)
 
 
 def test_temporal_split_respects_ratios():
@@ -436,7 +434,6 @@ def test_temporal_split_respects_ratios():
         train_ratio=0.6,
         val_ratio=0.2,
         test_ratio=0.2,
-        visualize=False,
     )
     # With 1000 entries, ratios should be exact
     assert len(train) == 600

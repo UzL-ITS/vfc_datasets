@@ -1,7 +1,7 @@
 """Temporal splitting strategy based on commit timestamps."""
 
 from dataset_entry import DatasetEntry
-from utils.split.repository_relationships import discover_repository_relationships
+from utils.split.repository_relationships import RepositoryRelationships
 from utils.split.split_common import split_by_ratio, validate_split_ratios, visualize_split
 
 
@@ -10,7 +10,7 @@ def train_val_test_split_temporal(
     train_ratio: float = 0.6,
     val_ratio: float = 0.2,
     test_ratio: float = 0.2,
-    visualize: bool = True,
+    relationships: RepositoryRelationships | None = None,
 ) -> tuple[list[DatasetEntry], list[DatasetEntry], list[DatasetEntry]]:
     """Temporal split based on commit timestamps."""
     if not entries:
@@ -26,8 +26,7 @@ def train_val_test_split_temporal(
     # Split the sorted entries
     train, val, test = split_by_ratio(sorted_entries, train_ratio, val_ratio, test_ratio)
 
-    if visualize:
-        relationships = discover_repository_relationships(entries)
+    if relationships is not None:
         visualize_split(train, test, relationships, val_entries=val)
 
     return train, val, test

@@ -82,6 +82,7 @@ def create_random_split(
     output_path: Path,
     seed: int,
     *,
+    relationships: RepositoryRelationships | None = None,
     train_ratio: float = 0.6,
     val_ratio: float = 0.2,
     test_ratio: float = 0.2,
@@ -95,7 +96,7 @@ def create_random_split(
         val_ratio=val_ratio,
         test_ratio=test_ratio,
         seed=seed,
-        visualize=True,
+        relationships=relationships,
     )
 
     save_entries_csv(train, output_path / f"{name}-random-seed{seed}-train.csv")
@@ -108,6 +109,7 @@ def create_temporal_split(
     name: str,
     output_path: Path,
     *,
+    relationships: RepositoryRelationships | None = None,
     train_ratio: float = 0.6,
     val_ratio: float = 0.2,
     test_ratio: float = 0.2,
@@ -120,7 +122,7 @@ def create_temporal_split(
         train_ratio=train_ratio,
         val_ratio=val_ratio,
         test_ratio=test_ratio,
-        visualize=True,
+        relationships=relationships,
     )
 
     save_entries_csv(train, output_path / f"{name}-temporal-train.csv")
