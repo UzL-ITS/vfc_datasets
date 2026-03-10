@@ -23,10 +23,9 @@ entries = BigVulDataset() + CVEFixesDataset()
 entries = deduplicate_within_repository(entries)
 ```
 
-See [`src/examples/create_custom_dataset.py`](src/examples/create_custom_dataset.py) for a complete example.
+See [`src/examples/`](src/examples/) for more examples.
 
 
 ## Cite the Original Authors
 
 If you use any of these datasets for your research, please cite the original authors. Paper titles and DOIs are available via `DatasetClass.metadata.paper_url`.
-
