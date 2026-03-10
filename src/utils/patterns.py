@@ -1,7 +1,5 @@
 """Regex patterns for vulnerability identifiers (CVE, CWE)."""
 
-from __future__ import annotations
-
 import re
 
 # CVE IDs: CVE-YYYY-NNNN+ (4+ digits, unlimited)

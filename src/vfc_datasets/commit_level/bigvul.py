@@ -7,6 +7,7 @@ from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_url_and_commit,
+    lookup_broken_commit,
     normalize_cve_ids,
     normalize_cwe_ids,
 )
@@ -18,7 +19,7 @@ class BigVulDataset(BaseDataset):
         granularity="commit",  # TODO: add the function-level data as well?
         paper_title="A C/C++ Code Vulnerability Dataset with Code Changes and CVE Summaries",
         paper_url="https://doi.org/10.1145/3379597.3387501",
-        download_url="https://github.com/ZeoVan/MSR_20_Code_vulnerability_CSV_Dataset",
+        source_url="https://github.com/ZeoVan/MSR_20_Code_vulnerability_CSV_Dataset",
         publication_year=2020,
         programming_languages=("C", "C++"),
         paper_quotes=(
@@ -56,11 +57,7 @@ class BigVulDataset(BaseDataset):
         if "envoyproxy/envoy" in ref_link and "CVE-2019-15226" in cve_id:
             return "https://github.com/envoyproxy/envoy", "afc39bea36fd436e54262f150c009e8d72db5014"
 
-        # Curl broken tag-describe link: 3ab3c16 doesn't resolve correctly
-        if "github.com/curl/curl" in ref_link and "3ab3c16" in ref_link:
-            return "https://github.com/curl/curl", "3ab3c16db6a5674f53cf23d5654366663f734493"
-
-        return None, None
+        return lookup_broken_commit(ref_link) or (None, None)
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         project_url, commit_id = self._handle_broken_entries(row)

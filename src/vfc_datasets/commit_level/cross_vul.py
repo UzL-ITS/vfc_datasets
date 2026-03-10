@@ -11,6 +11,7 @@ from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.download_helper import download_and_extract_zip
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
+    lookup_broken_commit,
     normalize_cve_ids,
     normalize_cwe_ids,
     normalize_or_resolve_commit,
@@ -27,7 +28,7 @@ class CrossVulDataset(BaseDataset):
         granularity="commit",
         paper_title="CrossVul: a cross-language vulnerability dataset with commit data",
         paper_url="https://doi.org/10.1145/3468264.3473122",
-        download_url="https://doi.org/10.5281/zenodo.4734049",
+        source_url="https://doi.org/10.5281/zenodo.4734049",
         publication_year=2021,
         programming_languages=("40+ languages",),
         paper_quotes=(
@@ -83,8 +84,10 @@ class CrossVulDataset(BaseDataset):
 
         commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
         if not commit_id:
-            # TODO: fix broken entries: 'commit_url': 'https://github.com/curl/curl/commit/curl-7_51_0-162-g3ab3c16'
-            return None
+            match = lookup_broken_commit(row.get("commit_url", ""))
+            if not match:
+                return None
+            project_url, commit_id = match
 
         return DatasetEntry(
             project_url=project_url,

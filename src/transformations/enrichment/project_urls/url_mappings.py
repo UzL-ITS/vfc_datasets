@@ -1,7 +1,5 @@
 """Cached accessors for global project URL mapping JSON files."""
 
-from __future__ import annotations
-
 import json
 from functools import cache
 from importlib.resources import files

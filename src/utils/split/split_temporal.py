@@ -1,7 +1,5 @@
 """Temporal splitting strategy based on commit timestamps."""
 
-from __future__ import annotations
-
 from dataset_entry import DatasetEntry
 from utils.split.repository_relationships import discover_repository_relationships
 from utils.split.split_common import _split_by_ratio, _validate_split_ratios, visualize_split

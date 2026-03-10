@@ -1,7 +1,5 @@
 """Shared utilities for dataset splitting strategies."""
 
-from __future__ import annotations
-
 import logging
 from collections import defaultdict
 

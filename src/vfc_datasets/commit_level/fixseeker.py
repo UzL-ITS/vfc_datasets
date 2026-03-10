@@ -23,7 +23,7 @@ class _FixSeekerBase(BaseDataset):
     _file_glob: str
 
     def _load_data(self) -> pd.DataFrame:
-        raw_dir = download_and_extract_zip(self.metadata.download_url, self._raw_dir / "fixseeker")
+        raw_dir = download_and_extract_zip(self.metadata.source_url, self._raw_dir / "fixseeker")
         json_files = sorted(raw_dir.rglob(self._file_glob))
         if not json_files:
             raise RuntimeError(f"No files matching {self._file_glob} in {raw_dir}")
@@ -65,7 +65,7 @@ class FixSeekerBalancedDataset(_FixSeekerBase):
         granularity="commit",
         paper_title="Fixseeker: An Empirical Driven Graph-based Approach for Detecting Silent Vulnerability Fixes in Open Source Software",
         paper_url="https://doi.org/10.48550/arXiv.2503.20265",
-        download_url="https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link",
+        source_url="https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link",
         publication_year=2025,
         programming_languages=("C", "C++", "Java", "Python", "PHP"),
         paper_quotes=(
@@ -86,7 +86,7 @@ class FixSeekerImbalancedDataset(_FixSeekerBase):
         granularity="commit",
         paper_title="Fixseeker: An Empirical Driven Graph-based Approach for Detecting Silent Vulnerability Fixes in Open Source Software",
         paper_url="https://doi.org/10.48550/arXiv.2503.20265",
-        download_url="https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link",
+        source_url="https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link",
         publication_year=2025,
         programming_languages=("C", "C++", "Java", "Python", "PHP"),
         paper_quotes=(

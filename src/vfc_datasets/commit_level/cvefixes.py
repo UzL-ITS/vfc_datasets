@@ -29,7 +29,7 @@ class CVEFixesDataset(BaseDataset):
         granularity="commit",
         paper_title="CVEfixes: Automated Collection of Vulnerabilities and Their Fixes from Open-Source Software",
         paper_url="https://doi.org/10.1145/3475960.3475985",
-        download_url="https://doi.org/10.5281/zenodo.4476563",
+        source_url="https://doi.org/10.5281/zenodo.4476563",
         publication_year=2021,
         paper_quotes=(
             # PROMISE 2021 Paper - Page 1 (Abstract)

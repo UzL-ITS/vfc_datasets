@@ -20,7 +20,7 @@ class TracerDataset(BaseDataset):
         granularity="commit",
         paper_title="Tracking Patches for Open Source Software Vulnerabilities",
         paper_url="https://doi.org/10.48550/arXiv.2112.02240",
-        download_url="https://github.com/patch-tracer/patch-tracer.github.io",
+        source_url="https://github.com/patch-tracer/patch-tracer.github.io",
         publication_year=2022,
         paper_quotes=(
             # Page 3 (Section 2.1 - Depth Dataset Construction)

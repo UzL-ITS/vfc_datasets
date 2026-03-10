@@ -101,13 +101,6 @@ async def _extend_commit_id_api_async(
     entry: DatasetEntry, client: AsyncGitHubClient
 ) -> tuple[DatasetEntry, str, bool]:
     """Extend a short commit ID to full 40-character SHA using GitHub API."""
-    if not entry.commit_id or len(entry.commit_id) >= 40:
-        return entry, entry.commit_id, False
-
-    # Only works for GitHub repositories
-    if not entry.project_url or "github.com" not in entry.project_url:
-        return entry, entry.commit_id, False
-
     git_url = GitURL.parse(entry.project_url)
     if not git_url or git_url.host != "github.com":
         return entry, entry.commit_id, False
@@ -178,8 +171,10 @@ def extend_commit_ids_local(entries: list[DatasetEntry]) -> list[DatasetEntry]:
         entries_by_project_url[project_url].append(entry)
 
     logger.info(
-        f"Processing {len(entries_to_process)} entries from "
-        f"{len(entries_by_project_url)} repositories using {MAX_WORKERS} workers"
+        "Processing %d entries from %d repositories using %d workers",
+        len(entries_to_process),
+        len(entries_by_project_url),
+        MAX_WORKERS,
     )
 
     # Sort by number of entries per repository (descending)

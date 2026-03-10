@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import pandas as pd
 
@@ -25,7 +25,7 @@ class PrimeVulDataset(BaseDataset):
         granularity="function",
         paper_title="Vulnerability Detection with Code Language Models: How Far Are We?",
         paper_url="https://doi.org/10.48550/arXiv.2403.18624",
-        download_url="https://github.com/DLVulDet/PrimeVul",
+        source_url="https://github.com/DLVulDet/PrimeVul",
         publication_year=2024,
         programming_languages=("C", "C++"),
         paper_quotes=(
@@ -90,7 +90,8 @@ class PrimeVulDataset(BaseDataset):
         df = pd.concat(frames, ignore_index=True)
 
         # Add resolved project URLs for proper deduplication
-        resolved_project_urls = [self._resolve_project_url(dict(row)) for _, row in df.iterrows()]
+        records = cast(list[dict[str, Any]], df.to_dict(orient="records"))
+        resolved_project_urls = [self._resolve_project_url(row) for row in records]
         df["resolved_project_url"] = pd.Series(
             resolved_project_urls, index=df.index, dtype="string"
         )

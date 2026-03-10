@@ -1,10 +1,9 @@
-from __future__ import annotations
-
 import hashlib
 import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Self
 from urllib.parse import ParseResult, parse_qs, unquote, urlparse
 
 from config import REPOSITORY_PATH
@@ -32,7 +31,7 @@ class GitURL:
     _is_gitweb: bool = False
 
     @classmethod
-    def parse(cls, url: str, prefer_https: bool = True) -> GitURL | None:
+    def parse(cls, url: str, prefer_https: bool = True) -> Self | None:
         """Parse any Git URL format into a GitURL object."""
         if not url:
             return None
@@ -71,7 +70,7 @@ class GitURL:
         return git_url
 
     @classmethod
-    def _parse_ssh_url(cls, ssh_url: str) -> GitURL | None:
+    def _parse_ssh_url(cls, ssh_url: str) -> Self | None:
         """Parse SSH URL formats (SCP-style or URL-style)."""
         for pattern in (
             r"^(?P<user>\w+)@(?P<host>[^:]+):(?P<path>.+)$",  # git@host:path
@@ -89,23 +88,22 @@ class GitURL:
 
         path = self._normalized_path()
 
-        match self.host:
-            case "github.com":
-                self._extract_github(path)
-            case host if "gitlab" in host:
-                self._extract_gitlab(path)
-            case host if "bitbucket" in host:
-                self._extract_bitbucket(path)
-            case host if host.endswith("googlesource.com"):
-                self._extract_googlesource(path)
-            case host if host.startswith("git.savannah."):
-                self._extract_savannah(path, parsed_url)
-            case "git.kernel.org":
-                self._extract_kernel_org(parsed_url)
-            case "cgit.freedesktop.org":
-                self._extract_cgit_freedesktop(parsed_url)
-            case _:
-                self._extract_generic(path, parsed_url)
+        if self.host == "github.com":
+            self._extract_github(path)
+        elif "gitlab" in self.host:
+            self._extract_gitlab(path)
+        elif "bitbucket" in self.host:
+            self._extract_bitbucket(path)
+        elif self.host.endswith("googlesource.com"):
+            self._extract_googlesource(path)
+        elif self.host.startswith("git.savannah."):
+            self._extract_savannah(path, parsed_url)
+        elif self.host == "git.kernel.org":
+            self._extract_kernel_org(parsed_url)
+        elif self.host == "cgit.freedesktop.org":
+            self._extract_cgit_freedesktop(parsed_url)
+        else:
+            self._extract_generic(path, parsed_url)
 
     def _normalized_path(self) -> str:
         path = self.path.rstrip("/")
@@ -183,13 +181,16 @@ class GitURL:
         # Handle cgit URLs: /cgit/project.git or /cgit/group/project.git
         if "/cgit/" in path:
             cgit_path = path[path.index("/cgit/") + 6 :]
-            # Remove /commit suffix if present
+            # Remove /commit suffix if present (with or without trailing slash)
             if "/commit" in cgit_path:
                 cgit_path = cgit_path[: cgit_path.index("/commit")]
-            # Extract commit hash if present
-            if "/commit/" in path:
-                commit_part = path[path.index("/commit/") + 8 :].split("/")[0]
-                if COMMIT_HASH_PATTERN.fullmatch(commit_part):
+            # Extract commit hash if present (with or without trailing slash)
+            if "/commit" in path:
+                after_commit = path[path.index("/commit") + 7 :]
+                # Strip leading slash if present
+                after_commit = after_commit.lstrip("/")
+                commit_part = after_commit.split("/")[0].split("?")[0] if after_commit else ""
+                if commit_part and COMMIT_HASH_PATTERN.fullmatch(commit_part):
                     self.commit_id = commit_part.lower()
             self.repo = cgit_path.removesuffix(".git") if cgit_path else None
             return

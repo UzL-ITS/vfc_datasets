@@ -5,6 +5,17 @@ from transformations.filters.duplicates import (
 )
 
 
+def test_merge_entry_group_covers_all_slots():
+    """Every DatasetEntry slot must be handled by merge_entry_group."""
+    key_fields = {"project_url", "commit_id", "function_name", "is_vfc"}
+    set_union = {"cwe_ids", "cve_ids", "src_datasets", "files_changed", "owasp_categories"}
+    first_non_none = {"commit_timestamp_utc", "commit_message", "commit_diff", "ghsa_id"}
+
+    all_attrs = {s.lstrip("_") for s in DatasetEntry.__slots__}
+    covered = key_fields | set_union | first_non_none
+    assert covered == all_attrs, f"Uncovered: {all_attrs - covered}, Extra: {covered - all_attrs}"
+
+
 def test_vfc_conflict_excludes_entries():
     entries = [
         DatasetEntry(

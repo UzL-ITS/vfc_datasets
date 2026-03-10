@@ -17,7 +17,7 @@ class MSR2019Dataset(BaseDataset):
         granularity="commit",
         paper_title="A Manually-Curated Dataset of Fixes to Vulnerabilities of Open-Source Software",
         paper_url="https://doi.org/10.1109/MSR.2019.00064",
-        download_url="https://github.com/SAP/project-kb/tree/main/MSR2019",
+        source_url="https://github.com/SAP/project-kb/tree/main/MSR2019",
         publication_year=2019,
         programming_languages=("Java",),
         paper_quotes=(

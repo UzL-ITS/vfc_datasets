@@ -7,6 +7,7 @@ from typing import Any
 from tqdm.asyncio import tqdm
 
 from dataset_entry import DatasetEntry
+from transformations.enrichment.commit_data_common import apply_commit_data, needs_enrichment
 from utils.git.github_client import GITHUB_API_URL, AsyncGitHubClient
 from utils.git.url import GitURL
 
@@ -33,29 +34,26 @@ async def _enrich_entry(entry: DatasetEntry, client: AsyncGitHubClient) -> bool:
     if not data:
         return False
 
-    _populate_entry(entry, data)
+    _apply_api_response(entry, data)
     return True
 
 
-def _populate_entry(entry: DatasetEntry, data: dict[str, Any]) -> None:
-    """Extract commit data from API response into entry (only update missing fields)."""
+def _apply_api_response(entry: DatasetEntry, data: dict[str, Any]) -> None:
+    """Convert GitHub API response to common format and apply."""
     commit = data.get("commit", {})
-    if entry.commit_message is None:
-        entry.commit_message = commit.get("message")
-    if entry.commit_timestamp_utc is None:
-        entry.commit_timestamp_utc = commit.get("author", {}).get("date")
-
     files = data.get("files", [])
-    if not files:
-        return
 
-    if not entry.files_changed:
-        entry.files_changed = {f["filename"] for f in files if f.get("filename")}
+    patches = [f["patch"] for f in files if f.get("patch")]
 
-    if entry.commit_diff is None:
-        patches = [f["patch"] for f in files if f.get("patch")]
-        if patches:
-            entry.commit_diff = "\n".join(patches)
+    apply_commit_data(
+        entry,
+        {
+            "message": commit.get("message"),
+            "timestamp": commit.get("author", {}).get("date"),
+            "diff": "\n".join(patches) if patches else None,
+            "files_changed": {f["filename"] for f in files if f.get("filename")},
+        },
+    )
 
 
 async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
@@ -76,14 +74,9 @@ async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
     return success, len(entries) - success
 
 
-def _needs_enrichment(entry: DatasetEntry) -> bool:
-    """Check if entry needs core fields (message/diff) from API."""
-    return entry.commit_message is None or entry.commit_diff is None
-
-
 def add_commit_information_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Enrich entries with commit data from the GitHub API and return the modified list."""
-    entries_to_process = [e for e in entries if _needs_enrichment(e)]
+    entries_to_process = [e for e in entries if needs_enrichment(e)]
 
     if not entries_to_process:
         logger.info("No entries need API enrichment")

@@ -16,7 +16,7 @@ class VCMatchDataset(BaseDataset):
         granularity="commit",
         paper_title="VCMatch: A Ranking-based Approach for Automatic Security Patches Localization for OSS Vulnerabilities",
         paper_url="https://doi.org/10.1109/SANER53432.2022.00076",
-        download_url="https://figshare.com/s/0f3ed11f9348e2f3a9f8",
+        source_url="https://figshare.com/s/0f3ed11f9348e2f3a9f8",
         publication_year=2022,
         paper_quotes=(
             # Page 2 (Contribution 1)

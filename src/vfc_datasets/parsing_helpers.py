@@ -1,14 +1,27 @@
-from __future__ import annotations
-
 import logging
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
-from utils.git.url import COMMIT_HASH_PATTERN, GitURL, normalize_commit_id
+from utils.git.url import GitURL, normalize_commit_id
 from utils.patterns import CVE_PATTERN
 
 logger = logging.getLogger(__name__)
+
+KNOWN_BROKEN_COMMITS: dict[str, dict[str, str]] = {
+    "https://github.com/curl/curl": {
+        "curl-7_51_0-162-g3ab3c16": "3ab3c16db6a5674f53cf23d5654366663f734493",
+    },
+}
+
+
+def lookup_broken_commit(text: str) -> tuple[str, str] | None:
+    """Check if text contains a known broken commit ref. Returns (project_url, full_hash) or None."""
+    for url, fixes in KNOWN_BROKEN_COMMITS.items():
+        for broken_ref, full_hash in fixes.items():
+            if broken_ref in text:
+                return url, full_hash
+    return None
 
 
 def _resolve_ref_local(ref: str, git_url: str) -> str | None:
@@ -146,12 +159,10 @@ def normalize_or_resolve_commit(
     """Normalize commit ID, falling back to symbolic ref resolution if needed."""
 
     commit_id = normalize_commit_id(raw_commit_id)
-
-    if commit_id and COMMIT_HASH_PATTERN.fullmatch(commit_id):
+    if commit_id:
         return commit_id
 
-    ref_to_resolve = commit_id or raw_commit_id
-    resolved_commit_id = _resolve_symbolic_ref(ref_to_resolve, project_url)
+    resolved_commit_id = _resolve_symbolic_ref(raw_commit_id, project_url)
     if resolved_commit_id:
         return resolved_commit_id
 

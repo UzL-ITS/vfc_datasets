@@ -1,3 +1,4 @@
+import copy
 import hashlib
 import logging
 from collections import Counter, defaultdict
@@ -15,9 +16,9 @@ from utils.split.repository_relationships import (
 logger = logging.getLogger(__name__)
 
 
-def _merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
-    """Merge a group of entries with the same key into one."""
-    base = entries[0]
+def merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
+    """Merge a group of entries with the same key into a new entry."""
+    base = copy.copy(entries[0])
     for other in entries[1:]:
         base.cwe_ids |= other.cwe_ids
         base.cve_ids |= other.cve_ids
@@ -44,7 +45,6 @@ def _merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
 def _merge_duplicates(
     entries: list[DatasetEntry],
     key_func: Callable[[DatasetEntry], tuple],
-    clear_function_name: bool,
     level_name: str,
 ) -> list[DatasetEntry]:
     logger.info("Merging duplicates at %s level.", level_name)
@@ -61,10 +61,7 @@ def _merge_duplicates(
     ):
         if len(group_entries) == 1:
             stats["unique"] += 1
-            entry = group_entries[0]
-            if clear_function_name:
-                entry.function_name = None
-            result_entries.append(entry)
+            result_entries.append(group_entries[0])
         else:
             vfc_values = {entry.is_vfc for entry in group_entries}
             if len(vfc_values) > 1:
@@ -77,10 +74,7 @@ def _merge_duplicates(
                 stats["conflict"] += len(group_entries)
                 continue
 
-            merged = _merge_entry_group(group_entries)
-            if clear_function_name:
-                merged.function_name = None
-            result_entries.append(merged)
+            result_entries.append(merge_entry_group(group_entries))
             stats["merged"] += 1
 
     logger.info("\tUnique entries: %d", stats["unique"])
@@ -96,19 +90,20 @@ def deduplicate_function_level(entries: list[DatasetEntry]) -> list[DatasetEntry
     return _merge_duplicates(
         entries,
         key_func=lambda entry: (entry.project_url, entry.commit_id, entry.function_name),
-        clear_function_name=False,
         level_name="function",
     )
 
 
 def deduplicate_within_repository(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Deduplicate by (project_url, commit_id). Clears function_name."""
-    return _merge_duplicates(
+    result = _merge_duplicates(
         entries,
         key_func=lambda entry: (entry.project_url, entry.commit_id),
-        clear_function_name=True,
         level_name="commit",
     )
+    for entry in result:
+        entry.function_name = None
+    return result
 
 
 def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]:

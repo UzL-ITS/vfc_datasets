@@ -33,9 +33,9 @@ def load_entries(file_path: str | Path) -> list[DatasetEntry]:
 
             data = json.loads(line)
 
-            # Handle None/NaN values for pandas compatibility
+            # Convert NaN values to None for pandas compatibility
             for key, value in data.items():
-                if value is None or (isinstance(value, float) and math.isnan(value)):
+                if isinstance(value, float) and math.isnan(value):
                     data[key] = None
 
             try:

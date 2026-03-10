@@ -1,7 +1,5 @@
 """Group-stratified splitting strategy respecting repository relationships."""
 
-from __future__ import annotations
-
 import random
 
 from dataset_entry import DatasetEntry

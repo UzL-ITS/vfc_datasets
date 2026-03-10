@@ -10,23 +10,12 @@ from tqdm.auto import tqdm
 
 from config import MAX_DIFF_SIZE, MAX_WORKERS
 from dataset_entry import DatasetEntry
+from transformations.enrichment.commit_data_common import apply_commit_data, needs_enrichment
 from utils.git.repository import clone_repositories
 
 logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 200
-
-
-def _apply_commit_data(entry: DatasetEntry, data: dict[str, Any]) -> None:
-    """Update entry fields from commit data."""
-    if entry.commit_message is None:
-        entry.commit_message = data["message"]
-    if entry.commit_timestamp_utc is None:
-        entry.commit_timestamp_utc = data["timestamp"]
-    if entry.commit_diff is None:
-        entry.commit_diff = data["diff"]
-    if not entry.files_changed:
-        entry.files_changed = data["files_changed"]
 
 
 def _get_commit_info(repo: Repo, commit_id: str, max_diff_size: int) -> dict[str, Any] | None:
@@ -76,14 +65,7 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEnt
     logger.info("Add commit information [LOCAL]")
 
     # 1. Filter entries that need processing
-    entries_to_process = [
-        entry
-        for entry in entries
-        if entry.commit_diff is None
-        or entry.commit_message is None
-        or entry.commit_timestamp_utc is None
-        or not entry.files_changed
-    ]
+    entries_to_process = [entry for entry in entries if needs_enrichment(entry)]
     if not entries_to_process:
         logger.info("All entries already have commit information.")
         return entries
@@ -104,7 +86,13 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEnt
     }
 
     # Reverse mapping: repo_path -> project_url (for associating batch results)
-    path_to_url: dict[str, str] = {path: url for url, path in repo_paths.items()}
+    path_to_url: dict[str, str] = {}
+    for url, path in repo_paths.items():
+        if path in path_to_url:
+            logger.warning(
+                "Duplicate repo path %s for URLs %s and %s", path, path_to_url[path], url
+            )
+        path_to_url[path] = url
 
     # Build lookup for fast entry access by (project_url, commit_id)
     # Multiple entries can share the same commit (e.g., from different source datasets)
@@ -172,7 +160,7 @@ def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEnt
                     # Update entries immediately - no accumulation!
                     for commit_id, data in result_dict.items():
                         for entry in entries_by_commit.get((project_url, commit_id), []):
-                            _apply_commit_data(entry, data)
+                            apply_commit_data(entry, data)
 
                     # result_dict goes out of scope here - memory freed immediately
 

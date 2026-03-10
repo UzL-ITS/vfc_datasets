@@ -20,7 +20,7 @@ class DiverseVulDataset(BaseDataset):
         granularity="function",
         paper_title="DiverseVul: A New Vulnerable Source Code Dataset for Deep Learning Based Vulnerability Detection",
         paper_url="https://doi.org/10.1145/3607199.3607242",
-        download_url="https://github.com/wagner-group/diversevul",
+        source_url="https://github.com/wagner-group/diversevul",
         publication_year=2023,
         programming_languages=("C", "C++"),
         paper_quotes=(

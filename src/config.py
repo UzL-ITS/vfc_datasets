@@ -9,16 +9,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def _env(name: str, default: str) -> str:
-    """Get string env var with default."""
-    return os.getenv(name, default)
-
-
-def _env_optional(name: str) -> str | None:
-    """Get optional string env var (None if not set)."""
-    return os.getenv(name)
-
-
 def _env_int(
     name: str, default: int, *, minimum: int | None = None, maximum: int | None = None
 ) -> int:
@@ -57,11 +47,11 @@ for _p in [BASE_DATA_PATH, DATASET_PATH, RAW_DATA_PATH, CACHE_PATH, REPOSITORY_P
 MAX_WORKERS = _env_int("MAX_WORKERS", os.cpu_count() or 1, minimum=1)
 
 # API Tokens (optional)
-HF_TOKEN = _env_optional("HF_TOKEN")
-GITHUB_TOKEN = _env_optional("GITHUB_TOKEN")
+HF_TOKEN = os.getenv("HF_TOKEN")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # API Base URLs
-GITHUB_API_URL = _env("GITHUB_API_URL", "https://api.github.com")
+GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com")
 
 # Git Operations
 GIT_CLONE_TIMEOUT = _env_int("GIT_CLONE_TIMEOUT", 3600, minimum=1)  # 1 hour default
@@ -70,12 +60,14 @@ GIT_CLONE_TIMEOUT = _env_int("GIT_CLONE_TIMEOUT", 3600, minimum=1)  # 1 hour def
 USE_DATASET_CACHE = os.getenv("USE_DATASET_CACHE", "true").lower() in ("true", "yes")
 
 # Logging
-LOG_LEVEL: int = logging.getLevelNamesMapping().get(_env("LOG_LEVEL", "INFO").upper(), logging.INFO)
+LOG_LEVEL: int = logging.getLevelNamesMapping().get(
+    os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO
+)
 LOG_DIR = _env_path("LOG_DIR", BASE_DATA_PATH / "logs")
 
 # Max diff size in characters
 MAX_DIFF_SIZE = _env_int("MAX_DIFF_SIZE", 100_000, minimum=0)
 
 # MoreFixes Database (optional)
-MOREFIXES_DB_HOST = _env("MOREFIXES_DB_HOST", "localhost")
+MOREFIXES_DB_HOST = os.getenv("MOREFIXES_DB_HOST", "localhost")
 MOREFIXES_DB_PORT = _env_int("MOREFIXES_DB_PORT", 5432, minimum=1, maximum=65535)

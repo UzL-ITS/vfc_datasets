@@ -26,7 +26,7 @@ class MorefixesDataset(BaseDataset):
         granularity="commit",
         paper_title="MoreFixes: A Large-Scale Dataset of CVE Fix Commits Mined through Enhanced Repository Discovery",
         paper_url="https://doi.org/10.1145/3663533.3664036",
-        download_url="https://github.com/JafarAkhondali/Morefixes",
+        source_url="https://github.com/JafarAkhondali/Morefixes",
         publication_year=2024,
         paper_quotes=(
             # Page 1 (Abstract)

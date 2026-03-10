@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 # Canonical mapping from file extension to language name
 EXTENSION_TO_LANGUAGE: dict[str, str] = {
     # C

@@ -21,7 +21,7 @@ class SecBenchDataset(BaseDataset):
         granularity="commit",
         paper_title="SECBENCH: A Database of Real Security Vulnerabilities",
         paper_url="https://ceur-ws.org/Vol-1977/paper6.pdf",
-        download_url="https://tqrg.github.io/secbench/",
+        source_url="https://tqrg.github.io/secbench/",
         publication_year=2017,
         paper_quotes=(
             # SecSE 2017 Paper - Page 1 (Abstract)

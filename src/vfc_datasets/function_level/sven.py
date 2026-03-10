@@ -21,7 +21,7 @@ class SVENDataset(BaseDataset):
         granularity="function",
         paper_title="Large Language Models for Code: Security Hardening and Adversarial Testing",
         paper_url="https://doi.org/10.1145/3576915.3623175",
-        download_url="https://github.com/eth-sri/sven",
+        source_url="https://github.com/eth-sri/sven",
         publication_year=2023,
         programming_languages=("C", "C++", "Python"),
         paper_quotes=(
@@ -43,11 +43,11 @@ class SVENDataset(BaseDataset):
         self.sven_repo_path: str | None = None
 
     def _load_data(self) -> pd.DataFrame:
-        self.sven_repo_path = url_to_pathname(self.metadata.download_url)
-        clone_repository(self.metadata.download_url, branch="master")
+        self.sven_repo_path = url_to_pathname(self.metadata.source_url)
+        clone_repository(self.metadata.source_url, branch="master")
 
         if not os.path.exists(self.sven_repo_path):
-            logger.error("Failed to clone repository: %s", self.metadata.download_url)
+            logger.error("Failed to clone repository: %s", self.metadata.source_url)
             return pd.DataFrame()
 
         # Load all jsonl files from train and val directories

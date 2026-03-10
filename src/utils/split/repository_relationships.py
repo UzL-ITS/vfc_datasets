@@ -1,7 +1,5 @@
 """Discover relationships between repositories (forks, mirrors, shared commits)."""
 
-from __future__ import annotations
-
 import asyncio
 import hashlib
 import json
@@ -11,7 +9,7 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 from git import Repo
 from tqdm.auto import tqdm
@@ -54,7 +52,7 @@ class RelationshipEdge:
 def _find_connected_groups(
     edges: list[RelationshipEdge],
 ) -> list[tuple[set[str], set[str], dict[str, set[str]]]]:
-    """Find connected components via BFS. Returns (urls, methods, links) per group."""
+    """Find connected components via DFS. Returns (urls, methods, links) per group."""
     adjacency: dict[str, set[str]] = defaultdict(set)
     for edge in edges:
         adjacency[edge.url1].add(edge.url2)
@@ -123,7 +121,7 @@ class RepositoryGroup:
         return result
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> RepositoryGroup:
+    def from_dict(cls, data: dict[str, Any]) -> Self:
         return cls(
             group_id=data["group_id"],
             project_urls=set(data["project_urls"]),
@@ -156,7 +154,7 @@ class RepositoryRelationships:
         }
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> RepositoryRelationships:
+    def from_dict(cls, data: dict[str, Any]) -> Self:
         groups = [RepositoryGroup.from_dict(g) for g in data.get("groups", [])]
         return cls(
             groups=groups,
@@ -169,8 +167,8 @@ class RepositoryRelationships:
         cls,
         edges: list[RelationshipEdge],
         url_to_source: dict[str, str] | None = None,
-    ) -> RepositoryRelationships:
-        """Build relationships from edges using BFS to find connected components."""
+    ) -> Self:
+        """Build relationships from edges using DFS to find connected components."""
         connected = _find_connected_groups(edges)
         source_urls = set(url_to_source.values()) if url_to_source else set()
 
@@ -498,7 +496,7 @@ def _find_suspicious_project_relationships(
                 validated_adjacency[url1].add(url2)
                 validated_adjacency[url2].add(url1)
 
-        # BFS from canonical URL (or first URL) to find reachable URLs
+        # DFS from canonical URL (or first URL) to find reachable URLs
         start_url = group.canonical_url or sorted(group.project_urls)[0]
         reachable: set[str] = set()
         stack = [start_url]

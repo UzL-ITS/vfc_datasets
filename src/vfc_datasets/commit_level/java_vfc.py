@@ -51,7 +51,7 @@ class JavaVFCDataset(_JavaVFCBase):
         granularity="commit",
         paper_title="JavaVFC: Java Vulnerability Fixing Commits from Open-source Software",
         paper_url="https://doi.org/10.48550/arXiv.2409.05576",
-        download_url="https://doi.org/10.5281/zenodo.13731781",
+        source_url="https://doi.org/10.5281/zenodo.13731781",
         publication_year=2024,
         programming_languages=("Java",),
         paper_quotes=(
@@ -69,7 +69,7 @@ class JavaVFCDatasetExtended(_JavaVFCBase):
         granularity="commit",
         paper_title="JavaVFC: Java Vulnerability Fixing Commits from Open-source Software",
         paper_url="https://doi.org/10.48550/arXiv.2409.05576",
-        download_url="https://doi.org/10.5281/zenodo.13731781",
+        source_url="https://doi.org/10.5281/zenodo.13731781",
         publication_year=2024,
         programming_languages=("Java",),
         paper_quotes=(

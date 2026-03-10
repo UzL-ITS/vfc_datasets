@@ -25,7 +25,7 @@ class RepoSPDDataset(BaseDataset):
         granularity="commit",
         paper_title="Repository-Level Graph Representation Learning for Enhanced Security Patch Detection",
         paper_url="https://doi.org/10.48550/arXiv.2412.08068",
-        download_url="https://github.com/Xin-Cheng-Wen/RepoSPD",
+        source_url="https://github.com/Xin-Cheng-Wen/RepoSPD",
         publication_year=2024,
         programming_languages=("C", "C++"),
         paper_quotes=(

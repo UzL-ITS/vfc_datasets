@@ -34,7 +34,7 @@ class SPIDBDataset(BaseDataset):
         granularity="commit",
         paper_title="SPI: Automated Identification of Security Patches via Commits",
         paper_url="https://doi.org/10.1145/3468854",
-        download_url="https://sites.google.com/view/du-commits/home",
+        source_url="https://sites.google.com/view/du-commits/home",
         publication_year=2021,
         programming_languages=("C", "C++"),
         paper_quotes=(
@@ -95,7 +95,7 @@ class SPIDBDataset(BaseDataset):
         project_url: str,
         repo: Repo | None = None,
     ) -> pd.DataFrame:
-        project_dataframe = self._drop_unnamed_columns(project_dataframe.copy())
+        project_dataframe = project_dataframe.copy()
         if "commit_id" not in project_dataframe.columns:
             project_dataframe.insert(len(project_dataframe.columns), "commit_id", None)
 
@@ -228,7 +228,6 @@ class SPIDBDataset(BaseDataset):
                 )
                 dataframe.to_csv(processed_file, index=False)
 
-            dataframe = self._drop_unnamed_columns(dataframe)
             dataframe["project_url"] = project_info["url"]
             all_data.append(dataframe)
 

@@ -100,15 +100,13 @@ def _handle_existing_repo(
     try:
         repo = Repo(destination)
         _ = repo.head.commit
+    except (InvalidGitRepositoryError, ValueError, GitCommandError):
+        logger.warning("Invalid repository at %s, removing and recloning", destination)
+        _delete_corrupted_repo(destination)
+        return None
     except Exception as exc:
-        match exc:
-            case InvalidGitRepositoryError() | ValueError() | GitCommandError():
-                logger.warning("Invalid repository at %s, removing and recloning", destination)
-                _delete_corrupted_repo(destination)
-                return None
-            case _:
-                logger.warning("Failed to access repository %s: %s", destination, exc)
-                return None
+        logger.warning("Failed to access repository %s: %s", destination, exc)
+        return None
 
     if branch is not None:
         _fetch_updates(repo, timeout)
@@ -161,22 +159,18 @@ def _clone_new_repo(
             _checkout_branch(repo, branch, checkout_files=False)
         return repo
     except GitCommandError as exc:
-        # Use pattern matching for error message categorization
         message = str(exc).lower()
-        match message:
-            case str() if "authentication" in message:
-                return _clone_with_auth_bypass(git_url, destination, clone_options, timeout)
-            case str() if "repository not found" in message or "does not exist" in message:
-                logger.warning("Repository not found: %s", git_url)
-            case _:
-                logger.error("Git error cloning %s: %s", git_url, exc)
+        if "authentication" in message:
+            return _clone_with_auth_bypass(git_url, destination, clone_options, timeout)
+        elif "repository not found" in message or "does not exist" in message:
+            logger.warning("Repository not found: %s", git_url)
+        else:
+            logger.error("Git error cloning %s: %s", git_url, exc)
     except OSError as exc:
-        # Pattern matching for OS errors
-        match exc.errno:
-            case errno.ENOSPC:
-                logger.error("No disk space available to clone %s", git_url)
-            case _:
-                logger.error("OS error cloning %s: %s", git_url, exc)
+        if exc.errno == errno.ENOSPC:
+            logger.error("No disk space available to clone %s", git_url)
+        else:
+            logger.error("OS error cloning %s: %s", git_url, exc)
     except ValueError as exc:
         logger.error("Invalid URL or parameters for %s: %s", git_url, exc)
 

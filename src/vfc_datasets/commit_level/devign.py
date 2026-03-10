@@ -33,7 +33,7 @@ class DevignDataset(BaseDataset):
         granularity="commit",
         paper_title="Devign: Effective Vulnerability Identification by Learning Comprehensive Program Semantics via Graph Neural Networks",
         paper_url="https://doi.org/10.48550/arXiv.1909.03496",
-        download_url="https://sites.google.com/view/devign",
+        source_url="https://sites.google.com/view/devign",
         publication_year=2019,
         programming_languages=("C", "C++"),
         paper_quotes=(

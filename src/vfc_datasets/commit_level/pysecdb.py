@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import asyncio
 import json
 import logging
@@ -226,7 +224,7 @@ class PySecDBDataset(BaseDataset):
         granularity="commit",
         paper_title="Exploring Security Commits in Python",
         paper_url="https://doi.org/10.48550/arXiv.2307.11853",
-        download_url="https://huggingface.co/datasets/sunlab/PySecDB",
+        source_url="https://huggingface.co/datasets/sunlab/PySecDB",
         publication_year=2023,
         programming_languages=("Python",),
         paper_quotes=(
@@ -239,8 +237,8 @@ class PySecDBDataset(BaseDataset):
             "covering 119 more CWEs.",
             # Page 6 (Table II): Base 729 + Pilot 400 + Augmented 129 = 1,258 security commits
         ),
-        vfcs=1139,  # 1258 NOTE: not all available yet
-        non_vfcs=2703,  # 2791, NOTE: not all available yet
+        vfcs=1142,  # 1258 NOTE: not all available yet
+        non_vfcs=2721,  # 2791, NOTE: not all available yet
         projects=351,
     )
 

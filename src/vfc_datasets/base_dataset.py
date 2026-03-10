@@ -23,7 +23,7 @@ class DatasetMetadata:
 
     # Required
     name: str
-    download_url: str
+    source_url: str
     granularity: Literal["commit", "function"]
     publication_year: int
 

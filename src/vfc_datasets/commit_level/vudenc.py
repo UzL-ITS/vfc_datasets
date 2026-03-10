@@ -1,8 +1,5 @@
 import json
 import logging
-import shutil
-import tempfile
-from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -23,7 +20,7 @@ class VUDEncDataset(BaseDataset):
         granularity="commit",
         paper_title="VUDENC: Vulnerability Detection with Deep Learning on a Natural Codebase for Python",
         paper_url="https://doi.org/10.1016/j.infsof.2021.106809",
-        download_url="https://doi.org/10.5281/zenodo.3559840",
+        source_url="https://doi.org/10.5281/zenodo.3559840",
         publication_year=2022,
         programming_languages=("Python",),
         paper_quotes=(
@@ -62,15 +59,7 @@ class VUDEncDataset(BaseDataset):
             file_name = link.split("/")[-1].split("?")[0]
             json_path = vudenc_dir / f"{file_name}.json"
             if not json_path.exists():
-                with tempfile.TemporaryDirectory() as tmp_dir:
-                    download_file(
-                        url=link,
-                        output_path=Path(tmp_dir) / file_name,
-                    )
-                    shutil.move(
-                        src=Path(tmp_dir) / file_name,
-                        dst=json_path,
-                    )
+                download_file(url=link, output_path=json_path)
 
         # combine all json files into a single dataframe
         json_files = sorted(vudenc_dir.glob("*.json"))
@@ -85,10 +74,9 @@ class VUDEncDataset(BaseDataset):
                 for commits in file_data.values():
                     if not isinstance(commits, dict):
                         continue
-                    for commit_id in commits:
-                        commit_data = commits.get(commit_id)
+                    for commit_data in commits.values():
                         if commit_data:
-                            records.append({**commit_data})
+                            records.append(commit_data)
 
         return pd.DataFrame.from_records(records)
 

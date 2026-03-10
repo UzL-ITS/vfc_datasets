@@ -21,7 +21,7 @@ class PatchDBDataset(BaseDataset):
         granularity="commit",
         paper_title="PatchDB: A Large-Scale Security Patch Dataset",
         paper_url="https://doi.org/10.1109/DSN48987.2021.00030",
-        download_url="https://huggingface.co/datasets/sunlab/patch_db",
+        source_url="https://huggingface.co/datasets/sunlab/patch_db",
         publication_year=2021,
         programming_languages=("C", "C++"),
         paper_quotes=(
@@ -101,15 +101,11 @@ class PatchDBDataset(BaseDataset):
             if not commit_id:
                 return None
 
-        # PatchDB stores CWE as just the number (e.g., "79"), needs "CWE-" prefix
-        cwe_raw = row.get("CWE_ID")
-        cwe_input = f"CWE-{cwe_raw}" if cwe_raw and cwe_raw != "NA" else None
-
         return DatasetEntry(
             project_url=project_url,
             commit_id=commit_id,
             src_datasets={self.metadata.name},
             is_vfc="non-security" not in str(row.get("category", "")),
             cve_ids=normalize_cve_ids(row.get("CVE_ID")),
-            cwe_ids=normalize_cwe_ids(cwe_input),
+            cwe_ids=normalize_cwe_ids(row.get("CWE_ID")),
         )

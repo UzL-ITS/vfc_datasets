@@ -18,7 +18,7 @@ class MegaVulDataset(BaseDataset):
         granularity="function",
         paper_title="MegaVul: A C/C++ Vulnerability Dataset with Comprehensive Code Representations",
         paper_url="https://doi.org/10.1145/3643991.3644886",
-        download_url="https://github.com/Icyrockton/MegaVul",
+        source_url="https://github.com/Icyrockton/MegaVul",
         publication_year=2024,
         programming_languages=("C", "C++", "Java"),
         paper_quotes=(
@@ -115,7 +115,7 @@ class MegaVulDataset(BaseDataset):
             commit_id=commit_id,
             src_datasets={self.metadata.name},
             files_changed={file_path} if file_path else set(),
-            is_vfc=row.get("is_vul") is True,
+            is_vfc=bool(row.get("is_vul")),
             cve_ids=normalize_cve_ids(row.get("cve_id")),
             cwe_ids=normalize_cwe_ids(row.get("cwe_ids")),
             function_name=function_name,

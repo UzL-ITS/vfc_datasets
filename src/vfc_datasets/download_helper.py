@@ -15,9 +15,6 @@ from config import HF_TOKEN
 
 logger = logging.getLogger(__name__)
 
-# Type alias for path-like objects (accepts both str and Path)
-type PathLike = str | Path
-
 
 def _is_html_error_page(file_path: Path) -> bool:
     """Check if downloaded file is actually an HTML error page."""
@@ -31,20 +28,21 @@ def _is_html_error_page(file_path: Path) -> bool:
             if b"403 forbidden" in header or b"access denied" in header:
                 return True
     except Exception:
-        pass
+        logger.debug("Failed to check if %s is an HTML error page", file_path, exc_info=True)
     return False
+
+
+_GDRIVE_PATTERNS = [
+    re.compile(r"/file/d/([a-zA-Z0-9_-]+)"),  # /file/d/FILE_ID/...
+    re.compile(r"/d/([a-zA-Z0-9_-]+)"),  # /d/FILE_ID/... (docs, sheets, etc.)
+    re.compile(r"[?&]id=([a-zA-Z0-9_-]+)"),  # ?id=FILE_ID or &id=FILE_ID
+]
 
 
 def _extract_gdrive_file_id(url: str) -> str | None:
     """Extract Google Drive file ID from URL (/file/d/ID, /d/ID, or ?id=ID)."""
-    patterns = [
-        r"/file/d/([a-zA-Z0-9_-]+)",  # /file/d/FILE_ID/...
-        r"/d/([a-zA-Z0-9_-]+)",  # /d/FILE_ID/... (docs, sheets, etc.)
-        r"[?&]id=([a-zA-Z0-9_-]+)",  # ?id=FILE_ID or &id=FILE_ID
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, url)
+    for pattern in _GDRIVE_PATTERNS:
+        match = pattern.search(url)
         if match:
             return match.group(1)
 
@@ -52,8 +50,7 @@ def _extract_gdrive_file_id(url: str) -> str | None:
     return None
 
 
-
-def _verify_checksum(file_path: PathLike, expected_checksum: str) -> bool:
+def _verify_checksum(file_path: str | Path, expected_checksum: str) -> bool:
     """Verify file SHA-256 checksum. Returns True if match, False otherwise."""
     file_path = Path(file_path)
 
@@ -167,7 +164,7 @@ def _download_http(
 
 def download_file(
     url: str,
-    output_path: PathLike,
+    output_path: str | Path,
     *,
     force_download: bool = False,
     checksum: str | None = None,
@@ -201,7 +198,7 @@ def download_file(
 
 def download_and_extract_zip(
     url: str,
-    extract_path: PathLike,
+    extract_path: str | Path,
     *,
     files_to_extract: list[str] | None = None,
     force_download: bool = False,

@@ -192,6 +192,44 @@ class TestCollapseToCommitLevel:
         assert len(result) == 1
         assert result[0].owasp_categories is None
 
+    def test_benign_only_commits_kept_by_default(self):
+        entries = [
+            DatasetEntry(
+                project_url="https://github.com/test/repo",
+                commit_id="abc123def456",
+                src_datasets={"ds1"},
+                is_vfc=False,
+                function_name="func1",
+            ),
+            DatasetEntry(
+                project_url="https://github.com/test/repo",
+                commit_id="abc123def456",
+                src_datasets={"ds2"},
+                is_vfc=False,
+                function_name="func2",
+            ),
+        ]
+
+        result = collapse_to_commit_level(entries, include_benign_only=True)
+
+        assert len(result) == 1
+        assert result[0].is_vfc is False
+
+    def test_benign_only_commits_dropped_when_opted_out(self):
+        entries = [
+            DatasetEntry(
+                project_url="https://github.com/test/repo",
+                commit_id="abc123def456",
+                src_datasets={"ds1"},
+                is_vfc=False,
+                function_name="func1",
+            ),
+        ]
+
+        result = collapse_to_commit_level(entries, include_benign_only=False)
+
+        assert len(result) == 0
+
     def test_files_changed_is_always_set(self):
         """files_changed is normalized to set by DatasetEntry, never None."""
         entry = DatasetEntry(

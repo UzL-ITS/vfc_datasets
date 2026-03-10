@@ -1,7 +1,5 @@
 """Core DatasetEntry model for vulnerability-fixing commit data."""
 
-from __future__ import annotations
-
 import logging
 import re
 from datetime import UTC, datetime
@@ -16,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class DatasetEntry:
     __hash__ = None  # type: ignore[assignment]
-    __slots__ = [
+    __slots__ = (
         "_commit_timestamp_utc",
         "commit_diff",
         "commit_id",
@@ -30,7 +28,7 @@ class DatasetEntry:
         "owasp_categories",
         "project_url",
         "src_datasets",
-    ]
+    )
 
     @staticmethod
     def _validate_ids(
@@ -72,7 +70,11 @@ class DatasetEntry:
 
         # Validate project_url
         if not (git_url := GitURL.parse(project_url)):
-            raise ValueError(f"Invalid project URL: {project_url}")
+            raise ValueError(
+                f"Invalid project URL: {project_url!r}. "
+                "Supported platforms: GitHub, GitLab, Bitbucket, googlesource, "
+                "Savannah, kernel.org, freedesktop.org, and generic git hosts."
+            )
         if not (normalized_url := git_url.to_https_url()):
             raise ValueError(f"Failed to normalize project URL: {project_url}")
         self.project_url = normalized_url

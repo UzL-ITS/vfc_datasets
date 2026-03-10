@@ -34,9 +34,9 @@ def update_project_urls_inplace(entries: list[DatasetEntry]) -> list[DatasetEntr
     changed_urls = 0
     moved_urls = get_moved_urls()
     for entry in entries:
-        project_url = entry.project_url.lower().replace("http://", "https://")
-        if project_url in moved_urls:
-            entry.project_url = moved_urls[project_url]
+        lookup_key = entry.project_url.lower()
+        if lookup_key in moved_urls:
+            entry.project_url = moved_urls[lookup_key]
             changed_urls += 1
 
     logger.info("%d project_urls were updated", changed_urls)

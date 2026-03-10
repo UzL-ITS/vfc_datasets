@@ -14,7 +14,6 @@ from config import GITHUB_API_URL, GITHUB_TOKEN
 from utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
-logging.getLogger("httpx").setLevel(logging.WARNING)
 
 
 class AsyncGitHubClient:
@@ -40,6 +39,7 @@ class AsyncGitHubClient:
         self._rate_limit_limit: int | None = None
 
     async def __aenter__(self) -> "AsyncGitHubClient":
+        logging.getLogger("httpx").setLevel(logging.WARNING)
         headers: dict[str, str] = {
             "Accept": "application/vnd.github+json",
             "User-Agent": "vfc-datasets/2.0",
@@ -153,13 +153,32 @@ class AsyncGitHubClient:
 
 
 def query_github_api_sync(api_url: str) -> dict[str, Any] | None:
-    """Synchronous wrapper to query GitHub API."""
+    """Synchronous single-request GitHub API query."""
+    headers: dict[str, str] = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "vfc-datasets/2.0",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
-    async def _query() -> dict[str, Any] | None:
-        async with AsyncGitHubClient() as client:
-            return await client.query_api(api_url)
+    try:
+        response = httpx.get(
+            api_url,
+            headers=headers,
+            timeout=httpx.Timeout(120.0, connect=30.0),
+            follow_redirects=True,
+        )
+        if response.status_code == 200:
+            data = response.json()
+            return data if isinstance(data, dict) else None
+        if response.status_code == 404:
+            return None
+        logger.warning("GitHub API returned %d for: %s", response.status_code, api_url)
+    except httpx.HTTPError as e:
+        logger.debug("GitHub API sync request failed: %s", e)
 
-    return asyncio.run(_query())
+    return None
 
 
 @dataclass
@@ -203,7 +222,7 @@ async def _fetch_single_repo_info(
                 if source_url:
                     result.source = source_url.lower()
 
-    except Exception as e:
+    except (httpx.HTTPError, KeyError, ValueError) as e:
         logger.debug("Failed to fetch repo info for %s: %s", project_url, e)
 
     return project_url, result

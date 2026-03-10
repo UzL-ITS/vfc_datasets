@@ -8,6 +8,7 @@ from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
     extract_url_and_commit,
+    lookup_broken_commit,
     normalize_cve_ids,
     normalize_cwe_ids,
     normalize_or_resolve_commit,
@@ -20,7 +21,7 @@ class TQRGDataset(BaseDataset):
         granularity="commit",
         paper_title="A ground-truth dataset of real security patches",
         paper_url="https://doi.org/10.48550/arXiv.2110.09635",
-        download_url="https://github.com/TQRG/security-patches-dataset/tree/main",
+        source_url="https://github.com/TQRG/security-patches-dataset/tree/main",
         publication_year=2021,
         paper_quotes=(
             # Page 1 (Abstract)
@@ -70,13 +71,11 @@ class TQRGDataset(BaseDataset):
                 row, "project", "sha", self.metadata.name
             )
             if not project_url or not commit_id:
-                if "github.com/curl/curl" in row.get("project", "") and "3ab3c16" in row.get(
-                    "sha", ""
-                ):
-                    project_url = "https://github.com/curl/curl"
-                    commit_id = "3ab3c16db6a5674f53cf23d5654366663f734493"
-                else:
+                sha = row.get("sha", "")
+                match = lookup_broken_commit(sha)
+                if not match:
                     return None
+                project_url, commit_id = match
         else:
             project_url, raw_commit_id = extract_from_commit_url(row, "github", self.metadata.name)
             if not project_url or not raw_commit_id:

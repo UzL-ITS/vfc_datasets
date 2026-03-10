@@ -21,7 +21,7 @@ class ICVulDataset(BaseDataset):
         granularity="function",
         paper_title="ICVul: A Well-labeled C/C++ Vulnerability Dataset with Comprehensive Metadata and VCCs",
         paper_url="https://doi.org/10.48550/arXiv.2505.08503",
-        download_url="https://github.com/Chaomeng-Lu/ICVul",
+        source_url="https://github.com/Chaomeng-Lu/ICVul",
         publication_year=2025,
         programming_languages=("C", "C++"),
         paper_quotes=(
@@ -86,7 +86,7 @@ class ICVulDataset(BaseDataset):
         if not project_url or not commit_id:
             return None
 
-        is_vulnerable = row.get("before_change") is True
+        is_vulnerable = bool(row.get("before_change"))
 
         function_name = f"{row.get('name')}-[{row.get('start_line')}-{row.get('end_line')}]"
 

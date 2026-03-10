@@ -5,7 +5,7 @@ from typing import Any
 import pandas as pd
 
 from dataset_entry import DatasetEntry
-from datasets import load_dataset
+from datasets import load_dataset  # type: ignore[attr-defined]
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
@@ -25,7 +25,7 @@ class CleanVulDataset(BaseDataset):
         granularity="function",
         paper_title="CleanVul: Automatic Function-Level Vulnerability Detection in Code Commits Using LLM Heuristics",
         paper_url="https://doi.org/10.48550/arXiv.2411.17274",
-        download_url="https://huggingface.co/datasets/yikun-li/CleanVul",
+        source_url="https://huggingface.co/datasets/yikun-li/CleanVul",
         publication_year=2024,
         programming_languages=("C", "C++", "C#", "Java", "JavaScript", "Python"),
         paper_quotes=(

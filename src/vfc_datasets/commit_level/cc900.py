@@ -20,7 +20,7 @@ class CC900Dataset(BaseDataset):
         granularity="commit",
         paper_title="Co-training for Commit Classification",
         paper_url="https://doi.org/10.18653/v1/2021.wnut-1.43",
-        download_url="https://github.com/davidleejy/wnut21-cotrain/tree/main",
+        source_url="https://github.com/davidleejy/wnut21-cotrain/tree/main",
         publication_year=2021,
         paper_quotes=(
             # Page 3 (Section 3 - The 900Repo Dataset)
