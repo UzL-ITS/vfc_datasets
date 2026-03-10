@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from tqdm.asyncio import tqdm as async_tqdm
@@ -14,38 +15,31 @@ from utils.git.url import GitURL
 logger = logging.getLogger(__name__)
 
 
-def _extend_commit_ids_one_repository(
-    entries: list[DatasetEntry],
-) -> list[DatasetEntry]:
-    """Extend commit IDs for all entries from one repository."""
-    if not entries:
-        return entries
-
-    project_url = entries[0].project_url
-    logger.debug("Processing repository: %s with %d commits", project_url, len(entries))
+def _resolve_commit_ids(args: tuple[str, list[str]]) -> dict[str, str]:
+    """Resolve short commit IDs to full SHAs. Returns {short_id: full_sha} for successful lookups."""
+    project_url, commit_ids = args
+    logger.debug("Processing repository: %s with %d commits", project_url, len(commit_ids))
 
     repo = clone_repository(project_url)
     if not repo:
         logger.error("Could not clone repository for project_url %s", project_url)
-        return entries
+        return {}
 
-    for entry in entries:
-        if not entry.commit_id or len(entry.commit_id) >= 40:
-            continue
-
+    resolved: dict[str, str] = {}
+    for commit_id in commit_ids:
         try:
-            commit = repo.commit(entry.commit_id)
-            if commit.hexsha != entry.commit_id:
-                entry.commit_id = commit.hexsha
+            full_sha = repo.commit(commit_id).hexsha
+            if full_sha != commit_id:
+                resolved[commit_id] = full_sha
         except Exception as e:
             logger.debug(
                 "Failed to extend commit ID %s for repository %s: %s",
-                entry.commit_id,
+                commit_id,
                 project_url,
                 e,
             )
 
-    return entries
+    return resolved
 
 
 async def _extend_commit_ids_api_async(
@@ -151,7 +145,6 @@ def extend_commit_ids_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
 
 def extend_commit_ids_local(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Extend commit IDs in-place by cloning repositories locally and return the list of modified entries."""
-    # Filter entries that need extension
     entries_to_process = [
         entry for entry in entries if entry.commit_id and len(entry.commit_id) < 40
     ]
@@ -160,55 +153,42 @@ def extend_commit_ids_local(entries: list[DatasetEntry]) -> list[DatasetEntry]:
         logger.info("No commit IDs need extension")
         return entries
 
-    logger.info("Extending %d commit IDs using local repositories", len(entries_to_process))
-
-    # Group entries by project_url (repository)
-    entries_by_project_url: dict[str, list[DatasetEntry]] = {}
+    # Group entries by project_url
+    entries_by_url: defaultdict[str, list[DatasetEntry]] = defaultdict(list)
     for entry in entries_to_process:
-        project_url = entry.project_url
-        if project_url not in entries_by_project_url:
-            entries_by_project_url[project_url] = []
-        entries_by_project_url[project_url].append(entry)
+        entries_by_url[entry.project_url].append(entry)
 
     logger.info(
-        "Processing %d entries from %d repositories using %d workers",
+        "Extending %d commit IDs from %d repositories using %d workers",
         len(entries_to_process),
-        len(entries_by_project_url),
+        len(entries_by_url),
         MAX_WORKERS,
     )
 
-    # Sort by number of entries per repository (descending)
-    entries_by_project_url = dict(
-        sorted(
-            entries_by_project_url.items(),
-            key=lambda item: len(item[1]),
-            reverse=True,
-        )
-    )
+    # Build tasks: send only (project_url, commit_ids) — no full entries
+    tasks = [
+        (url, list({e.commit_id for e in url_entries}))
+        for url, url_entries in entries_by_url.items()
+    ]
+    tasks.sort(key=lambda t: len(t[1]), reverse=True)
 
     updated_count = 0
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        future_to_url = {
-            executor.submit(
-                _extend_commit_ids_one_repository, entries_by_project_url[project_url]
-            ): project_url
-            for project_url in entries_by_project_url
-        }
+        future_to_url = {executor.submit(_resolve_commit_ids, task): task[0] for task in tasks}
 
         with tqdm(
-            total=len(entries_by_project_url),
+            total=len(tasks),
             desc="Local extension",
             dynamic_ncols=True,
             unit="repos",
         ) as pbar:
             for future in as_completed(future_to_url):
-                project_url = future_to_url[future]
-                modified_entries = future.result()
-                original_entries = entries_by_project_url[project_url]
-                # Update original entries with data from child process
-                for orig, mod in zip(original_entries, modified_entries, strict=True):
-                    if orig.commit_id != mod.commit_id:
-                        orig.commit_id = mod.commit_id
+                url = future_to_url[future]
+                resolved = future.result()
+
+                for entry in entries_by_url[url]:
+                    if full_sha := resolved.get(entry.commit_id):
+                        entry.commit_id = full_sha
                         updated_count += 1
 
                 pbar.update(1)
