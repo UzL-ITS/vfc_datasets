@@ -1,6 +1,7 @@
 """Dataset statistics utilities."""
 
 import logging
+from collections.abc import Iterable
 from typing import TypedDict
 
 from dataset_entry import DatasetEntry
@@ -14,8 +15,9 @@ class DatasetStats(TypedDict):
     projects: int
 
 
-def compute_dataset_stats(entries: list[DatasetEntry]) -> dict[str, DatasetStats]:
+def compute_dataset_stats(entries: Iterable[DatasetEntry]) -> dict[str, DatasetStats]:
     """Compute per-dataset statistics from entries."""
+    entries = list(entries)
     # Collect all dataset names from entries
     all_names: set[str] = set()
     for entry in entries:
@@ -43,8 +45,9 @@ def compute_dataset_stats(entries: list[DatasetEntry]) -> dict[str, DatasetStats
     }
 
 
-def print_dataset_stats(entries: list[DatasetEntry]) -> None:
+def print_dataset_stats(entries: Iterable[DatasetEntry]) -> None:
     """Print dataset statistics table to logging."""
+    entries = list(entries)
     stats = compute_dataset_stats(entries)
 
     logger.info("")
