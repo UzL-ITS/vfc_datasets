@@ -204,13 +204,14 @@ def deduplicate_across_related_repositories(
             else:
                 standalone.append(entry)
 
-        # For each group, keep only the entry from the canonical URL (or first)
+        # Merge metadata from all entries, keep canonical URL
         for group, group_entries in entries_by_group_id.values():
-            preferred_entry = next(
-                (entry for entry in group_entries if entry.project_url == group.canonical_url),
-                group_entries[0],
-            )
-            result.append(preferred_entry)
+            if len(group_entries) == 1:
+                result.append(group_entries[0])
+                continue
+            merged = merge_entry_group(group_entries)
+            merged.project_url = group.canonical_url or group_entries[0].project_url
+            result.append(merged)
             duplicates_removed += len(group_entries) - 1
 
         result.extend(standalone)
