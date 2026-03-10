@@ -1,6 +1,7 @@
 """Base dataset class for vulnerability-fixing commit datasets."""
 
 import logging
+import math
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
@@ -89,11 +90,13 @@ class BaseDataset(ABC):
                 return cached
 
         df = self._load_data()
-        df = df.where(df.notna(), None)
 
         entries: list[DatasetEntry] = []
         records = cast(list[dict[str, Any]], df.to_dict(orient="records"))
         for row in tqdm(records, total=len(records), desc=f"Parsing {name}", dynamic_ncols=True):
+            for key, value in row.items():
+                if isinstance(value, float) and math.isnan(value):
+                    row[key] = None
             entry = self._parse_row(row)
             if entry:
                 entries.append(entry)
