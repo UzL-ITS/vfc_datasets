@@ -2,6 +2,7 @@ from dataset_entry import DatasetEntry
 from transformations.filters.duplicates import (
     deduplicate_function_level,
     deduplicate_within_repository,
+    merge_entry_group,
 )
 
 
@@ -169,6 +170,39 @@ def test_function_level_keeps_separate_functions():
     # Different functions stay separate
     assert len(result) == 2
     assert {e.function_name for e in result} == {"func_a", "func_b"}
+
+
+def test_merge_does_not_mutate_input_entries():
+    """Merging must not modify the original entries' sets."""
+    entries = [
+        DatasetEntry(
+            project_url="https://github.com/test/repo",
+            commit_id="abc123",
+            is_vfc=True,
+            src_datasets={"d1"},
+        ),
+        DatasetEntry(
+            project_url="https://github.com/test/repo",
+            commit_id="abc123",
+            is_vfc=True,
+            src_datasets={"d2"},
+            owasp_categories={1, 2},
+        ),
+        DatasetEntry(
+            project_url="https://github.com/test/repo",
+            commit_id="abc123",
+            is_vfc=True,
+            src_datasets={"d3"},
+            owasp_categories={3},
+        ),
+    ]
+
+    merged = merge_entry_group(entries)
+
+    assert entries[0].src_datasets == {"d1"}
+    assert entries[1].src_datasets == {"d2"}
+    assert entries[1].owasp_categories == {1, 2}
+    assert merged.owasp_categories == {1, 2, 3}
 
 
 def test_commit_level_merges_different_functions():

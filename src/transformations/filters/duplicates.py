@@ -19,6 +19,13 @@ logger = logging.getLogger(__name__)
 def merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
     """Merge a group of entries with the same key into a new entry."""
     base = copy.copy(entries[0])
+    base.cwe_ids = set(base.cwe_ids)
+    base.cve_ids = set(base.cve_ids)
+    base.src_datasets = set(base.src_datasets)
+    base.files_changed = set(base.files_changed)
+    if base.owasp_categories is not None:
+        base.owasp_categories = set(base.owasp_categories)
+
     for other in entries[1:]:
         base.cwe_ids |= other.cwe_ids
         base.cve_ids |= other.cve_ids
@@ -26,7 +33,8 @@ def merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
         base.files_changed |= other.files_changed
 
         if base.owasp_categories is None:
-            base.owasp_categories = other.owasp_categories
+            if other.owasp_categories is not None:
+                base.owasp_categories = set(other.owasp_categories)
         elif other.owasp_categories:
             base.owasp_categories |= other.owasp_categories
 
