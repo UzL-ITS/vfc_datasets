@@ -6,8 +6,8 @@ from dataset_entry import DatasetEntry
 from utils.split.repository_relationships import RepositoryRelationships
 from utils.split.split_common import (
     Group,
-    _validate_split_ratios,
     group_related_repos,
+    validate_split_ratios,
     visualize_split,
 )
 
@@ -162,7 +162,7 @@ def train_val_test_split_group_stratified(
     """Hierarchical three-way split respecting repository groups."""
     if not entries:
         return [], [], []
-    _validate_split_ratios(train_ratio, val_ratio, test_ratio)
+    validate_split_ratios(train_ratio, val_ratio, test_ratio)
 
     rng = random.Random(seed)
 

@@ -2,7 +2,7 @@
 
 from dataset_entry import DatasetEntry
 from utils.split.repository_relationships import discover_repository_relationships
-from utils.split.split_common import _split_by_ratio, _validate_split_ratios, visualize_split
+from utils.split.split_common import split_by_ratio, validate_split_ratios, visualize_split
 
 
 def train_val_test_split_temporal(
@@ -15,7 +15,7 @@ def train_val_test_split_temporal(
     """Temporal split based on commit timestamps."""
     if not entries:
         return [], [], []
-    _validate_split_ratios(train_ratio, val_ratio, test_ratio)
+    validate_split_ratios(train_ratio, val_ratio, test_ratio)
 
     if not all(e.commit_timestamp_utc is not None for e in entries):
         raise ValueError("All entries must have commit_timestamp_utc for temporal split")
@@ -24,7 +24,7 @@ def train_val_test_split_temporal(
     sorted_entries = sorted(entries, key=lambda e: e.commit_timestamp_utc)  # type: ignore
 
     # Split the sorted entries
-    train, val, test = _split_by_ratio(sorted_entries, train_ratio, val_ratio, test_ratio)
+    train, val, test = split_by_ratio(sorted_entries, train_ratio, val_ratio, test_ratio)
 
     if visualize:
         relationships = discover_repository_relationships(entries)

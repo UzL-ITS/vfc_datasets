@@ -9,13 +9,13 @@ from utils.split.repository_relationships import RepositoryRelationships
 Group = tuple[set[str], int]
 
 
-def _validate_split_ratios(train_ratio: float, val_ratio: float, test_ratio: float) -> None:
+def validate_split_ratios(train_ratio: float, val_ratio: float, test_ratio: float) -> None:
     """Validate that split ratios sum to 1.0."""
     if abs(train_ratio + val_ratio + test_ratio - 1.0) > 1e-6:
         raise ValueError("Ratios must sum to 1.0")
 
 
-def _split_by_ratio(
+def split_by_ratio(
     items: list[DatasetEntry],
     train_ratio: float,
     val_ratio: float,
