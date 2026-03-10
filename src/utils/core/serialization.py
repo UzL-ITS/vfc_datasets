@@ -5,6 +5,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
+import pandas as pd
+
 from config import DATASET_PATH
 from dataset_entry import DatasetEntry
 
@@ -114,8 +116,6 @@ def save_entries_csv(
 
     output_path = Path(file_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    import pandas as pd
 
     rows: list[dict[str, Any]] = []
     for entry in entries:
