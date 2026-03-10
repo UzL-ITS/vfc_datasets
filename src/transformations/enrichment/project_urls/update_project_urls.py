@@ -18,14 +18,9 @@ logger = logging.getLogger(__name__)
 
 def filter_unreachable_project_urls(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Remove entries with unreachable project_url's"""
-    filtered_entries: list[DatasetEntry] = []
     logger.info("REMOVE unreachable project_urls")
     unreachable_urls = get_unreachable_urls()
-    for entry in entries:
-        if entry.project_url in unreachable_urls:
-            continue
-        filtered_entries.append(entry)
-    return filtered_entries
+    return [e for e in entries if e.project_url not in unreachable_urls]
 
 
 def update_project_urls_inplace(entries: list[DatasetEntry]) -> list[DatasetEntry]:
