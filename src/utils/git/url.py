@@ -6,16 +6,26 @@ from pathlib import Path
 from typing import Self
 from urllib.parse import ParseResult, parse_qs, unquote, urlparse
 
-from config import REPOSITORY_PATH
+from config import GITHUB_API_URL, REPOSITORY_PATH
 
 logger = logging.getLogger(__name__)
 
 # Commit hash validation
 MIN_COMMIT_LENGTH = 5
-COMMIT_HASH_PATTERN = re.compile(rf"^[a-f0-9]{{{MIN_COMMIT_LENGTH},40}}$", re.IGNORECASE)
+_COMMIT_HASH_PATTERN = re.compile(rf"^[a-f0-9]{{{MIN_COMMIT_LENGTH},40}}$", re.IGNORECASE)
 
 # Pattern for git-describe style identifiers: tag-N-g<hash>
-GIT_DESCRIBE_PATTERN = re.compile(r".+-g(?P<hash>[a-f0-9]{7,40})$", re.IGNORECASE)
+_GIT_DESCRIBE_PATTERN = re.compile(r".+-g(?P<hash>[a-f0-9]{7,40})$", re.IGNORECASE)
+
+# GitLab URL patterns
+_GITLAB_COMMIT_PATTERN = re.compile(r"/-/commit/([^/]+)", re.IGNORECASE)
+_GITLAB_SPLIT_PATTERN = re.compile(r"/-/|/tree/|/blob/|/commit/|/merge_requests/", re.IGNORECASE)
+
+# cgit repo extraction
+_CGIT_REPO_PATTERN = re.compile(r"/cgit/([^/]+)")
+
+# Common VCS path delimiters used for stripping web UI paths
+_VCS_DELIMITERS = ("/commit/", "/commits/", "/tree/", "/blob/", "/src/", "/browse/")
 
 
 @dataclass(slots=True)
@@ -28,7 +38,6 @@ class GitURL:
     owner: str | None = None
     repo: str | None = None
     commit_id: str | None = None
-    _is_gitweb: bool = False
 
     @classmethod
     def parse(cls, url: str, prefer_https: bool = True) -> Self | None:
@@ -88,22 +97,39 @@ class GitURL:
 
         path = self._normalized_path()
 
-        if self.host == "github.com":
-            self._extract_github(path)
-        elif "gitlab" in self.host:
-            self._extract_gitlab(path)
-        elif "bitbucket" in self.host:
-            self._extract_bitbucket(path)
-        elif self.host.endswith("googlesource.com"):
-            self._extract_googlesource(path)
-        elif self.host.startswith("git.savannah."):
-            self._extract_savannah(path, parsed_url)
-        elif self.host == "git.kernel.org":
-            self._extract_kernel_org(parsed_url)
-        elif self.host == "cgit.freedesktop.org":
-            self._extract_cgit_freedesktop(parsed_url)
-        else:
-            self._extract_generic(path, parsed_url)
+        match self.host:
+            case "github.com":
+                self._extract_github(path)
+            case h if "gitlab" in h:
+                self._extract_gitlab(path)
+            case h if "bitbucket" in h:
+                self._extract_bitbucket(path)
+            case h if h.endswith("googlesource.com"):
+                self._extract_googlesource(path)
+            case h if h.startswith("git.savannah."):
+                self._extract_savannah(path, parsed_url)
+            case "git.kernel.org":
+                self._extract_kernel_org(parsed_url)
+            case "cgit.freedesktop.org":
+                self._extract_cgit_freedesktop(parsed_url)
+            case _:
+                self._extract_generic(path, parsed_url)
+
+    def _try_parse_gitweb(self, parsed_url: ParseResult | None) -> bool:
+        """Try to extract repo from gitweb ?p= parameter. Returns True if handled."""
+        if not parsed_url or not parsed_url.query or "p=" not in parsed_url.query:
+            return False
+        query = parsed_url.query.replace(";", "&")
+        params = parse_qs(query)
+        if "p" not in params:
+            return False
+        repo = params["p"][0]
+        if repo.endswith(".git"):
+            repo = repo[:-4]
+        self.repo = repo
+        if "h" in params and _COMMIT_HASH_PATTERN.fullmatch(params["h"][0]):
+            self.commit_id = params["h"][0].lower()
+        return True
 
     def _normalized_path(self) -> str:
         path = self.path.rstrip("/")
@@ -117,27 +143,21 @@ class GitURL:
             self.owner, self.repo = parts[0], parts[1]
         if len(parts) >= 4 and parts[2] == "commit":
             commit_part = parts[3]
-            if COMMIT_HASH_PATTERN.fullmatch(commit_part):
+            if _COMMIT_HASH_PATTERN.fullmatch(commit_part):
                 self.commit_id = commit_part.lower()
-            elif match := GIT_DESCRIBE_PATTERN.fullmatch(commit_part):
+            elif match := _GIT_DESCRIBE_PATTERN.fullmatch(commit_part):
                 self.commit_id = match.group("hash").lower()
             else:
                 self.commit_id = commit_part
 
     def _extract_gitlab(self, path: str) -> None:
-        path_lower = path.lower()
-        for delimiter in ["/-/", "/tree/", "/blob/", "/commit/", "/merge_requests/"]:
-            if delimiter in path_lower:
-                repo_path = path[: path_lower.index(delimiter)]
-                if "/-/commit/" in path_lower:
-                    commit_start = path_lower.index("/-/commit/") + len("/-/commit/")
-                    commit_part = path[commit_start:].split("/")[0]
-                    if COMMIT_HASH_PATTERN.fullmatch(commit_part):
-                        self.commit_id = commit_part.lower()
-                path = repo_path
-                break
+        commit_match = _GITLAB_COMMIT_PATTERN.search(path)
+        if commit_match and _COMMIT_HASH_PATTERN.fullmatch(commit_match.group(1)):
+            self.commit_id = commit_match.group(1).lower()
 
-        parts = [p for p in path.split("/") if p]
+        repo_path = _GITLAB_SPLIT_PATTERN.split(path)[0]
+
+        parts = [p for p in repo_path.split("/") if p]
         if not parts:
             return
         if len(parts) >= 2:
@@ -150,54 +170,42 @@ class GitURL:
         parts = [p for p in path.split("/") if p]
         if len(parts) >= 2:
             self.owner, self.repo = parts[0], parts[1]
-        if len(parts) >= 4 and parts[2] == "commits" and COMMIT_HASH_PATTERN.fullmatch(parts[3]):
+        if len(parts) >= 4 and parts[2] == "commits" and _COMMIT_HASH_PATTERN.fullmatch(parts[3]):
             self.commit_id = parts[3].lower()
 
     def _extract_googlesource(self, path: str) -> None:
-        if "/+/" in path:
-            repo_path = path[: path.index("/+/")]
-            commit_part = path[path.index("/+/") + 3 :].split("/")[0]
+        if (idx := path.find("/+/")) >= 0:
+            commit_part = path[idx + 3 :].split("/")[0]
             # Strip common git revision suffixes (e.g., ^!, ~1)
             commit_hash = re.split(r"[\^~!]", commit_part)[0]
-            if COMMIT_HASH_PATTERN.fullmatch(commit_hash):
+            if _COMMIT_HASH_PATTERN.fullmatch(commit_hash):
                 self.commit_id = commit_hash.lower()
-            path = repo_path
+            path = path[:idx]
         self.repo = path.lstrip("/")
 
     def _extract_savannah(self, path: str, parsed_url: ParseResult | None) -> None:
         """Extract repo from GNU Savannah URLs (cgit, gitweb, or direct git paths)."""
-        # Handle gitweb URLs: ?p=project.git
-        if parsed_url and parsed_url.query and "p=" in parsed_url.query:
-            query = parsed_url.query.replace(";", "&")
-            params = parse_qs(query)
-            if "p" in params:
-                repo = params["p"][0]
-                if repo.endswith(".git"):
-                    repo = repo[:-4]
-                self.repo = repo
-                self._is_gitweb = True
-                return
+        if self._try_parse_gitweb(parsed_url):
+            return
 
         # Handle cgit URLs: /cgit/project.git or /cgit/group/project.git
-        if "/cgit/" in path:
-            cgit_path = path[path.index("/cgit/") + 6 :]
+        if (cgit_idx := path.find("/cgit/")) >= 0:
+            cgit_path = path[cgit_idx + 6 :]
             # Remove /commit suffix if present (with or without trailing slash)
-            if "/commit" in cgit_path:
-                cgit_path = cgit_path[: cgit_path.index("/commit")]
+            if (ci := cgit_path.find("/commit")) >= 0:
+                cgit_path = cgit_path[:ci]
             # Extract commit hash if present (with or without trailing slash)
-            if "/commit" in path:
-                after_commit = path[path.index("/commit") + 7 :]
-                # Strip leading slash if present
-                after_commit = after_commit.lstrip("/")
+            if (commit_idx := path.find("/commit")) >= 0:
+                after_commit = path[commit_idx + 7 :].lstrip("/")
                 commit_part = after_commit.split("/")[0].split("?")[0] if after_commit else ""
-                if commit_part and COMMIT_HASH_PATTERN.fullmatch(commit_part):
+                if commit_part and _COMMIT_HASH_PATTERN.fullmatch(commit_part):
                     self.commit_id = commit_part.lower()
             self.repo = cgit_path.removesuffix(".git") if cgit_path else None
             return
 
         # Handle direct git URLs: /git/project.git
-        if "/git/" in path:
-            git_path = path[path.index("/git/") + 5 :]
+        if (git_idx := path.find("/git/")) >= 0:
+            git_path = path[git_idx + 5 :]
             self.repo = git_path.removesuffix(".git") if git_path else None
             return
 
@@ -218,35 +226,23 @@ class GitURL:
         if parsed_url and parsed_url.query:
             query = parsed_url.query.replace(";", "&")
             params = parse_qs(query)
-            if "id" in params and COMMIT_HASH_PATTERN.fullmatch(params["id"][0]):
+            if "id" in params and _COMMIT_HASH_PATTERN.fullmatch(params["id"][0]):
                 self.commit_id = params["id"][0].lower()
 
-            # Handle gitweb-style URLs: ?p=linux/kernel/git/torvalds/linux.git;h=HASH
-            if "p" in params:
-                repo = params["p"][0]
-                if repo.endswith(".git"):
-                    repo = repo[:-4]
-                self.repo = repo
-                self._is_gitweb = True
-                # Extract commit from h parameter (gitweb uses h= for commit hash)
-                if "h" in params and COMMIT_HASH_PATTERN.fullmatch(params["h"][0]):
-                    self.commit_id = params["h"][0].lower()
-                return
+        if self._try_parse_gitweb(parsed_url):
+            return
 
-        if "/commit/" in path:
-            commit_part = path[path.index("/commit/") + 8 :].split("/")[0].split("?")[0]
-            if COMMIT_HASH_PATTERN.fullmatch(commit_part):
+        if (commit_idx := path.find("/commit/")) >= 0:
+            commit_part = path[commit_idx + 8 :].split("/")[0].split("?")[0]
+            if _COMMIT_HASH_PATTERN.fullmatch(commit_part):
                 self.commit_id = commit_part.lower()
 
         # Extract repo path from /pub/scm/ or /cgit/ format
-        if "/pub/scm/" in path and ".git" in path:
-            start = path.index("/pub/scm/") + 9
-            end = path.index(".git")
-            self.repo = path[start:end]
-        elif "/cgit/" in path and ".git" in path:
-            start = path.index("/cgit/") + 6
-            end = path.index(".git")
-            self.repo = path[start:end]
+        git_end = path.find(".git")
+        if (scm_idx := path.find("/pub/scm/")) >= 0 and git_end >= 0:
+            self.repo = path[scm_idx + 9 : git_end]
+        elif (cgit_idx := path.find("/cgit/")) >= 0 and git_end >= 0:
+            self.repo = path[cgit_idx + 6 : git_end]
 
     def _extract_cgit_freedesktop(self, parsed_url: ParseResult | None) -> None:
         """Extract repo from cgit.freedesktop.org URLs, stripping web paths."""
@@ -255,13 +251,13 @@ class GitURL:
         # Extract commit ID from query string (?id=HASH)
         if parsed_url and parsed_url.query:
             params = parse_qs(parsed_url.query)
-            if "id" in params and COMMIT_HASH_PATTERN.fullmatch(params["id"][0]):
+            if "id" in params and _COMMIT_HASH_PATTERN.fullmatch(params["id"][0]):
                 self.commit_id = params["id"][0].lower()
 
         # Strip cgit web paths to get repo
         for suffix in ("/commit", "/tree", "/log", "/diff", "/refs", "/snapshot", "/patch"):
-            if suffix in path:
-                path = path[: path.index(suffix)]
+            if (idx := path.find(suffix)) >= 0:
+                path = path[:idx]
                 break
 
         # Update self.path to the normalized form for to_https_url()
@@ -269,31 +265,23 @@ class GitURL:
         self.repo = path.lstrip("/") if path and path != "/" else None
 
     def _extract_generic(self, path: str, parsed_url: ParseResult | None) -> None:
-        if parsed_url and parsed_url.query and "p=" in parsed_url.query:
-            query = parsed_url.query.replace(";", "&")
-            params = parse_qs(query)
-            if "p" in params:
-                repo = params["p"][0]
-                if repo.endswith(".git"):
-                    repo = repo[:-4]
-                self.repo = repo
-                self._is_gitweb = True
-                return
+        if self._try_parse_gitweb(parsed_url):
+            return
 
         if "/cgit/" in path:
-            match = re.search(r"/cgit/([^/]+)", path)
+            match = _CGIT_REPO_PATTERN.search(path)
             if match:
                 repo = match.group(1)
                 if repo.endswith(".git"):
                     repo = repo[:-4]
                 self.repo = repo
 
-        for delimiter in ["/commit/", "/commits/", "/tree/", "/blob/", "/src/", "/browse/"]:
-            if delimiter in path:
-                commit_part = path[path.index(delimiter) + len(delimiter) :].split("/")[0]
-                if COMMIT_HASH_PATTERN.fullmatch(commit_part):
+        for delimiter in _VCS_DELIMITERS:
+            if (idx := path.find(delimiter)) >= 0:
+                commit_part = path[idx + len(delimiter) :].split("/")[0]
+                if _COMMIT_HASH_PATTERN.fullmatch(commit_part):
                     self.commit_id = commit_part.lower()
-                elif match := GIT_DESCRIBE_PATTERN.fullmatch(commit_part):
+                elif match := _GIT_DESCRIBE_PATTERN.fullmatch(commit_part):
                     self.commit_id = match.group("hash").lower()
                 break
 
@@ -302,35 +290,36 @@ class GitURL:
             if parts:
                 self.repo = parts[-1]
 
+    def to_github_api_url(self, path: str = "") -> str | None:
+        """Build GitHub API URL for this repo, e.g. path='/commits/{sha}'.
+
+        Returns None if not a GitHub URL or missing owner/repo.
+        """
+        if self.host != "github.com" or not self.owner or not self.repo:
+            return None
+        return f"{GITHUB_API_URL}/repos/{self.owner}/{self.repo}{path}"
+
     def to_https_url(self) -> str | None:
         """Convert to HTTPS URL format."""
         base_url = f"https://{self.host}"
 
-        # GNU Savannah: always return the clone URL format (/git/repo.git)
-        if self.host.startswith("git.savannah.") and self.repo:
-            return f"{base_url}/git/{self.repo}.git"
-
-        # git.kernel.org: clone URL is /pub/scm/REPO.git
-        if self.host == "git.kernel.org" and self.repo:
-            return f"{base_url}/pub/scm/{self.repo}.git"
-
-        # cgit.freedesktop.org: return normalized URL (repos moved to gitlab)
-        if self.host == "cgit.freedesktop.org" and self.repo:
-            return f"{base_url}/{self.repo}"
-
-        # Special handling for gitweb URLs (non-Savannah)
-        if self._is_gitweb and self.repo:
-            return f"{base_url}/?p={self.repo}.git"
-
-        # Platform-specific formats with owner/repo
-        if self.owner and self.repo:
-            if self.host == "github.com":
+        match self.host:
+            case h if h.startswith("git.savannah.") and self.repo:
+                return f"{base_url}/git/{self.repo}.git"
+            case "git.kernel.org" if self.repo:
+                return f"{base_url}/pub/scm/{self.repo}.git"
+            case "cgit.freedesktop.org" if self.repo:
+                return f"{base_url}/{self.repo}"
+            case "github.com" if self.owner and self.repo:
                 return f"{base_url}/{self.owner.lower()}/{self.repo.lower()}"
-            if "gitlab" in self.host or "bitbucket" in self.host:
+            case h if ("gitlab" in h or "bitbucket" in h) and self.owner and self.repo:
                 return f"{base_url}/{self.owner}/{self.repo}"
+            case h if h.endswith("googlesource.com") and self.repo:
+                return f"{base_url}/{self.repo}"
 
-        if self.host.endswith("googlesource.com") and self.repo:
-            return f"{base_url}/{self.repo}"
+        # Gitweb URLs: repo was extracted from ?p= query param, not from the path
+        if self.repo and self.repo not in self.path:
+            return f"{base_url}/?p={self.repo}.git"
 
         # Generic format - strip .git suffix and VCS paths
         path = self.path.rstrip("/").removesuffix(".git")
@@ -338,7 +327,7 @@ class GitURL:
             return None
 
         # Strip common VCS path segments (but not if at root)
-        for delim in ("/commit/", "/commits/", "/tree/", "/blob/", "/src/", "/browse/"):
+        for delim in _VCS_DELIMITERS:
             if (idx := path.find(delim)) > 0:
                 path = path[:idx]
                 break
@@ -385,7 +374,7 @@ def normalize_commit_id(url_or_commit_id: str | None) -> str | None:
     if not value:
         return None
 
-    if COMMIT_HASH_PATTERN.fullmatch(value):
+    if _COMMIT_HASH_PATTERN.fullmatch(value):
         return value.lower()
 
     git_url = GitURL.parse(value)
@@ -408,9 +397,6 @@ def url_to_pathname(url: str) -> str:
         if git_url and git_url.owner and git_url.repo:
             dir_name = f"{git_url.owner}_{git_url.repo}_"
 
-        # Add hash for uniqueness
-        hasher = hashlib.sha256()
-        hasher.update(url.encode("utf-8"))
-        dir_name += hasher.hexdigest()
+        dir_name += hashlib.sha256(url.encode()).hexdigest()
 
     return str(Path(REPOSITORY_PATH) / dir_name)

@@ -9,7 +9,7 @@ from transformations.enrichment.add_commit_data_local import (
     _get_commit_info,
     add_commit_information_local,
 )
-from transformations.enrichment.commit_data_common import apply_commit_data
+from transformations.enrichment.commit_data_common import CommitData, apply_commit_data
 
 
 class TestApplyCommitData:
@@ -21,12 +21,12 @@ class TestApplyCommitData:
             commit_id="abc1234",
             src_datasets={"test"},
         )
-        data = {
-            "message": "Fix bug",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "diff --git a/file.py",
-            "files_changed": {"file.py", "test.py"},
-        }
+        data = CommitData(
+            message="Fix bug",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="diff --git a/file.py",
+            files_changed={"file.py", "test.py"},
+        )
 
         apply_commit_data(entry, data)
 
@@ -45,12 +45,12 @@ class TestApplyCommitData:
             commit_diff="original diff",
             files_changed={"original.py"},
         )
-        data = {
-            "message": "New message",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "new diff",
-            "files_changed": {"new.py"},
-        }
+        data = CommitData(
+            message="New message",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="new diff",
+            files_changed={"new.py"},
+        )
 
         apply_commit_data(entry, data)
 
@@ -66,12 +66,12 @@ class TestApplyCommitData:
             src_datasets={"test"},
             commit_message="Existing message",
         )
-        data = {
-            "message": "New message",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "new diff",
-            "files_changed": {"new.py"},
-        }
+        data = CommitData(
+            message="New message",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="new diff",
+            files_changed={"new.py"},
+        )
 
         apply_commit_data(entry, data)
 
@@ -87,12 +87,12 @@ class TestApplyCommitData:
             src_datasets={"test"},
             commit_diff="Existing diff",
         )
-        data = {
-            "message": "New message",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "new diff",
-            "files_changed": {"new.py"},
-        }
+        data = CommitData(
+            message="New message",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="new diff",
+            files_changed={"new.py"},
+        )
 
         apply_commit_data(entry, data)
 
@@ -107,12 +107,12 @@ class TestApplyCommitData:
             src_datasets={"test"},
             files_changed=set(),  # Empty set
         )
-        data = {
-            "message": "msg",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "diff",
-            "files_changed": {"file.py"},
-        }
+        data = CommitData(
+            message="msg",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="diff",
+            files_changed={"file.py"},
+        )
 
         apply_commit_data(entry, data)
 
@@ -125,12 +125,12 @@ class TestApplyCommitData:
             src_datasets={"test"},
             files_changed={"existing.py"},
         )
-        data = {
-            "message": "msg",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "diff",
-            "files_changed": {"new.py"},
-        }
+        data = CommitData(
+            message="msg",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="diff",
+            files_changed={"new.py"},
+        )
 
         apply_commit_data(entry, data)
 

@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from utils.git.url import MIN_COMMIT_LENGTH, GitURL, normalize_commit_id
-from utils.owasp import cwes_to_owasp
+from utils.owasp import OwaspCategory, cwes_to_owasp
 from utils.patterns import CVE_PATTERN, CWE_PATTERN
 
 logger = logging.getLogger(__name__)
@@ -48,12 +48,13 @@ class DatasetEntry:
         project_url: str,
         commit_id: str,
         src_datasets: set[str],
+        *,
         is_vfc: bool = True,
         cve_ids: set[str] | None = None,
         cwe_ids: set[str] | None = None,
         function_name: str | None = None,
         ghsa_id: str | None = None,
-        owasp_categories: set[int] | None = None,
+        owasp_categories: set[OwaspCategory] | None = None,
         commit_message: str | None = None,
         commit_diff: str | None = None,
         files_changed: set[str] | None = None,
@@ -100,7 +101,7 @@ class DatasetEntry:
 
         # Derive OWASP categories from CWE if not provided
         if owasp_categories is not None:
-            self.owasp_categories: set[int] | None = owasp_categories
+            self.owasp_categories: set[OwaspCategory] | None = owasp_categories
         elif self.cwe_ids:
             self.owasp_categories = cwes_to_owasp(self.cwe_ids)
         else:
@@ -136,5 +137,8 @@ class DatasetEntry:
 
 
 def create_dataset_entry(data: dict[str, Any]) -> DatasetEntry:
-    """Create DatasetEntry from dict, converting lists to sets."""
-    return DatasetEntry(**{k: set(v) if isinstance(v, list) else v for k, v in data.items()})  # type: ignore[arg-type]
+    """Create DatasetEntry from dict, coercing serialized types to their runtime equivalents."""
+    converted = {k: set(v) if isinstance(v, list) else v for k, v in data.items()}
+    if converted.get("owasp_categories") is not None:
+        converted["owasp_categories"] = {OwaspCategory(v) for v in converted["owasp_categories"]}
+    return DatasetEntry(**converted)  # type: ignore[arg-type]

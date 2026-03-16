@@ -4,6 +4,7 @@ from transformations.filters.duplicates import (
     deduplicate_within_repository,
     merge_entry_group,
 )
+from utils.owasp import OwaspCategory
 
 
 def test_merge_entry_group_covers_all_slots():
@@ -186,14 +187,17 @@ def test_merge_does_not_mutate_input_entries():
             commit_id="abc123",
             is_vfc=True,
             src_datasets={"d2"},
-            owasp_categories={1, 2},
+            owasp_categories={
+                OwaspCategory.BROKEN_ACCESS_CONTROL,
+                OwaspCategory.CRYPTOGRAPHIC_FAILURES,
+            },
         ),
         DatasetEntry(
             project_url="https://github.com/test/repo",
             commit_id="abc123",
             is_vfc=True,
             src_datasets={"d3"},
-            owasp_categories={3},
+            owasp_categories={OwaspCategory.INJECTION},
         ),
     ]
 
@@ -201,8 +205,15 @@ def test_merge_does_not_mutate_input_entries():
 
     assert entries[0].src_datasets == {"d1"}
     assert entries[1].src_datasets == {"d2"}
-    assert entries[1].owasp_categories == {1, 2}
-    assert merged.owasp_categories == {1, 2, 3}
+    assert entries[1].owasp_categories == {
+        OwaspCategory.BROKEN_ACCESS_CONTROL,
+        OwaspCategory.CRYPTOGRAPHIC_FAILURES,
+    }
+    assert merged.owasp_categories == {
+        OwaspCategory.BROKEN_ACCESS_CONTROL,
+        OwaspCategory.CRYPTOGRAPHIC_FAILURES,
+        OwaspCategory.INJECTION,
+    }
 
 
 def test_commit_level_merges_different_functions():

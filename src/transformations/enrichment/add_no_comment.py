@@ -1,10 +1,7 @@
-import contextlib
 import logging
 import os
 import tempfile
-from collections import defaultdict
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from os import fspath
+from pathlib import PurePosixPath
 from typing import Any
 
 import tree_sitter
@@ -14,16 +11,13 @@ import tree_sitter_java
 import tree_sitter_javascript
 import tree_sitter_python
 from git import Repo
-from tqdm.auto import tqdm
 
-from config import MAX_DIFF_SIZE, MAX_WORKERS
+from config import MAX_DIFF_SIZE
 from dataset_entry import DatasetEntry
+from transformations.enrichment.batch_processing import process_commits_in_batches
 from utils.extensions import EXTENSION_TO_LANGUAGE
-from utils.git.repository import clone_repositories
 
 logger = logging.getLogger(__name__)
-
-BATCH_SIZE = 200
 
 # Comment node types for each language
 COMMENT_NODE_TYPES: dict[str, set[str]] = {
@@ -62,8 +56,7 @@ def _get_parser(language: str) -> tree_sitter.Parser | None:
 
 def _get_language(file_path: str) -> str | None:
     """Get language from file extension."""
-    _, ext = os.path.splitext(file_path)
-    return EXTENSION_TO_LANGUAGE.get(ext.lower())
+    return EXTENSION_TO_LANGUAGE.get(PurePosixPath(file_path).suffix.lower())
 
 
 def _strip_comments(source_code: str, language: str) -> str | None:
@@ -177,38 +170,64 @@ def _read_blob(blob: Any) -> str:
     return blob.data_stream.read().decode("utf-8", errors="replace") if blob else ""
 
 
-def _process_diff_item(diff_item: Any, repo: Repo) -> tuple[str | None, bool]:
-    """Process a diff item, returning (stripped_diff, is_unsupported)."""
+def _build_original_diff(diff_item: Any) -> str | None:
+    """Build a full diff from a diff_item's raw diff, with a proper header."""
+    if not diff_item.diff:
+        return None
+    path = diff_item.b_path or diff_item.a_path
+    blob_a = diff_item.a_blob.hexsha[:7] if diff_item.a_blob else "0000000"
+    blob_b = diff_item.b_blob.hexsha[:7] if diff_item.b_blob else "0000000"
+    blob = diff_item.b_blob or diff_item.a_blob
+    mode = f"{blob.mode:06o}" if blob and blob.mode else "100644"
+    header = (
+        f"diff --git a/{path} b/{path}\n"
+        f"index {blob_a}..{blob_b} {mode}\n"
+        f"--- a/{path}\n"
+        f"+++ b/{path}\n"
+    )
+    raw_diff = diff_item.diff
+    diff_text = (
+        raw_diff.decode("utf-8", errors="replace") if isinstance(raw_diff, bytes) else raw_diff
+    )
+    return header + diff_text
+
+
+def _process_diff_item(diff_item: Any, repo: Repo, include_unsupported: bool) -> str | None:
+    """Process a single diff item, stripping comments where possible.
+
+    For unsupported languages/binary files, returns the original diff
+    (if include_unsupported is True) or None.
+    """
     file_path = diff_item.b_path or diff_item.a_path
+    fallback = _build_original_diff(diff_item) if include_unsupported else None
+
     language = _get_language(file_path) if file_path else None
     if not language:
-        return None, True
+        return fallback
 
-    # Check for binary
     if any(
         b and b.mime_type and "text" not in b.mime_type
         for b in [diff_item.a_blob, diff_item.b_blob]
     ):
-        return None, True
+        return fallback
 
     try:
         content_a = _read_blob(diff_item.a_blob)
         content_b = _read_blob(diff_item.b_blob)
     except Exception:
-        return None, True
+        return fallback
 
-    # Strip comments
     stripped_a = _strip_comments(content_a, language) if content_a else ""
     stripped_b = _strip_comments(content_b, language) if content_b else ""
 
     if stripped_a is None or stripped_b is None:
-        return None, True
+        return fallback
 
     # Get file mode from blob (default 100644)
     blob = diff_item.b_blob or diff_item.a_blob
     mode = f"{blob.mode:06o}" if blob and blob.mode else "100644"
 
-    return _generate_diff(repo, stripped_a, stripped_b, file_path, mode), False
+    return _generate_diff(repo, stripped_a, stripped_b, file_path, mode)
 
 
 def _get_diff_no_comments(
@@ -231,29 +250,8 @@ def _get_diff_no_comments(
         file_diffs: list[str] = []
 
         for diff_item in diffs:
-            diff_str, unsupported = _process_diff_item(diff_item, repo)
-            if unsupported:
-                if include_unsupported and diff_item.diff:
-                    # Construct full diff with header for unsupported files
-                    path = diff_item.b_path or diff_item.a_path
-                    blob_a = diff_item.a_blob.hexsha[:7] if diff_item.a_blob else "0000000"
-                    blob_b = diff_item.b_blob.hexsha[:7] if diff_item.b_blob else "0000000"
-                    blob = diff_item.b_blob or diff_item.a_blob
-                    mode = f"{blob.mode:06o}" if blob and blob.mode else "100644"
-                    header = (
-                        f"diff --git a/{path} b/{path}\n"
-                        f"index {blob_a}..{blob_b} {mode}\n"
-                        f"--- a/{path}\n"
-                        f"+++ b/{path}\n"
-                    )
-                    raw_diff = diff_item.diff
-                    diff_text = (
-                        raw_diff.decode("utf-8", errors="replace")
-                        if isinstance(raw_diff, bytes)
-                        else raw_diff
-                    )
-                    file_diffs.append(header + diff_text)
-            elif diff_str:
+            diff_str = _process_diff_item(diff_item, repo, include_unsupported)
+            if diff_str:
                 file_diffs.append(diff_str)
 
         return "\n".join(file_diffs) if file_diffs else ""
@@ -279,6 +277,10 @@ def _process_batch(args: tuple[str, list[str], bool]) -> dict[str, str]:
     return results
 
 
+def _apply_diff(entry: DatasetEntry, diff: str) -> None:
+    entry.commit_diff = diff
+
+
 def strip_diff_comments(
     entries: list[DatasetEntry], *, include_unsupported: bool = True
 ) -> list[DatasetEntry]:
@@ -292,72 +294,24 @@ def strip_diff_comments(
     logger.info("Strip comments from commit diffs [LOCAL]")
     logger.info("Max diff size: %dK chars", MAX_DIFF_SIZE // 1000)
 
-    # Filter entries needing processing
     needs_processing = [e for e in entries if e.commit_diff]
-    to_process = [
-        e for e in needs_processing if e.commit_diff and len(e.commit_diff) <= MAX_DIFF_SIZE
-    ]
-
-    if skipped := len(needs_processing) - len(to_process):
+    skipped = sum(
+        1
+        for e in needs_processing
+        if e.commit_diff is not None and len(e.commit_diff) > MAX_DIFF_SIZE
+    )
+    if skipped:
         logger.info("Skipped %d entries exceeding size limit", skipped)
 
-    if not to_process:
-        logger.info("No entries to process")
-        return entries
-
-    # Group by project
-    commits_by_url: dict[str, set[str]] = defaultdict(set)
-    for e in to_process:
-        commits_by_url[e.project_url].add(e.commit_id)
-
-    # Clone repos
-    logger.info("Cloning repositories for %d entries...", len(to_process))
-    repos = clone_repositories(to_process)
-    repo_paths = {url: fspath(r.working_dir) for url, r in repos.items() if r and r.working_dir}
-    path_to_url = {v: k for k, v in repo_paths.items()}
-
-    # Entry lookup
-    entries_by_commit: dict[tuple[str, str], list[DatasetEntry]] = defaultdict(list)
-    for e in to_process:
-        entries_by_commit[(e.project_url, e.commit_id)].append(e)
-
-    # Create batches
-    batches: list[tuple[str, list[str], bool]] = []
-    for url, commit_ids in commits_by_url.items():
-        if url not in repo_paths:
-            continue
-        path = repo_paths[url]
-        ids = list(commit_ids)
-        for i in range(0, len(ids), BATCH_SIZE):
-            batches.append((path, ids[i : i + BATCH_SIZE], include_unsupported))
-
-    batches.sort(key=lambda b: len(b[1]), reverse=True)
-    total = sum(len(b[1]) for b in batches)
-
-    logger.info("Processing %d commits across %d repos", total, len(repo_paths))
-
-    # Process
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = {executor.submit(_process_batch, b): b for b in batches}
-
-        with tqdm(total=total, desc="Stripping comments", unit="commits") as pbar:
-            for future in as_completed(futures):
-                path, batch_ids, _ = futures[future]
-                url = path_to_url[path]
-
-                try:
-                    for commit_id, diff in future.result().items():
-                        for entry in entries_by_commit.get((url, commit_id), []):
-                            entry.commit_diff = diff
-                except Exception as exc:
-                    logger.error("Batch failed for %s: %s: %s", path, type(exc).__name__, exc)
-
-                pbar.update(len(batch_ids))
-
-    for repository in repos.values():
-        with contextlib.suppress(BrokenPipeError, OSError):
-            if repository:
-                repository.close()
-
-    logger.info("Done processing %d entries", len(to_process))
-    return entries
+    return process_commits_in_batches(
+        entries,
+        filter_fn=lambda e: (
+            e.commit_diff is not None
+            and len(e.commit_diff) > 0
+            and len(e.commit_diff) <= MAX_DIFF_SIZE
+        ),
+        batch_fn=_process_batch,
+        apply_fn=_apply_diff,
+        batch_extra_args=(include_unsupported,),
+        desc="Stripping comments",
+    )

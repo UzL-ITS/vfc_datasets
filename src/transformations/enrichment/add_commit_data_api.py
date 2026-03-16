@@ -7,8 +7,12 @@ from typing import Any
 from tqdm.asyncio import tqdm
 
 from dataset_entry import DatasetEntry
-from transformations.enrichment.commit_data_common import apply_commit_data, needs_enrichment
-from utils.git.github_client import GITHUB_API_URL, AsyncGitHubClient
+from transformations.enrichment.commit_data_common import (
+    CommitData,
+    apply_commit_data,
+    needs_enrichment,
+)
+from utils.git.github_client import AsyncGitHubClient
 from utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
@@ -17,18 +21,14 @@ logger = logging.getLogger(__name__)
 async def _enrich_entry(entry: DatasetEntry, client: AsyncGitHubClient) -> bool:
     """Fetch commit info from GitHub API and populate entry in-place."""
     git_url = GitURL.parse(entry.project_url)
-    if not git_url or git_url.host != "github.com":
+    api_url = git_url.to_github_api_url(f"/commits/{entry.commit_id}") if git_url else None
+    if not api_url:
         return False
 
-    owner, repo = git_url.owner, git_url.repo
-    if not owner or not repo:
-        return False
-
-    api_url = f"{GITHUB_API_URL}/repos/{owner}/{repo}/commits/{entry.commit_id}"
     try:
         data = await client.query_api(api_url)
     except Exception as e:
-        logger.warning("API error for %s/%s@%s: %s", owner, repo, entry.commit_id, e)
+        logger.warning("API error for %s: %s", api_url, e)
         return False
 
     if not data:
@@ -47,12 +47,12 @@ def _apply_api_response(entry: DatasetEntry, data: dict[str, Any]) -> None:
 
     apply_commit_data(
         entry,
-        {
-            "message": commit.get("message"),
-            "timestamp": commit.get("author", {}).get("date"),
-            "diff": "\n".join(patches) if patches else None,
-            "files_changed": {f["filename"] for f in files if f.get("filename")},
-        },
+        CommitData(
+            message=commit.get("message"),
+            timestamp=commit.get("author", {}).get("date"),
+            diff="\n".join(patches) if patches else None,
+            files_changed={f["filename"] for f in files if f.get("filename")},
+        ),
     )
 
 

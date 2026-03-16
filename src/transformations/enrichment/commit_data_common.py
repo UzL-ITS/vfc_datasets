@@ -1,8 +1,17 @@
 """Shared helpers for commit-data enrichment (API and local)."""
 
-from typing import Any
+from typing import TypedDict
 
 from dataset_entry import DatasetEntry
+
+
+class CommitData(TypedDict, total=False):
+    """Commit information produced by both API and local enrichment."""
+
+    message: str | None
+    timestamp: str | None
+    diff: str | None
+    files_changed: set[str]
 
 
 def needs_enrichment(entry: DatasetEntry) -> bool:
@@ -15,7 +24,7 @@ def needs_enrichment(entry: DatasetEntry) -> bool:
     )
 
 
-def apply_commit_data(entry: DatasetEntry, data: dict[str, Any]) -> None:
+def apply_commit_data(entry: DatasetEntry, data: CommitData) -> None:
     """Update entry fields from commit data (only fills missing fields)."""
     if entry.commit_message is None:
         entry.commit_message = data.get("message")

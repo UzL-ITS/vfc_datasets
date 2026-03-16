@@ -27,7 +27,7 @@ class TracerDataset(BaseDataset):
             "Finally, they successfully found patches for 1,295 CVEs, while they were still uncertain "
             "for 122 CVEs due to limited disclosed information.",
         ),
-        vfcs=2989,  # NOTE: -> 3188 (SVN or unsupported git urls)
+        vfcs=3017,  # NOTE: -> 3188 (SVN or unsupported git urls)
         non_vfcs=0,
     )
 
@@ -41,21 +41,17 @@ class TracerDataset(BaseDataset):
         return pd.read_csv(csv_path)
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
-        # Try github_commit first
+        # Try github_commit first, fallback to other_platform_git_commit
         project_url, raw_commit_id = extract_from_commit_url(
             row, "github_commit", self.metadata.name
         )
-
-        # Fallback to other_platform_git_commit
         if not project_url or not raw_commit_id:
             project_url, raw_commit_id = extract_from_commit_url(
                 row, "other_platform_git_commit", self.metadata.name
             )
-
         if not project_url or not raw_commit_id:
             return None
 
-        # Normalize commit ID
         commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
         if not commit_id:
             return None

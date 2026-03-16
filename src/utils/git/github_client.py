@@ -10,10 +10,24 @@ from typing import Any, Self
 import httpx
 from tqdm.asyncio import tqdm as async_tqdm
 
-from config import GITHUB_API_URL, GITHUB_TOKEN
+from config import GITHUB_TOKEN
 from utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
+
+_DEFAULT_TIMEOUT = httpx.Timeout(120.0, connect=30.0)
+
+
+def _github_headers() -> dict[str, str]:
+    """Build GitHub API request headers (with auth if configured)."""
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "vfc-datasets/2.0",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    return headers
 
 
 class AsyncGitHubClient:
@@ -28,8 +42,6 @@ class AsyncGitHubClient:
     )
 
     default_rate_limit_wait = 60  # seconds
-    request_timeout = 120.0  # seconds
-    connect_timeout = 30.0  # seconds
 
     def __init__(self, max_concurrent: int = 30, max_retries: int = 3) -> None:
         self.max_retries = max_retries
@@ -40,21 +52,14 @@ class AsyncGitHubClient:
 
     async def __aenter__(self) -> Self:
         logging.getLogger("httpx").setLevel(logging.WARNING)
-        headers: dict[str, str] = {
-            "Accept": "application/vnd.github+json",
-            "User-Agent": "vfc-datasets/2.0",
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
-        if GITHUB_TOKEN:
-            headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
-        else:
+        if not GITHUB_TOKEN:
             logger.warning(
                 "No GITHUB_TOKEN configured - API rate limits will be severely restricted"
             )
 
         self.client = httpx.AsyncClient(
-            timeout=httpx.Timeout(self.request_timeout, connect=self.connect_timeout),
-            headers=headers,
+            timeout=_DEFAULT_TIMEOUT,
+            headers=_github_headers(),
             follow_redirects=True,
         )
         return self
@@ -154,19 +159,11 @@ class AsyncGitHubClient:
 
 def query_github_api_sync(api_url: str) -> dict[str, Any] | None:
     """Synchronous single-request GitHub API query."""
-    headers: dict[str, str] = {
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "vfc-datasets/2.0",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
-    if GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
-
     try:
         response = httpx.get(
             api_url,
-            headers=headers,
-            timeout=httpx.Timeout(120.0, connect=30.0),
+            headers=_github_headers(),
+            timeout=_DEFAULT_TIMEOUT,
             follow_redirects=True,
         )
         if response.status_code == 200:
@@ -198,15 +195,11 @@ async def _fetch_single_repo_info(
     result = ForkInfo()
 
     git_url = GitURL.parse(project_url)
-    if not git_url or git_url.host != "github.com":
-        return project_url, result
-
-    owner, repo = git_url.owner, git_url.repo
-    if not owner or not repo:
+    api_url = git_url.to_github_api_url() if git_url else None
+    if not api_url:
         return project_url, result
 
     try:
-        api_url = f"{GITHUB_API_URL}/repos/{owner}/{repo}"
         data = await client.query_api(api_url)
 
         if data:

@@ -2,6 +2,7 @@
 
 import hashlib
 import logging
+from pathlib import PurePosixPath
 
 from git import Repo
 from git.exc import GitCommandError
@@ -83,6 +84,14 @@ TEMPLATE_FILE_PATTERNS = frozenset(
 )
 
 
+def get_commit_diff(repo: Repo, commit_id: str) -> str:
+    """Get the unified diff text for a commit."""
+    commit = repo.commit(commit_id)
+    if commit.parents:
+        return repo.git.diff(commit.parents[0].hexsha, commit.hexsha)
+    return repo.git.show(commit.hexsha, format="", p=True)
+
+
 def get_all_commit_ids(repo: Repo) -> list[str]:
     """Get all commit IDs from a repository."""
     try:
@@ -95,7 +104,7 @@ def get_all_commit_ids(repo: Repo) -> list[str]:
 
 def is_template_file(filename: str) -> bool:
     """Check if a filename is a template/config file."""
-    basename = filename.rsplit("/", 1)[-1].lower()
+    basename = PurePosixPath(filename).name.lower()
     return basename in TEMPLATE_FILE_PATTERNS
 
 

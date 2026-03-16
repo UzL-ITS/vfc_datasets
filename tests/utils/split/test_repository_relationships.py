@@ -402,7 +402,6 @@ class TestFindSuspiciousProjectRelationships:
         fork_edges = [RelationshipEdge(url1, url2, "github_fork")]
 
         _find_suspicious_project_relationships(relationships, fork_edges)
-        assert not group.suspicious
         assert group.suspicious_urls == set()
 
     def test_multi_commit_groups_not_suspicious(self) -> None:
@@ -421,7 +420,6 @@ class TestFindSuspiciousProjectRelationships:
         )
 
         _find_suspicious_project_relationships(relationships, [])
-        assert not group.suspicious
         assert group.suspicious_urls == set()
 
     def test_single_commit_not_in_fork_network_is_suspicious(self) -> None:
@@ -440,7 +438,6 @@ class TestFindSuspiciousProjectRelationships:
         )
 
         _find_suspicious_project_relationships(relationships, [])
-        assert group.suspicious
         # One URL is reachable (start), other is suspicious
         assert len(group.suspicious_urls) == 1
 
@@ -461,7 +458,6 @@ class TestFindSuspiciousProjectRelationships:
         fork_edges = [RelationshipEdge(url1, url2, "github_fork")]
 
         _find_suspicious_project_relationships(relationships, fork_edges)
-        assert not group.suspicious
         assert group.suspicious_urls == set()
 
     def test_non_github_urls_flagged_with_single_commit(self) -> None:
@@ -480,7 +476,6 @@ class TestFindSuspiciousProjectRelationships:
         )
 
         _find_suspicious_project_relationships(relationships, [])
-        assert group.suspicious
         # One URL reachable (start), other suspicious
         assert len(group.suspicious_urls) == 1
 
@@ -502,7 +497,6 @@ class TestFindSuspiciousProjectRelationships:
         )
 
         _find_suspicious_project_relationships(relationships, [])
-        assert group.suspicious
         assert group.suspicious_urls == {url3}
 
     def test_fork_validated_but_third_url_suspicious(self) -> None:
@@ -524,6 +518,5 @@ class TestFindSuspiciousProjectRelationships:
         fork_edges = [RelationshipEdge(url1, url2, "github_fork")]
 
         _find_suspicious_project_relationships(relationships, fork_edges)
-        assert group.suspicious
         # url1 and url2 validated via fork, url3 suspicious (single commit)
         assert group.suspicious_urls == {url3}

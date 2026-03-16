@@ -9,8 +9,9 @@ from urllib.parse import quote
 import pandas as pd
 from tqdm.auto import tqdm
 
+from config import GITHUB_API_URL
 from dataset_entry import DatasetEntry
-from utils.git.github_client import GITHUB_API_URL, AsyncGitHubClient
+from utils.git.github_client import AsyncGitHubClient
 from utils.git.url import GitURL, normalize_commit_id
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.download_helper import download_file

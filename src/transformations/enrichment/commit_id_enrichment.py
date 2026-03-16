@@ -8,7 +8,7 @@ from tqdm.auto import tqdm
 
 from config import MAX_WORKERS
 from dataset_entry import DatasetEntry
-from utils.git.github_client import GITHUB_API_URL, AsyncGitHubClient
+from utils.git.github_client import AsyncGitHubClient
 from utils.git.repository import clone_repository
 from utils.git.url import GitURL
 
@@ -96,15 +96,11 @@ async def _extend_commit_id_api_async(
 ) -> tuple[DatasetEntry, str, bool]:
     """Extend a short commit ID to full 40-character SHA using GitHub API."""
     git_url = GitURL.parse(entry.project_url)
-    if not git_url or git_url.host != "github.com":
-        return entry, entry.commit_id, False
-
-    owner, name = git_url.owner, git_url.repo
-    if not owner or not name:
+    api_url = git_url.to_github_api_url(f"/commits/{entry.commit_id}") if git_url else None
+    if not api_url:
         return entry, entry.commit_id, False
 
     try:
-        api_url = f"{GITHUB_API_URL}/repos/{owner}/{name}/commits/{entry.commit_id}"
         result = await client.query_api(api_url)
 
         if result and "sha" in result:

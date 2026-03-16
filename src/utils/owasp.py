@@ -258,15 +258,15 @@ _CWE_OWASP_MAPPING: dict[OwaspCategory, list[str]] = {
 }
 
 # Reverse lookup: CWE -> OWASP category (built once at module load for O(1) lookup)
-_CWE_TO_OWASP: dict[str, int] = {
+_CWE_TO_OWASP: dict[str, OwaspCategory] = {
     cwe: category for category, cwes in _CWE_OWASP_MAPPING.items() for cwe in cwes
 }
 
 
-def cwes_to_owasp(cwe_entries: set[str]) -> set[int]:
+def cwes_to_owasp(cwe_entries: set[str]) -> set[OwaspCategory]:
     """Map CWE IDs to OWASP (2021) Top Ten categories [1-10].
 
-    Returns {0} if no CWE maps to an OWASP category.
+    Returns {UNKNOWN} if no CWE maps to an OWASP category.
     """
     result = {_CWE_TO_OWASP[cwe] for cwe in cwe_entries if cwe in _CWE_TO_OWASP}
     return result or {OwaspCategory.UNKNOWN}

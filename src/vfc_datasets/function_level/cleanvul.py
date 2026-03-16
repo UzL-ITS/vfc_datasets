@@ -8,10 +8,9 @@ from dataset_entry import DatasetEntry
 from datasets import load_dataset  # type: ignore[attr-defined]
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.parsing_helpers import (
-    extract_from_commit_url,
+    extract_and_normalize_from_commit_url,
     normalize_cve_ids,
     normalize_cwe_ids,
-    normalize_or_resolve_commit,
 )
 
 logger = logging.getLogger(__name__)
@@ -45,12 +44,10 @@ class CleanVulDataset(BaseDataset):
         return df[df["vulnerability_score"] >= 3].copy()
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
-        project_url, raw_commit_id = extract_from_commit_url(row, "commit_url", self.metadata.name)
-        if not project_url or not raw_commit_id:
-            return None
-
-        commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
-        if not commit_id:
+        project_url, commit_id = extract_and_normalize_from_commit_url(
+            row, "commit_url", self.metadata.name
+        )
+        if not project_url or not commit_id:
             return None
 
         function_after = row.get("func_after")

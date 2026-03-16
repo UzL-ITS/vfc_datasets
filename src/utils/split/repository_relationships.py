@@ -9,7 +9,7 @@ from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, NamedTuple, Self
 
 from git import Repo
 from tqdm.auto import tqdm
@@ -49,17 +49,23 @@ class RelationshipEdge:
         return _link_key(self.url1, self.url2)
 
 
+class _ConnectedComponent(NamedTuple):
+    urls: set[str]
+    methods: set[str]
+    links: dict[str, set[str]]
+
+
 def _find_connected_groups(
     edges: list[RelationshipEdge],
-) -> list[tuple[set[str], set[str], dict[str, set[str]]]]:
-    """Find connected components via DFS. Returns (urls, methods, links) per group."""
+) -> list[_ConnectedComponent]:
+    """Find connected components via DFS."""
     adjacency: dict[str, set[str]] = defaultdict(set)
     for edge in edges:
         adjacency[edge.url1].add(edge.url2)
         adjacency[edge.url2].add(edge.url1)
 
     seen: set[str] = set()
-    groups: list[tuple[set[str], set[str], dict[str, set[str]]]] = []
+    groups: list[_ConnectedComponent] = []
 
     for start in adjacency:
         if start in seen:
@@ -82,7 +88,7 @@ def _find_connected_groups(
                 for commit_id in edge.commit_ids:
                     links.setdefault(commit_id, set()).update([edge.url1, edge.url2])
 
-        groups.append((component, methods, links))
+        groups.append(_ConnectedComponent(component, methods, links))
 
     return groups
 
@@ -95,10 +101,6 @@ class RepositoryGroup:
     canonical_url: str | None = None
     links: dict[str, set[str]] = field(default_factory=dict)  # commit_id -> URLs
     suspicious_urls: set[str] = field(default_factory=set)  # URLs not validated
-
-    @property
-    def suspicious(self) -> bool:
-        return len(self.suspicious_urls) > 0
 
     @property
     def shared_commits(self) -> set[str]:
@@ -224,79 +226,97 @@ def _compute_signatures_for_repo(
     return results
 
 
-def _find_related_by_local_history(
-    entries: list[DatasetEntry],
+def _scan_commit_histories(
+    project_urls: set[str],
     url_to_repo: dict[str, Repo | None],
-    min_files_changed: int,
-    num_recent_commits: int = 50,
-    num_early_commits: int = 50,
-    skip_oldest_commits: int = 10,
-) -> tuple[list[RelationshipEdge], dict[str, list[str]]]:
-    """Find relationships by comparing local commit histories. Returns (edges, commit_history)."""
-    project_urls = {e.project_url for e in entries if e.project_url}
+) -> dict[str, list[str]]:
+    """Scan repos in parallel and return mapping of URL to commit IDs (newest-first)."""
     urls_to_scan = {url for url in project_urls if url_to_repo.get(url)}
-
     logger.info("Scanning commit history for %d repos...", len(urls_to_scan))
 
     commit_history: dict[str, list[str]] = {}
+    if not urls_to_scan:
+        return commit_history
 
-    if urls_to_scan:
-        max_workers = min(multiprocessing.cpu_count(), 32, len(urls_to_scan))
+    max_workers = min(multiprocessing.cpu_count(), 32, len(urls_to_scan))
 
-        def scan_repo(url: str) -> tuple[str, list[str]]:
-            repo = url_to_repo.get(url)
-            if repo:
-                return url, list(get_all_commit_ids(repo))
-            return url, []
+    def scan_repo(url: str) -> tuple[str, list[str]]:
+        repo = url_to_repo.get(url)
+        if repo:
+            return url, list(get_all_commit_ids(repo))
+        return url, []
 
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = {executor.submit(scan_repo, url): url for url in urls_to_scan}
-            with tqdm(total=len(futures), desc="Scanning commit history", unit="repos") as pbar:
-                for future in as_completed(futures):
-                    url, commit_ids = future.result()
-                    if commit_ids:
-                        commit_history[url] = commit_ids
-                    pbar.update(1)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(scan_repo, url): url for url in urls_to_scan}
+        with tqdm(total=len(futures), desc="Scanning commit history", unit="repos") as pbar:
+            for future in as_completed(futures):
+                url, commit_ids = future.result()
+                if commit_ids:
+                    commit_history[url] = commit_ids
+                pbar.update(1)
 
-    # git rev-list returns newest-first; skip oldest commits (often template/skeleton setup)
+    return commit_history
+
+
+def _sample_commits(
+    project_urls: set[str],
+    commit_history: dict[str, list[str]],
+    num_recent_commits: int,
+    num_early_commits: int,
+    skip_oldest_commits: int,
+) -> set[str]:
+    """Sample recent and early commits from each repo's history."""
     logger.info(
         "Sampling %d recent + %d early (skipping first %d) commits per repo...",
         num_recent_commits,
         num_early_commits,
         skip_oldest_commits,
     )
-    sampled_commits: set[str] = set()
+    sampled: set[str] = set()
     for url in project_urls:
         # commits is newest-first from git rev-list
         commits = commit_history.get(url, [])
-        if commits:
-            # Sample recent commits (from the start of the list)
-            sampled_commits.update(commits[:num_recent_commits])
-            # Sample early commits (from the end), skipping the very oldest
-            # which are often template/skeleton setup commits
-            if len(commits) > num_early_commits + skip_oldest_commits:
-                early_start = -(num_early_commits + skip_oldest_commits)
-                early_end = -skip_oldest_commits if skip_oldest_commits else None
-                sampled_commits.update(commits[early_start:early_end])
+        if not commits:
+            continue
+        # Sample recent commits (from the start of the list)
+        sampled.update(commits[:num_recent_commits])
+        # Sample early commits (from the end), skipping the very oldest
+        # which are often template/skeleton setup commits
+        if len(commits) > num_early_commits + skip_oldest_commits:
+            early_start = -(num_early_commits + skip_oldest_commits)
+            early_end = -skip_oldest_commits if skip_oldest_commits else None
+            sampled.update(commits[early_start:early_end])
 
-    logger.info("Sampled %d unique commits from %d repos", len(sampled_commits), len(project_urls))
+    logger.info("Sampled %d unique commits from %d repos", len(sampled), len(project_urls))
+    return sampled
 
+
+def _find_shared_commits(
+    project_urls: set[str],
+    commit_history: dict[str, list[str]],
+    sampled_commits: set[str],
+) -> list[tuple[str, set[str]]]:
+    """Find sampled commits that appear in 2+ repos. Returns sorted (commit_id, urls) pairs."""
     commit_to_urls: dict[str, set[str]] = defaultdict(set)
     for url in tqdm(project_urls, desc="Mapping commits to repos", unit="repos"):
         for commit_id in commit_history.get(url, []):
             if commit_id in sampled_commits:
                 commit_to_urls[commit_id].add(url)
 
-    shared_commits = sorted(
+    shared = sorted(
         [(cid, urls) for cid, urls in commit_to_urls.items() if len(urls) >= 2],
         key=lambda x: len(x[1]),
     )
-    logger.info("Found %d sampled commits shared by 2+ repos", len(shared_commits))
+    logger.info("Found %d sampled commits shared by 2+ repos", len(shared))
+    return shared
 
-    if not shared_commits:
-        return [], commit_history
 
-    # Group tasks by URL for efficient per-repo processing
+def _compute_signatures(
+    shared_commits: list[tuple[str, set[str]]],
+    url_to_repo: dict[str, Repo | None],
+    min_files_changed: int,
+) -> dict[tuple[str, str], tuple[str, str] | None]:
+    """Compute commit signatures in parallel for all shared commits."""
     url_to_commits: dict[str, list[str]] = defaultdict(list)
     for cid, urls in shared_commits:
         for url in urls:
@@ -311,29 +331,38 @@ def _find_related_by_local_history(
     )
     sig_cache: dict[tuple[str, str], tuple[str, str] | None] = {}
 
-    if url_to_commits:
-        # Build args for each repo: (url, repo_path, commit_ids, min_files_changed)
-        repo_tasks = []
-        for url, commits in url_to_commits.items():
-            if repo := url_to_repo[url]:
-                repo_tasks.append((url, Path(repo.working_dir), commits, min_files_changed))
+    if not url_to_commits:
+        return sig_cache
 
-        max_workers = min(multiprocessing.cpu_count(), len(repo_tasks))
+    repo_tasks = []
+    for url, commits in url_to_commits.items():
+        if repo := url_to_repo[url]:
+            repo_tasks.append((url, Path(repo.working_dir), commits, min_files_changed))
 
-        with ProcessPoolExecutor(max_workers=max_workers) as pool:
-            sig_futures = {
-                pool.submit(_compute_signatures_for_repo, task): task[0] for task in repo_tasks
-            }
-            with tqdm(total=total_sigs, desc="Computing signatures", unit="sigs") as pbar:
-                for sig_future in as_completed(sig_futures):
-                    url = sig_futures[sig_future]
-                    results = sig_future.result()
-                    for result_url, commit_id, sig in results:
-                        sig_cache[(result_url, commit_id)] = sig
-                        pbar.update(1)
-                    repo_name = url.rstrip("/").split("/")[-1][:20].ljust(20)
-                    pbar.set_postfix_str(f"{repo_name} done")
+    max_workers = min(multiprocessing.cpu_count(), len(repo_tasks))
 
+    with ProcessPoolExecutor(max_workers=max_workers) as pool:
+        sig_futures = {
+            pool.submit(_compute_signatures_for_repo, task): task[0] for task in repo_tasks
+        }
+        with tqdm(total=total_sigs, desc="Computing signatures", unit="sigs") as pbar:
+            for sig_future in as_completed(sig_futures):
+                url = sig_futures[sig_future]
+                results = sig_future.result()
+                for result_url, commit_id, sig in results:
+                    sig_cache[(result_url, commit_id)] = sig
+                    pbar.update(1)
+                repo_name = url.rstrip("/").split("/")[-1][:20].ljust(20)
+                pbar.set_postfix_str(f"{repo_name} done")
+
+    return sig_cache
+
+
+def _build_edges_from_signatures(
+    shared_commits: list[tuple[str, set[str]]],
+    sig_cache: dict[tuple[str, str], tuple[str, str] | None],
+) -> list[RelationshipEdge]:
+    """Compare signatures for shared commits and build relationship edges."""
     edges: list[RelationshipEdge] = []
     seen_pairs: dict[tuple[str, str], RelationshipEdge] = {}
 
@@ -354,6 +383,28 @@ def _find_related_by_local_history(
                         edges.append(edge)
 
     logger.info("Found %d local history edges", len(edges))
+    return edges
+
+
+def _find_related_by_local_history(
+    entries: list[DatasetEntry],
+    url_to_repo: dict[str, Repo | None],
+    min_files_changed: int,
+    num_recent_commits: int = 50,
+    num_early_commits: int = 50,
+    skip_oldest_commits: int = 10,
+) -> tuple[list[RelationshipEdge], dict[str, list[str]]]:
+    """Find relationships by comparing local commit histories. Returns (edges, commit_history)."""
+    project_urls = {e.project_url for e in entries if e.project_url}
+    commit_history = _scan_commit_histories(project_urls, url_to_repo)
+    sampled = _sample_commits(
+        project_urls, commit_history, num_recent_commits, num_early_commits, skip_oldest_commits
+    )
+    shared = _find_shared_commits(project_urls, commit_history, sampled)
+    if not shared:
+        return [], commit_history
+    sig_cache = _compute_signatures(shared, url_to_repo, min_files_changed)
+    edges = _build_edges_from_signatures(shared, sig_cache)
     return edges, commit_history
 
 
@@ -570,6 +621,81 @@ def discover_repository_relationships(
     return relationships
 
 
+def _count_matching_signatures(
+    repo: Repo,
+    validated_repo: Repo,
+    common_commits: list[str],
+    url: str,
+    validated_url: str,
+    group: RepositoryGroup,
+    min_files_changed: int,
+    needed: int,
+) -> int:
+    """Compare commit signatures between two repos, adding links for matches."""
+    matched = 0
+    for commit_id in common_commits:
+        sig1 = get_commit_signature_if_substantial(repo, commit_id, min_files_changed)
+        if not sig1:
+            continue
+        sig2 = get_commit_signature_if_substantial(validated_repo, commit_id, min_files_changed)
+        if sig2 and sig1 == sig2:
+            group.add_link(url, validated_url, commit_id)
+            matched += 1
+            if matched >= needed:
+                break
+    return matched
+
+
+def _try_validate_url(
+    url: str,
+    reachable: set[str],
+    group: RepositoryGroup,
+    url_to_repo: dict[str, Repo | None],
+    commit_sets: dict[str, set[str]],
+    min_files_changed: int,
+    min_shared_commits: int,
+) -> bool:
+    """Try to validate a single suspicious URL against already-validated URLs."""
+    repo = url_to_repo.get(url)
+    if not repo:
+        return False
+
+    url_commits = commit_sets.get(url)
+    if not url_commits:
+        return False
+
+    for validated_url in reachable:
+        validated_repo = url_to_repo.get(validated_url)
+        if not validated_repo:
+            continue
+
+        validated_commits = commit_sets.get(validated_url)
+        if not validated_commits:
+            continue
+
+        existing = sum(1 for urls in group.links.values() if url in urls and validated_url in urls)
+
+        common = list(url_commits & validated_commits - group.shared_commits)
+        if not common and existing < min_shared_commits:
+            continue
+
+        needed = min_shared_commits - existing
+        new = _count_matching_signatures(
+            repo,
+            validated_repo,
+            common,
+            url,
+            validated_url,
+            group,
+            min_files_changed,
+            needed,
+        )
+        if existing + new >= min_shared_commits:
+            return True
+
+    return False
+
+
 def _validate_suspicious_urls(
     relationships: RepositoryRelationships,
     commit_history: dict[str, list[str]],
@@ -592,51 +718,22 @@ def _validate_suspicious_urls(
             len(reachable),
         )
 
+        commit_sets = {
+            url: set(commits) for url in group.project_urls if (commits := commit_history.get(url))
+        }
+
         for url in list(unvalidated_urls):
-            repo = url_to_repo.get(url)
-            if not repo:
-                continue
-
-            url_commits = set(commit_history.get(url, []))
-            if not url_commits:
-                continue
-
-            for validated_url in reachable:
-                validated_repo = url_to_repo.get(validated_url)
-                if not validated_repo:
-                    continue
-
-                validated_commits = set(commit_history.get(validated_url, []))
-                if not validated_commits:
-                    continue
-
-                existing_commits = sum(
-                    1 for urls in group.links.values() if url in urls and validated_url in urls
-                )
-
-                common = list(url_commits & validated_commits - group.shared_commits)
-                if not common and existing_commits < min_shared_commits:
-                    continue
-
-                needed = min_shared_commits - existing_commits
-                new_commits = 0
-                for commit_id in common:
-                    sig1 = get_commit_signature_if_substantial(repo, commit_id, min_files_changed)
-                    if not sig1:
-                        continue
-                    sig2 = get_commit_signature_if_substantial(
-                        validated_repo, commit_id, min_files_changed
-                    )
-                    if sig2 and sig1 == sig2:
-                        group.add_link(url, validated_url, commit_id)
-                        new_commits += 1
-                        if new_commits >= needed:
-                            break
-
-                if existing_commits + new_commits >= min_shared_commits:
-                    unvalidated_urls.discard(url)
-                    reachable.add(url)
-                    break
+            if _try_validate_url(
+                url,
+                reachable,
+                group,
+                url_to_repo,
+                commit_sets,
+                min_files_changed,
+                min_shared_commits,
+            ):
+                unvalidated_urls.discard(url)
+                reachable.add(url)
 
         group.suspicious_urls = unvalidated_urls
 
@@ -674,7 +771,7 @@ def validate_relationships(
         relationships, commit_history, url_to_repo, min_files_changed, min_shared_commits
     )
 
-    suspicious_count = sum(1 for g in relationships.groups if g.suspicious)
+    suspicious_count = sum(1 for g in relationships.groups if g.suspicious_urls)
     if suspicious_count:
         total_suspicious_urls = sum(len(g.suspicious_urls) for g in relationships.groups)
         logger.warning(
@@ -683,7 +780,7 @@ def validate_relationships(
             total_suspicious_urls,
         )
         # Save suspicious groups for review
-        suspicious_groups = [g for g in relationships.groups if g.suspicious]
+        suspicious_groups = [g for g in relationships.groups if g.suspicious_urls]
         suspicious_path = relationships_path.with_name(
             relationships_path.stem + "_suspicious" + relationships_path.suffix
         )

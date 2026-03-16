@@ -1,5 +1,5 @@
 import logging
-from pathlib import Path
+from pathlib import PurePosixPath
 
 from tqdm.auto import tqdm
 
@@ -22,7 +22,7 @@ def filter_by_extension(
         if not entry.files_changed:
             skipped_no_files += 1
             continue
-        if any(Path(f).suffix.lower() in normalized for f in entry.files_changed):
+        if any(PurePosixPath(f).suffix.lower() in normalized for f in entry.files_changed):
             filtered.append(entry)
 
     logger.info(

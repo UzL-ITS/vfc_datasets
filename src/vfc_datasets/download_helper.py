@@ -58,13 +58,8 @@ def _verify_checksum(file_path: str | Path, expected_checksum: str) -> bool:
         logger.error("File not found for checksum verification: %s", file_path)
         return False
 
-    # Calculate SHA-256 checksum
-    sha256_hash = hashlib.sha256()
     with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            sha256_hash.update(chunk)
-
-    calculated_checksum = sha256_hash.hexdigest()
+        calculated_checksum = hashlib.file_digest(f, "sha256").hexdigest()
 
     if calculated_checksum.lower() != expected_checksum.lower():
         logger.warning(

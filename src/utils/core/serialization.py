@@ -2,7 +2,6 @@ import json
 import logging
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 
@@ -104,31 +103,20 @@ def save_entries_csv(
     if fields is None:
         fields = ["project_url", "commit_id", "is_vfc", "commit_timestamp_utc"]
 
-    # Check against class attributes (slots + properties)
-    if invalid_fields := {f for f in fields if not hasattr(DatasetEntry, f)}:
+    valid_fields = {s.lstrip("_") for s in DatasetEntry.__slots__}
+    if invalid_fields := set(fields) - valid_fields:
         raise ValueError(f"Invalid field names: {invalid_fields}")
 
     output_path = Path(file_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    rows: list[dict[str, Any]] = []
-    for entry in entries:
-        row: dict[str, Any] = {}
-        for field in fields:
-            value = getattr(entry, field, None)
+    rows = [entry.to_dict() for entry in entries]
+    for row in rows:
+        for key, value in row.items():
+            if isinstance(value, list):
+                row[key] = ";".join(str(v) for v in value) if value else None
 
-            if value is None:
-                row[field] = None
-            elif isinstance(value, set):
-                row[field] = ";".join(str(v) for v in sorted(value)) if value else None
-            elif hasattr(value, "isoformat"):
-                row[field] = value.isoformat()
-            else:
-                row[field] = value
-
-        rows.append(row)
-
-    csv_data = pd.DataFrame(rows)
+    csv_data = pd.DataFrame(rows, columns=fields)
     if "project_url" in csv_data.columns:
         csv_data = csv_data.sort_values(by=["project_url"]).reset_index(drop=True)
     csv_data.to_csv(output_path, index=False)

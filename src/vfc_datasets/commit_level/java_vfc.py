@@ -6,10 +6,7 @@ import pandas as pd
 from dataset_entry import DatasetEntry
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.download_helper import download_file
-from vfc_datasets.parsing_helpers import (
-    extract_from_commit_url,
-    normalize_or_resolve_commit,
-)
+from vfc_datasets.parsing_helpers import extract_and_normalize_from_commit_url
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +26,10 @@ class _JavaVFCBase(BaseDataset):
         return pd.read_json(raw_dataset_path, lines=True)
 
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
-        project_url, raw_commit_id = extract_from_commit_url(row, "commit_link", self.metadata.name)
-        if not project_url or not raw_commit_id:
-            return None
-
-        commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
-        if not commit_id:
+        project_url, commit_id = extract_and_normalize_from_commit_url(
+            row, "commit_link", self.metadata.name
+        )
+        if not project_url or not commit_id:
             return None
 
         return DatasetEntry(

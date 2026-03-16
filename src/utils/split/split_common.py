@@ -6,7 +6,7 @@ from collections import defaultdict
 from dataset_entry import DatasetEntry
 from utils.split.repository_relationships import RepositoryRelationships
 
-Group = tuple[set[str], int]
+type Group = tuple[set[str], int]
 
 
 def validate_split_ratios(train_ratio: float, val_ratio: float, test_ratio: float) -> None:

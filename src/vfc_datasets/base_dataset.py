@@ -1,7 +1,6 @@
 """Base dataset class for vulnerability-fixing commit datasets."""
 
 import logging
-import math
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
@@ -53,12 +52,13 @@ class BaseDataset(ABC):
 
     metadata: DatasetMetadata
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        super().__init_subclass__(**kwargs)
+        # Skip private intermediate base classes (e.g., _FixSeekerBase, _JavaVFCBase)
+        if not getattr(cls, "metadata", None) and not cls.__name__.startswith("_"):
+            raise TypeError(f"{cls.__name__} must define a 'metadata' class attribute")
+
     def __init__(self) -> None:
-        if not hasattr(self, "metadata"):
-            raise ValueError(
-                f"{self.__class__.__name__} must define 'metadata' class attribute "
-                "with DatasetMetadata instance"
-            )
         self._entries: list[DatasetEntry] | None = None
 
     @property
@@ -94,10 +94,9 @@ class BaseDataset(ABC):
         entries: list[DatasetEntry] = []
         records = cast(list[dict[str, Any]], df.to_dict(orient="records"))
         for row in tqdm(records, total=len(records), desc=f"Parsing {name}", dynamic_ncols=True):
-            for key, value in row.items():
-                if isinstance(value, float) and math.isnan(value):
-                    row[key] = None
-            entry = self._parse_row(row)
+            entry = self._parse_row(
+                {k: None if isinstance(v, float) and v != v else v for k, v in row.items()}
+            )
             if entry:
                 entries.append(entry)
 

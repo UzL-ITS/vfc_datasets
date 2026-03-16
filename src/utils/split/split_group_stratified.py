@@ -11,7 +11,7 @@ from utils.split.split_common import (
     visualize_split,
 )
 
-HashableGroup = tuple[frozenset[str], int]
+type HashableGroup = tuple[frozenset[str], int]
 
 
 def _greedy_assign(groups: list[Group], target: float) -> set[str]:

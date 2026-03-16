@@ -39,24 +39,16 @@ def _resolve_ref_local(ref: str, git_url: str) -> str | None:
     if not repo_path.exists():
         return None
 
-    repo = None
     try:
-        repo = Repo(repo_path)
-        commit = repo.commit(ref)
-        sha = commit.hexsha
-
-        normalized_sha = normalize_commit_id(sha)
-        if normalized_sha:
-            logger.debug("Resolved %r -> %s locally for %s", ref, normalized_sha, git_url)
-            return normalized_sha
+        with Repo(repo_path) as repo:
+            sha = repo.commit(ref).hexsha
+            if normalized_sha := normalize_commit_id(sha):
+                logger.debug("Resolved %r -> %s locally for %s", ref, normalized_sha, git_url)
+                return normalized_sha
     except (BadName, InvalidGitRepositoryError, ValueError):
-        # Ref not found locally or repo is invalid
         pass
     except Exception as exc:
         logger.debug("Local ref resolution failed for %r: %s", ref, exc)
-    finally:
-        if repo is not None:
-            repo.close()
 
     return None
 
@@ -64,44 +56,28 @@ def _resolve_ref_local(ref: str, git_url: str) -> str | None:
 def _resolve_ref_via_api(ref: str, git_url: str) -> str | None:
     """Resolve a symbolic ref via GitHub API (fallback)."""
     parsed_url = GitURL.parse(git_url)
-    if not parsed_url or parsed_url.host != "github.com":
+    api_url = parsed_url.to_github_api_url(f"/commits/{ref}") if parsed_url else None
+    if not api_url:
         logger.debug("API ref resolution only supported for GitHub: %s", git_url)
         return None
 
-    if not parsed_url.owner or not parsed_url.repo:
-        logger.warning("Missing owner/repo in URL: %s", git_url)
-        return None
-
     try:
-        from utils.git.github_client import GITHUB_API_URL, query_github_api_sync
+        from utils.git.github_client import query_github_api_sync
 
-        api_url = f"{GITHUB_API_URL}/repos/{parsed_url.owner}/{parsed_url.repo}/commits/{ref}"
-        logger.info(
-            "Resolving symbolic ref %r for %s/%s via GitHub API",
-            ref,
-            parsed_url.owner,
-            parsed_url.repo,
-        )
+        logger.info("Resolving symbolic ref %r for %s via GitHub API", ref, git_url)
         commit_data = query_github_api_sync(api_url)
     except ImportError as exc:
         logger.debug("GitHub API client not available; cannot resolve ref %r: %s", ref, exc)
         return None
     except Exception as exc:
-        logger.warning(
-            "Failed to resolve symbolic ref %r for %s/%s via API: %s",
-            ref,
-            parsed_url.owner,
-            parsed_url.repo,
-            exc,
-        )
+        logger.warning("Failed to resolve symbolic ref %r for %s via API: %s", ref, git_url, exc)
         return None
 
     if not isinstance(commit_data, dict):
         logger.warning(
-            "Failed to resolve symbolic ref %r for %s/%s: unexpected response %r",
+            "Failed to resolve symbolic ref %r for %s: unexpected response %r",
             ref,
-            parsed_url.owner,
-            parsed_url.repo,
+            git_url,
             commit_data,
         )
         return None
@@ -109,30 +85,16 @@ def _resolve_ref_via_api(ref: str, git_url: str) -> str | None:
     sha = commit_data.get("sha")
     if not sha:
         logger.warning(
-            "Failed to resolve symbolic ref %r for %s/%s: No SHA in API response",
-            ref,
-            parsed_url.owner,
-            parsed_url.repo,
+            "Failed to resolve symbolic ref %r for %s: No SHA in API response", ref, git_url
         )
         return None
 
     normalized_sha = normalize_commit_id(str(sha))
     if not normalized_sha:
-        logger.warning(
-            "Failed to normalize resolved SHA %r for %s/%s",
-            sha,
-            parsed_url.owner,
-            parsed_url.repo,
-        )
+        logger.warning("Failed to normalize resolved SHA %r for %s", sha, git_url)
         return None
 
-    logger.info(
-        "Resolved %r -> %s for %s/%s",
-        ref,
-        normalized_sha,
-        parsed_url.owner,
-        parsed_url.repo,
-    )
+    logger.info("Resolved %r -> %s for %s", ref, normalized_sha, git_url)
     return normalized_sha
 
 
@@ -244,6 +206,17 @@ def extract_from_commit_url(
         return None, None
 
     return project_url, raw_commit_id
+
+
+def extract_and_normalize_from_commit_url(
+    row: dict[str, Any], url_field: str, dataset_name: str = "dataset"
+) -> tuple[str | None, str | None]:
+    """Extract project URL and normalized commit ID from a combined commit URL field."""
+    project_url, raw_commit_id = extract_from_commit_url(row, url_field, dataset_name)
+    if not project_url or not raw_commit_id:
+        return None, None
+    commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+    return project_url, commit_id
 
 
 def normalize_cve_ids(cve_input: object) -> set[str]:

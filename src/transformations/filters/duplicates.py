@@ -116,8 +116,7 @@ def deduplicate_within_repository(entries: list[DatasetEntry]) -> list[DatasetEn
 
 def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     """Remove entries with duplicate (diff, files_changed) pairs. Entries without diff are kept."""
-    # Use hash as key to avoid storing full diff strings twice in memory
-    seen_combinations: dict[tuple[str, tuple[str, ...] | None], DatasetEntry] = {}
+    seen_by_hash: dict[tuple[str, tuple[str, ...] | None], DatasetEntry] = {}
     # Entries without diffs are kept separately - we can't determine if they're duplicates
     entries_without_diff: list[DatasetEntry] = []
     duplicates_removed = 0
@@ -142,11 +141,11 @@ def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]
         key = (diff_hash, sorted_files)
 
         # Keep only the first occurrence of each unique combination
-        if key not in seen_combinations:
-            seen_combinations[key] = entry
+        if key not in seen_by_hash:
+            seen_by_hash[key] = entry
         else:
             duplicates_removed += 1
-            original = seen_combinations[key]
+            original = seen_by_hash[key]
             logger.debug(
                 "Duplicate diff: %s/commit/%s duplicates %s/commit/%s",
                 entry.project_url,
@@ -155,10 +154,10 @@ def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]
                 original.commit_id,
             )
 
-    result = list(seen_combinations.values()) + entries_without_diff
+    result = list(seen_by_hash.values()) + entries_without_diff
     logger.info(
         "Duplicate diff filter: %d unique diffs, %d duplicates removed, %d entries without diff (kept)",
-        len(seen_combinations),
+        len(seen_by_hash),
         duplicates_removed,
         len(entries_without_diff),
     )

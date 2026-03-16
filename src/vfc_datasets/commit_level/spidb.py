@@ -8,6 +8,7 @@ from git.exc import BadName, GitCommandError
 from tqdm.auto import tqdm
 
 from dataset_entry import DatasetEntry
+from utils.git.commit import get_commit_diff
 from utils.git.repository import clone_repository
 from utils.git.url import GitURL
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
@@ -154,17 +155,10 @@ class SPIDBDataset(BaseDataset):
                 normalized_patch = _normalize_diff_for_comparison(str(patch))
                 for sha in candidate_shas:
                     try:
-                        commit = repo.commit(sha)
-                        # Get diff using GitPython
-                        if commit.parents:
-                            diff_output = repo.git.diff(commit.parents[0].hexsha, commit.hexsha)
-                        else:
-                            diff_output = repo.git.show(commit.hexsha, format="", p=True)
-
-                        # Normalize diff for comparison (strips index lines with blob hashes)
+                        diff_output = get_commit_diff(repo, sha)
                         normalized_diff = _normalize_diff_for_comparison(diff_output)
                         if normalized_diff == normalized_patch:
-                            resolved_commit_id = commit.hexsha
+                            resolved_commit_id = sha
                             break
                     except (GitCommandError, BadName) as e:
                         logger.debug("[spidb] Failed to get diff for commit %s: %s", sha, e)
