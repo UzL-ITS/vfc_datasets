@@ -140,5 +140,5 @@ if __name__ == "__main__":
     dataset_variants = load_vfc_datasets_if_exist()
     if dataset_variants is None:
         dataset_variants = create_vfc_datasets()
-    dataset_target = "dataset3-all-cpp"
+    dataset_target = "dataset2-mr-advisory-cpp"
     create_splits(dataset_variants[dataset_target], dataset_target)
