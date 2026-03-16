@@ -18,7 +18,7 @@ def filter_by_extension(
     filtered: list[DatasetEntry] = []
     skipped_no_files = 0
 
-    for entry in tqdm(entries, desc="Filtering by extension", dynamic_ncols=True):
+    for entry in tqdm(entries, desc="Filtering by extension"):
         if not entry.files_changed:
             skipped_no_files += 1
             continue

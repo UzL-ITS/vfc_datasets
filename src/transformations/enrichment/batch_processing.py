@@ -81,7 +81,7 @@ def process_commits_in_batches(
 
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(batch_fn, b): b for b in batches}
-        with tqdm(total=total, desc=desc, dynamic_ncols=True, unit="commits") as pbar:
+        with tqdm(total=total, desc=desc, unit="commits") as pbar:
             for future in as_completed(futures):
                 batch = futures[future]
                 url = path_to_url[batch[0]]

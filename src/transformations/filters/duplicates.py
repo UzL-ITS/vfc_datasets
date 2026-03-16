@@ -64,9 +64,7 @@ def _merge_duplicates(
     result_entries: list[DatasetEntry] = []
     stats: Counter[str] = Counter()
 
-    for key, group_entries in tqdm(
-        entry_groups_by_key.items(), desc="Merging duplicates", dynamic_ncols=True
-    ):
+    for key, group_entries in tqdm(entry_groups_by_key.items(), desc="Merging duplicates"):
         if len(group_entries) == 1:
             stats["unique"] += 1
             result_entries.append(group_entries[0])
@@ -123,7 +121,7 @@ def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]
 
     sorted_entries = sorted(entries, key=lambda entry: (entry.project_url, entry.commit_id))
 
-    for entry in tqdm(sorted_entries, desc="Filtering duplicate diffs", dynamic_ncols=True):
+    for entry in tqdm(sorted_entries, desc="Filtering duplicate diffs"):
         if entry.commit_diff is None:
             # Keep entries without diffs - we can't check for duplicates without diff content
             entries_without_diff.append(entry)

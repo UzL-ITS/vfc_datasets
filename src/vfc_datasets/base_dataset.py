@@ -93,7 +93,7 @@ class BaseDataset(ABC):
 
         entries: list[DatasetEntry] = []
         records = cast(list[dict[str, Any]], df.to_dict(orient="records"))
-        for row in tqdm(records, total=len(records), desc=f"Parsing {name}", dynamic_ncols=True):
+        for row in tqdm(records, total=len(records), desc=f"Parsing {name}"):
             entry = self._parse_row(
                 {k: None if isinstance(v, float) and v != v else v for k, v in row.items()}
             )
