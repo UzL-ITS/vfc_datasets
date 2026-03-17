@@ -1,6 +1,6 @@
 import pytest
 
-from utils.git.url import GitURL, normalize_commit_id
+from vfc_datasets.utils.git.url import GitURL, normalize_commit_id
 
 
 class TestGitURL:

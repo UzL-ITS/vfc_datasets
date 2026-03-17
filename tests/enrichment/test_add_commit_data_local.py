@@ -4,12 +4,12 @@ from datetime import UTC, datetime
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from transformations.enrichment.add_commit_data_local import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.enrichment.add_commit_data_local import (
     _get_commit_info,
     add_commit_information_local,
 )
-from transformations.enrichment.commit_data_common import CommitData, apply_commit_data
+from vfc_datasets.transformations.enrichment.commit_data_common import CommitData, apply_commit_data
 
 
 class TestApplyCommitData:
@@ -173,7 +173,7 @@ class TestGetCommitInfo:
     @pytest.fixture
     def curl_repo(self):
         """Get curl repo (clone if needed)."""
-        from utils.git.repository import clone_repository
+        from vfc_datasets.utils.git.repository import clone_repository
 
         repo = clone_repository("https://github.com/curl/curl")
         assert repo is not None

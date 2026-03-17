@@ -2,13 +2,13 @@
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from transformations.enrichment.commit_id_enrichment import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.enrichment.commit_id_enrichment import (
     _extend_commit_id_api_async,
     extend_commit_ids_api,
     extend_commit_ids_local,
 )
-from utils.git.github_client import AsyncGitHubClient
+from vfc_datasets.utils.git.github_client import AsyncGitHubClient
 
 # Known stable commit from curl/curl repository (curl-7_50_0 tag)
 # This commit is stable and will never change, making it ideal for testing

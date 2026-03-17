@@ -1,8 +1,8 @@
 from datetime import UTC, datetime
 
-from dataset_entry import DatasetEntry
-from transformations.filters import collapse_to_commit_level
-from utils.owasp import OwaspCategory
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.filters import collapse_to_commit_level
+from vfc_datasets.utils.owasp import OwaspCategory
 
 
 class TestCollapseToCommitLevel:

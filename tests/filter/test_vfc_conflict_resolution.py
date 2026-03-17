@@ -1,10 +1,10 @@
-from dataset_entry import DatasetEntry
-from transformations.filters.duplicates import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.filters.duplicates import (
     deduplicate_function_level,
     deduplicate_within_repository,
     merge_entry_group,
 )
-from utils.owasp import OwaspCategory
+from vfc_datasets.utils.owasp import OwaspCategory
 
 
 def test_merge_entry_group_covers_all_slots():

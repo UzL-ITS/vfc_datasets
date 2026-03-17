@@ -2,8 +2,10 @@ import datetime
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from transformations.enrichment.add_commit_data_local import add_commit_information_local
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.enrichment.add_commit_data_local import (
+    add_commit_information_local,
+)
 
 
 class TestTimestamps:

@@ -1,6 +1,6 @@
 """Tests for OWASP CWE mapping."""
 
-from utils.owasp import OwaspCategory, cwes_to_owasp
+from vfc_datasets.utils.owasp import OwaspCategory, cwes_to_owasp
 
 
 class TestCwesToOwasp:

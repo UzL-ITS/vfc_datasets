@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from utils.git.url import _COMMIT_HASH_PATTERN
-from utils.patterns import CVE_PATTERN, CWE_PATTERN
+from vfc_datasets.utils.git.url import _COMMIT_HASH_PATTERN
+from vfc_datasets.utils.patterns import CVE_PATTERN, CWE_PATTERN
 
 
 class TestCVEPattern:

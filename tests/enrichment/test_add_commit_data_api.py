@@ -2,8 +2,8 @@
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from transformations.enrichment.add_commit_data_api import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.enrichment.add_commit_data_api import (
     _apply_api_response,
     add_commit_information_api,
 )

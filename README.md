@@ -13,8 +13,8 @@ Requires Python 3.12+.
 ## Quick Start
 
 ```python
-from datasets import BigVulDataset, CVEFixesDataset
-from transformations.filters.duplicates import deduplicate_within_repository
+from vfc_datasets import BigVulDataset, CVEFixesDataset
+from vfc_datasets.transformations import deduplicate_within_repository
 
 # Load and combine datasets
 entries = BigVulDataset() + CVEFixesDataset()
@@ -23,7 +23,7 @@ entries = BigVulDataset() + CVEFixesDataset()
 entries = deduplicate_within_repository(entries)
 ```
 
-See [`src/examples/`](src/examples/) for more examples.
+See [`examples/`](examples/) for more examples.
 
 
 ## Cite the Original Authors

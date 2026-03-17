@@ -2,8 +2,8 @@
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from transformations.enrichment.add_no_comment import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.enrichment.add_no_comment import (
     _strip_comments,
     strip_diff_comments,
 )
@@ -20,7 +20,7 @@ class TestCppRealCommitIntegration:
     @pytest.fixture
     def entry_with_diff(self):
         """Create entry and fetch original diff."""
-        from transformations.enrichment.add_commit_data_local import (
+        from vfc_datasets.transformations.enrichment.add_commit_data_local import (
             add_commit_information_local,
         )
 

@@ -4,16 +4,16 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from utils.split.repository_relationships import RepositoryRelationships
-from utils.split.split_group_stratified import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.utils.split.repository_relationships import RepositoryRelationships
+from vfc_datasets.utils.split.split_group_stratified import (
     _greedy_assign,
     _optimize_assignment,
     train_test_split_group_stratified,
     train_val_test_split_group_stratified,
 )
-from utils.split.split_random import train_val_test_split_random
-from utils.split.split_temporal import train_val_test_split_temporal
+from vfc_datasets.utils.split.split_random import train_val_test_split_random
+from vfc_datasets.utils.split.split_temporal import train_val_test_split_temporal
 
 
 def _make_entries(project_url: str, count: int) -> list[DatasetEntry]:
@@ -196,7 +196,7 @@ def test_three_way_split_deterministic_with_seed():
 
 def test_three_way_split_no_group_leakage():
     """Verify related repos stay in same split."""
-    from utils.split.repository_relationships import RepositoryGroup
+    from vfc_datasets.utils.split.repository_relationships import RepositoryGroup
 
     # Create entries from 3 repos, where repo2 and repo3 are related
     entries = (

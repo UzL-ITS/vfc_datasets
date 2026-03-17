@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from utils.core.serialization import load_entries, save_entries, save_entries_csv
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.utils.core.serialization import load_entries, save_entries, save_entries_csv
 
 
 def _entry(commit="abcdef12345", diff=None, files=None):

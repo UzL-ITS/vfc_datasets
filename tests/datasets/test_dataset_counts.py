@@ -5,8 +5,8 @@ import inspect
 import pytest
 
 import vfc_datasets
-from transformations.filters import collapse_to_commit_level
 from vfc_datasets import BaseDataset
+from vfc_datasets.transformations.filters import collapse_to_commit_level
 
 pytestmark = [pytest.mark.slow]
 

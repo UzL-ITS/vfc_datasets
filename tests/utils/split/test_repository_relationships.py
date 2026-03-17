@@ -2,8 +2,8 @@
 
 import pytest
 
-from utils.git.commit import TEMPLATE_FILE_PATTERNS, is_template_file
-from utils.split.repository_relationships import (
+from vfc_datasets.utils.git.commit import TEMPLATE_FILE_PATTERNS, is_template_file
+from vfc_datasets.utils.split.repository_relationships import (
     RelationshipEdge,
     RepositoryGroup,
     RepositoryRelationships,

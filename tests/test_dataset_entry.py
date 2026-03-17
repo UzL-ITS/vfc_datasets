@@ -5,8 +5,8 @@ from typing import Any
 
 import pytest
 
-from dataset_entry import DatasetEntry, create_dataset_entry
-from utils.owasp import OwaspCategory
+from vfc_datasets.dataset_entry import DatasetEntry, create_dataset_entry
+from vfc_datasets.utils.owasp import OwaspCategory
 
 VALID_KWARGS: dict[str, Any] = {
     "project_url": "https://github.com/owner/repo",

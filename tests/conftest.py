@@ -1,6 +1,6 @@
 import pytest
 
-from dataset_entry import DatasetEntry
+from vfc_datasets.dataset_entry import DatasetEntry
 
 
 @pytest.fixture

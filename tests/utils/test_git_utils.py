@@ -1,6 +1,6 @@
 import pytest
 
-from utils.git.repository import clone_repositories, clone_repository
+from vfc_datasets.utils.git.repository import clone_repositories, clone_repository
 
 
 class TestCloneRepository:

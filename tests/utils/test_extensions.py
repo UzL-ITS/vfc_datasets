@@ -1,6 +1,6 @@
 """Tests for file extension mapping."""
 
-from utils.extensions import EXTENSION_TO_LANGUAGE, extensions_for
+from vfc_datasets.utils.extensions import EXTENSION_TO_LANGUAGE, extensions_for
 
 
 class TestExtensionsFor:
