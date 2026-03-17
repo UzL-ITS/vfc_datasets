@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -47,6 +47,7 @@ class VUDEncDataset(BaseDataset):
         "plain_xss",
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         base_url = f"https://zenodo.org/records/{self.ZENODO_RECORD_ID}/files"
         links = [f"{base_url}/{name}?download=1" for name in self.VULNERABILITY_FILES]
@@ -80,6 +81,7 @@ class VUDEncDataset(BaseDataset):
 
         return pd.DataFrame.from_records(records)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Extract and validate project URL and commit ID
         project_url, commit_id = extract_url_and_commit(row, "html_url", "sha", self.metadata.name)

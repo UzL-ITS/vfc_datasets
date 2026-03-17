@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -33,6 +33,7 @@ class SecBenchDataset(BaseDataset):
         projects=248,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_path = self._raw_dir / "secbench.csv"
 
@@ -43,6 +44,7 @@ class SecBenchDataset(BaseDataset):
         )
         return pd.read_csv(raw_dataset_path)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # project url is a github url
         owner = row.get("owner")

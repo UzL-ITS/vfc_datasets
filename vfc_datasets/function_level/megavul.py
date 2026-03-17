@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -37,6 +37,7 @@ class MegaVulDataset(BaseDataset):
         benign_functions=367147,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         megavul_dir = self._raw_dir / "megavul"
 
@@ -58,6 +59,7 @@ class MegaVulDataset(BaseDataset):
 
         return pd.DataFrame(cpp_data + java_data)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         git_url_value = row.get("git_url")
         if not git_url_value:

@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -42,6 +42,7 @@ class SVENDataset(BaseDataset):
         super().__init__()
         self.sven_repo_path: str | None = None
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         self.sven_repo_path = url_to_pathname(self.metadata.source_url)
         clone_repository(self.metadata.source_url, branch="master")
@@ -61,6 +62,7 @@ class SVENDataset(BaseDataset):
 
         return pd.DataFrame(all_data)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         commit_link = row.get("commit_link")
         if not isinstance(commit_link, str) or not commit_link:

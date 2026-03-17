@@ -225,7 +225,7 @@ def normalize_cve_ids(cve_input: object) -> set[str]:
         case None | float():
             return set()
         case str() as s:
-            cve_items: Iterable[str] = [s]
+            cve_items: Iterable[object] = [s]
         case Iterable() as items:
             cve_items = items
         case _:
@@ -244,7 +244,7 @@ def normalize_cwe_ids(cwe_input: object) -> set[str]:
         case None | float():
             return set()
         case int() | str() as item:
-            cwe_items: Iterable[str | int | float] = [item]
+            cwe_items: Iterable[object] = [item]
         case Iterable() as items:
             cwe_items = items
         case _:

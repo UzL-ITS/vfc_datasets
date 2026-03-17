@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetEntry:
-    __hash__ = None  # type: ignore[assignment]
+    __hash__ = None  # pyright: ignore[reportAssignmentType]
     __slots__ = (
         "_commit_timestamp_utc",
         "commit_diff",
@@ -141,4 +141,4 @@ def create_dataset_entry(data: dict[str, Any]) -> DatasetEntry:
     converted = {k: set(v) if isinstance(v, list) else v for k, v in data.items()}
     if converted.get("owasp_categories") is not None:
         converted["owasp_categories"] = {OwaspCategory(v) for v in converted["owasp_categories"]}
-    return DatasetEntry(**converted)  # type: ignore[arg-type]
+    return DatasetEntry(**converted)  # pyright: ignore[reportArgumentType]

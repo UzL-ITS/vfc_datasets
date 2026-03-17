@@ -22,7 +22,7 @@ def train_val_test_split_temporal(
         raise ValueError("All entries must have commit_timestamp_utc for temporal split")
 
     # Sort by timestamp
-    sorted_entries = sorted(entries, key=lambda e: e.commit_timestamp_utc)  # type: ignore
+    sorted_entries = sorted(entries, key=lambda e: e.commit_timestamp_utc)  # pyright: ignore[reportCallIssue,reportArgumentType]
 
     # Split the sorted entries
     train, val, test = split_by_ratio(sorted_entries, train_ratio, val_ratio, test_ratio)

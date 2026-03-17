@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -40,6 +40,7 @@ class ICVulDataset(BaseDataset):
 
     GDRIVE_FILE_ID = "1Bnnb7kJa8GEfyESIAuGXj2z0g8FvXgRk"
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         dataset_dir = self._raw_dir / "icvul"
         base_path = dataset_dir / "ICVul-Dataset"
@@ -79,6 +80,7 @@ class ICVulDataset(BaseDataset):
 
         return df
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Extract and validate project URL and commit ID
         project_url, commit_id = extract_url_and_commit(row, "repo_url", "hash", self.metadata.name)

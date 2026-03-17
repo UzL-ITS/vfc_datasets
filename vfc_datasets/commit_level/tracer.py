@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -31,6 +31,7 @@ class TracerDataset(BaseDataset):
         non_vfcs=0,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         csv_path = self._raw_dir / "tracer_depth_dataset.csv"
         download_file(
@@ -40,6 +41,7 @@ class TracerDataset(BaseDataset):
         )
         return pd.read_csv(csv_path)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Try github_commit first, fallback to other_platform_git_commit
         project_url, raw_commit_id = extract_from_commit_url(

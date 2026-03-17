@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -40,6 +40,7 @@ class PatchDBDataset(BaseDataset):
         projects=313,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         patch_db_dump = self._raw_dir / "patch_db.json"
 
@@ -52,6 +53,7 @@ class PatchDBDataset(BaseDataset):
 
         return pd.read_json(patch_db_dump)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Skip invalid entries
         owner = row.get("owner")

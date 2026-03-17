@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -33,6 +33,7 @@ class MSR2019Dataset(BaseDataset):
         projects=205,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         csv_path = self._raw_dir / "msr2019.csv"
         download_file(
@@ -42,6 +43,7 @@ class MSR2019Dataset(BaseDataset):
         )
         return pd.read_csv(csv_path, names=["cve_id", "project_url", "commit_id", "pos"])
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         raw_commit_id = row.get("commit_id")
         project_url = row.get("project_url")

@@ -26,10 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "mypy>=1.8.0",
-    "pandas-stubs>=2.2.0",
-    "types-psycopg2>=2.9.0",
-    "types-tqdm>=4.66.0",
+    "pyright>=1.1.0",
     "ruff>=0.3.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
@@ -37,6 +34,9 @@ dev = [
     "pytest-xdist>=3.5.0",
     "pre-commit>=3.6.0",
 ]
+
+[tool.setuptools.packages.find]
+exclude = ["examples", "research", "tests"]
 
 [tool.setuptools.package-data]
 "vfc_datasets.transformations.enrichment.project_urls" = ["*.json"]
@@ -54,24 +54,6 @@ ignore = ["E501", "SIM108", "RUF012", "RUF022"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["vfc_datasets"]
-
-[tool.pyright]
-venvPath = "."
-venv = ".venv"
-
-[tool.mypy]
-packages = ["vfc_datasets"]
-check_untyped_defs = true
-warn_unused_ignores = true
-ignore_missing_imports = false
-
-[[tool.mypy.overrides]]
-module = ["gdown"]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = ["datasets"]
-ignore_missing_imports = true
 
 [tool.coverage.run]
 source = ["vfc_datasets"]

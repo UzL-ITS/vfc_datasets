@@ -1,6 +1,6 @@
 import hashlib
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -37,12 +37,14 @@ class CleanVulDataset(BaseDataset):
         benign_functions=0,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         ds = load_dataset("yikun-li/CleanVul")
         df = ds["train"].to_pandas()
         # Filter for Threshold 3
-        return df[df["vulnerability_score"] >= 3].copy()
+        return df[df["vulnerability_score"] >= 3].copy()  # pyright: ignore[reportIndexIssue]
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         project_url, commit_id = extract_and_normalize_from_commit_url(
             row, "commit_url", self.metadata.name

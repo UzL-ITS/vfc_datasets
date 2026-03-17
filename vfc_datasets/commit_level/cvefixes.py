@@ -3,7 +3,7 @@ import logging
 import sqlite3
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -99,6 +99,7 @@ class CVEFixesDataset(BaseDataset):
 
         return sql_file_path
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         sql_file_path = self._get_database()
 
@@ -112,6 +113,7 @@ class CVEFixesDataset(BaseDataset):
         with sqlite3.connect(sql_file_path) as conn:
             return pd.read_sql_query(query, conn)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Extract and validate project URL and commit ID
         project_url, commit_id = extract_url_and_commit(

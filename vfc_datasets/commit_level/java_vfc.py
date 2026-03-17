@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 class _JavaVFCBase(BaseDataset):
     _ZENODO_RECORD_ID = "13731781"
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         file_name = f"{self.metadata.name}.jsonl"
         raw_dataset_path = self._raw_dir / "javavfc" / file_name
@@ -25,6 +26,7 @@ class _JavaVFCBase(BaseDataset):
             download_file(url=url, output_path=raw_dataset_path)
         return pd.read_json(raw_dataset_path, lines=True)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         project_url, commit_id = extract_and_normalize_from_commit_url(
             row, "commit_link", self.metadata.name

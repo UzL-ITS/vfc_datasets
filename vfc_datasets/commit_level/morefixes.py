@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 import psycopg2
@@ -41,6 +41,7 @@ class MorefixesDataset(BaseDataset):
         projects=6945,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         """
         Extract VFC data from MoreFixes PostgreSQL dump.
@@ -117,6 +118,7 @@ class MorefixesDataset(BaseDataset):
 
         return df
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         raw_cve_id = row.get("cve_id")
         cve_ids = normalize_cve_ids(raw_cve_id)

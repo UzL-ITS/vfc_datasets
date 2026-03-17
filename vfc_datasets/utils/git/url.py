@@ -3,7 +3,7 @@ import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Self
+from typing import Self, override
 from urllib.parse import ParseResult, parse_qs, unquote, urlparse
 
 from vfc_datasets.config import GITHUB_API_URL, REPOSITORY_PATH
@@ -344,11 +344,13 @@ class GitURL:
         # Other platforms need at least a path or repo
         return bool(self.path or self.repo)
 
+    @override
     def __str__(self) -> str:
         """String representation (defaults to HTTPS URL)."""
         # to_https_url may return None for generic hosts; ensure __str__ returns a string
         return self.to_https_url() or f"https://{self.host}"
 
+    @override
     def __repr__(self) -> str:
         """Detailed representation for debugging."""
         return (

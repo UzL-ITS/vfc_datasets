@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -41,6 +41,7 @@ class VCMatchDataset(BaseDataset):
         "wireshark": "https://github.com/wireshark/wireshark",
     }
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_path = self._raw_dir / "vcmatch.csv"
 
@@ -57,6 +58,7 @@ class VCMatchDataset(BaseDataset):
 
         return pd.read_csv(raw_dataset_path)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         project_name = row.get("repo")
         project_url = self.PROJECT_URLS.get(project_name) if project_name else None

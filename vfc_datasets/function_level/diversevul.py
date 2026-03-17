@@ -2,7 +2,7 @@ import json
 import logging
 from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -41,6 +41,7 @@ class DiverseVulDataset(BaseDataset):
         with open(Path(__file__).parent / "diversevul_project_urls.json", encoding="utf-8") as f:
             return json.load(f)
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_path = self._raw_dir / "diversevul.json"
         download_file(
@@ -58,6 +59,7 @@ class DiverseVulDataset(BaseDataset):
 
         return pd.DataFrame(data)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Get commit ID
         raw_commit_id = row.get("commit_id")

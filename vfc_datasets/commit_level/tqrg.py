@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -38,6 +38,7 @@ class TQRGDataset(BaseDataset):
         projects=1339,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_dir = self._raw_dir / "tqrg"
 
@@ -63,6 +64,7 @@ class TQRGDataset(BaseDataset):
 
         return pd.concat([df_positive, df_negative], ignore_index=True)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         is_vfc = row.get("dataset_type") == "positive"
 

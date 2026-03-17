@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, override
 
 import pandas as pd
 from git import Repo
@@ -198,6 +198,7 @@ class SPIDBDataset(BaseDataset):
             repo=repo,
         )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_dir = self._raw_dir / "spi-db"
         all_data = []
@@ -227,6 +228,7 @@ class SPIDBDataset(BaseDataset):
 
         return pd.concat(all_data, ignore_index=True)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         raw_commit_id = row.get("commit_id")
         project_url = row.get("project_url")

@@ -22,9 +22,9 @@ def process_commits_in_batches(
     entries: list[DatasetEntry],
     *,
     filter_fn: Callable[[DatasetEntry], bool],
-    batch_fn: Callable[[tuple], dict[str, Any]],
+    batch_fn: Callable[[tuple[Any, ...]], dict[str, Any]],
     apply_fn: Callable[[DatasetEntry, Any], None],
-    batch_extra_args: tuple = (),
+    batch_extra_args: tuple[Any, ...] = (),
     desc: str = "Processing commits",
 ) -> list[DatasetEntry]:
     """Generic batch processor for commit-level operations over cloned repos.

@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -50,6 +50,7 @@ class DevignDataset(BaseDataset):
         projects=2,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_dir = self._raw_dir / "devign"
 
@@ -61,6 +62,7 @@ class DevignDataset(BaseDataset):
 
         return pd.concat(dfs, ignore_index=True)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         raw_commit_id = row.get("sha_id")
         if not raw_commit_id:

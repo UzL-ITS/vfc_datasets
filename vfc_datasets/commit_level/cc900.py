@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -36,6 +36,7 @@ class CC900Dataset(BaseDataset):
         projects=910,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_dir = self._raw_dir / "cc900"
 
@@ -62,6 +63,7 @@ class CC900Dataset(BaseDataset):
         # Combine both dataframes
         return pd.concat([df_positive, df_negative], ignore_index=True)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         dataset_type = row.get("dataset_type")
         is_vfc = dataset_type == "positive"

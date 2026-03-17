@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -39,6 +39,7 @@ class BigVulDataset(BaseDataset):
         # benign_functions=253096,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         csv_path = self._raw_dir / "bigvul.csv"
         download_file(
@@ -59,6 +60,7 @@ class BigVulDataset(BaseDataset):
 
         return lookup_broken_commit(ref_link) or (None, None)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         project_url, commit_id = self._handle_broken_entries(row)
 

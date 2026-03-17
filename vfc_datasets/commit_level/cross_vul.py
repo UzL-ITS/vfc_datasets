@@ -2,7 +2,7 @@ import logging
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -50,6 +50,7 @@ class CrossVulDataset(BaseDataset):
         projects=1675,
     )
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_path = self._raw_dir / "cross_vul.csv"
 
@@ -76,6 +77,7 @@ class CrossVulDataset(BaseDataset):
             names=["cwe_id", "cve_id", "commit_url"],
         )
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         project_url, commit_id = extract_and_normalize_from_commit_url(
             row, "commit_url", self.metadata.name

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Any, Literal, cast, override
 
 import pandas as pd
 from tqdm.auto import tqdm
@@ -127,9 +127,11 @@ class BaseDataset(ABC):
     def __len__(self) -> int:
         return len(self._parse())
 
+    @override
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}()"
 
+    @override
     def __str__(self) -> str:
         m = self.metadata
         langs = ", ".join(m.programming_languages) if m.programming_languages else "any"

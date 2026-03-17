@@ -101,7 +101,7 @@ def _strip_comments(source_code: str, language: str) -> str | None:
             before = result[line_start:start]
             after = result[end:line_end]
 
-            if before.strip() == b"" and after.strip() == b"":
+            if not before.strip() and not after.strip():
                 # Remove entire line including newline
                 if line_end < len(result):
                     line_end += 1
@@ -138,7 +138,7 @@ def _generate_diff(
             f.write(content_b)
 
         # --no-index exits 1 when files differ, so suppress exceptions
-        _, raw, _ = repo.git.execute(  # type: ignore[call-overload]
+        _, raw, _ = repo.git.execute(  # pyright: ignore[reportCallIssue]
             ["git", "diff", "--no-index", "--", file_a, file_b],
             with_extended_output=True,
             with_exceptions=False,

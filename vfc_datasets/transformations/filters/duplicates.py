@@ -3,6 +3,7 @@ import hashlib
 import logging
 from collections import Counter, defaultdict
 from collections.abc import Callable
+from typing import Any
 
 from tqdm.auto import tqdm
 
@@ -52,7 +53,7 @@ def merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
 
 def _merge_duplicates(
     entries: list[DatasetEntry],
-    key_func: Callable[[DatasetEntry], tuple],
+    key_func: Callable[[DatasetEntry], tuple[Any, ...]],
     level_name: str,
 ) -> list[DatasetEntry]:
     logger.info("Merging duplicates at %s level.", level_name)

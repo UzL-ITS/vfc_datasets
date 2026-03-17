@@ -3,7 +3,7 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 from urllib.parse import quote
 
 import pandas as pd
@@ -274,6 +274,7 @@ class PySecDBDataset(BaseDataset):
             return {}
         return {str(k): str(v) for k, v in loaded.items() if k}
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         raw_dataset_dir = self._raw_dir / "pysecdb"
         raw_dataset_dir.mkdir(parents=True, exist_ok=True)
@@ -299,6 +300,7 @@ class PySecDBDataset(BaseDataset):
         self._repo_map = repo_map
         return pd.DataFrame.from_records(records)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         if not self._repo_map:
             return None

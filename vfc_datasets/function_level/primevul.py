@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, cast, override
 
 import pandas as pd
 
@@ -68,6 +68,7 @@ class PrimeVulDataset(BaseDataset):
 
         return primevul_path
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         primevul_path = self._download_if_missing()
 
@@ -145,6 +146,7 @@ class PrimeVulDataset(BaseDataset):
 
         return normalized
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         project_url = row.get("project_url")
         if project_url == "None" or not project_url:

@@ -3,7 +3,7 @@ import shutil
 import tempfile
 import zipfile
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
 import pandas as pd
 
@@ -53,6 +53,7 @@ class RepoSPDDataset(BaseDataset):
         "qemu": "https://github.com/qemu/qemu",
     }
 
+    @override
     def _load_data(self) -> pd.DataFrame:
         dataset_path = self._raw_dir / "repospd"
         self._download_if_missing(dataset_path)
@@ -98,6 +99,7 @@ class RepoSPDDataset(BaseDataset):
                         except KeyError:
                             logger.warning("Missing %s in RepoSPD archive", member)
 
+    @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
         # Transform data
         category = row.get("category")
