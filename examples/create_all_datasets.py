@@ -43,7 +43,7 @@ TRANSFORMATION_PIPELINE: list[Callable[[list[DatasetEntry]], list[DatasetEntry]]
 
 def create_all_datasets() -> list[DatasetEntry]:
     """Load all datasets, deduplicate, and enrich with commit information."""
-    all_datasets = _all_concrete_datasets(vfc_datasets.BaseDataset)  # type: ignore[type-abstract]
+    all_datasets = _all_concrete_datasets(vfc_datasets.BaseDataset)
 
     entries: list[DatasetEntry] = []
     for dataset_class in all_datasets:
