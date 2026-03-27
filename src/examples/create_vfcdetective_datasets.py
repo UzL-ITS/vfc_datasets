@@ -11,7 +11,9 @@ from utils.core.serialization import load_entries, save_entries
 from utils.core.statistics import print_dataset_stats
 from utils.extensions import extensions_for
 from utils.split import (
+    create_cve_split,
     create_random_split,
+    create_temporal_sliding_splits,
     create_temporal_split,
     create_top_n_group_stratified_splits,
     discover_repository_relationships,
@@ -126,19 +128,25 @@ def create_splits(entries: list[DatasetEntry], name: str) -> None:
     relationships = discover_repository_relationships(entries)
 
     # Create 3 random splits
-    for seed in [1, 2, 3]:
-        create_random_split(entries, name, OUTPUT_PATH, seed)
+    #for seed in [1, 2, 3]:
+    #    create_random_split(entries, name, OUTPUT_PATH, seed)
 
     # Create 1 temporal split
-    create_temporal_split(entries, name, OUTPUT_PATH)
+    #create_temporal_split(entries, name, OUTPUT_PATH)
 
     # Create 3 group-stratified splits (best out of 50 seeds)
-    create_top_n_group_stratified_splits(entries, name, OUTPUT_PATH, relationships)
+    #create_top_n_group_stratified_splits(entries, name, OUTPUT_PATH, relationships)
+
+    # Create 4 sliding-window temporal splits
+    create_temporal_sliding_splits(entries, name, OUTPUT_PATH)
+
+    # Create 1 CVE-based split
+    #create_cve_split(entries, name, OUTPUT_PATH)
 
 
 if __name__ == "__main__":
     dataset_variants = load_vfc_datasets_if_exist()
     if dataset_variants is None:
         dataset_variants = create_vfc_datasets()
-    dataset_target = "dataset3-all-cpp"
+    dataset_target = "dataset2-mr-advisory-cpp"
     create_splits(dataset_variants[dataset_target], dataset_target)

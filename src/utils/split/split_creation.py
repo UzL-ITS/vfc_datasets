@@ -9,9 +9,10 @@ from dataset_entry import DatasetEntry
 from utils.core.serialization import save_entries_csv
 from utils.split.repository_relationships import RepositoryRelationships
 from utils.split.split_common import group_related_repos, visualize_split
+from utils.split.split_cve import train_val_test_split_cve
 from utils.split.split_group_stratified import train_val_test_split_group_stratified
 from utils.split.split_random import train_val_test_split_random
-from utils.split.split_temporal import train_val_test_split_temporal
+from utils.split.split_temporal import train_val_test_split_temporal, train_val_test_split_temporal_sliding
 
 logger = logging.getLogger(__name__)
 
@@ -123,6 +124,63 @@ def create_temporal_split(
     save_entries_csv(train, output_path / f"{name}-temporal-train.csv")
     save_entries_csv(val, output_path / f"{name}-temporal-val.csv")
     save_entries_csv(test, output_path / f"{name}-temporal-test.csv")
+
+
+def create_cve_split(
+    entries: list[DatasetEntry],
+    name: str,
+    output_path: Path,
+    *,
+    seed: int | None = None,
+) -> None:
+    """Create a CVE-based split where val/test contain CVE entries filled with benign."""
+    logger.info("Creating CVE-based split for %s", name)
+
+    train, val, test = train_val_test_split_cve(
+        entries,
+        seed=seed,
+        visualize=True,
+    )
+
+    save_entries_csv(train, output_path / f"{name}-cve-train.csv")
+    save_entries_csv(val, output_path / f"{name}-cve-val.csv")
+    save_entries_csv(test, output_path / f"{name}-cve-test.csv")
+
+
+def create_temporal_sliding_splits(
+    entries: list[DatasetEntry],
+    name: str,
+    output_path: Path,
+) -> None:
+    """Create sliding-window temporal splits at 5% increments.
+
+    Produces:
+        - temporal-2: large window (Q1+Q2 train, Q3 val, Q4 test)
+        - temporal-sliding-{major}: major windows at 20% steps (major=1,2,3)
+        - temporal-sliding-{major}-{minor}: intermediate windows at 5% steps (minor=1,2,3)
+    """
+    logger.info("Creating temporal sliding-window splits for %s", name)
+
+    windows = train_val_test_split_temporal_sliding(entries, visualize=True)
+
+    # First window (large, Q1+Q2 train) uses "temporal-2" naming
+    train, val, test = windows[0]
+    save_entries_csv(train, output_path / f"{name}-temporal-2-train.csv")
+    save_entries_csv(val, output_path / f"{name}-temporal-2-val.csv")
+    save_entries_csv(test, output_path / f"{name}-temporal-2-test.csv")
+
+    # Sliding windows: group into major (every 4th) and minor (in between)
+    sliding = windows[1:]  # 9 windows at 5% steps
+    for i, (train, val, test) in enumerate(sliding):
+        major = i // 4 + 1
+        minor = i % 4
+        if minor == 0:
+            suffix = f"temporal-sliding-{major}"
+        else:
+            suffix = f"temporal-sliding-{major}-{minor}"
+        save_entries_csv(train, output_path / f"{name}-{suffix}-train.csv")
+        save_entries_csv(val, output_path / f"{name}-{suffix}-val.csv")
+        save_entries_csv(test, output_path / f"{name}-{suffix}-test.csv")
 
 
 def create_top_n_group_stratified_splits(
