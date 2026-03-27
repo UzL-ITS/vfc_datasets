@@ -4,16 +4,16 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from utils.split.repository_relationships import RepositoryRelationships
-from utils.split.split_group_stratified import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.utils.split.repository_relationships import RepositoryRelationships
+from vfc_datasets.utils.split.split_group_stratified import (
     _greedy_assign,
     _optimize_assignment,
     train_test_split_group_stratified,
     train_val_test_split_group_stratified,
 )
-from utils.split.split_random import train_val_test_split_random
-from utils.split.split_temporal import train_val_test_split_temporal
+from vfc_datasets.utils.split.split_random import train_val_test_split_random
+from vfc_datasets.utils.split.split_temporal import train_val_test_split_temporal
 
 
 def _make_entries(project_url: str, count: int) -> list[DatasetEntry]:
@@ -37,6 +37,7 @@ def _count_train(groups, train_urls):
 
 
 # --- _greedy_assign tests ---
+
 
 def test_greedy_simple_split():
     groups = _make_groups([100, 100, 100, 100, 100])
@@ -74,6 +75,7 @@ def test_greedy_ratio_one():
 
 # --- _optimize_assignment tests ---
 
+
 def test_optimize_finds_exact_target():
     groups = _make_groups([500, 300, 200])
     target = 1000 * 0.8
@@ -100,6 +102,7 @@ def test_optimize_empty():
 
 # --- train_test_split_stratified tests ---
 
+
 def test_split_stratified_empty():
     train, test = train_test_split_group_stratified([], RepositoryRelationships())
     assert train == []
@@ -108,7 +111,9 @@ def test_split_stratified_empty():
 
 def test_split_stratified_single_group():
     entries = _make_entries("https://github.com/test/only", 100)
-    train, test = train_test_split_group_stratified(entries, RepositoryRelationships(), split_ratio=0.8)
+    train, test = train_test_split_group_stratified(
+        entries, RepositoryRelationships(), split_ratio=0.8
+    )
     assert len(train) == 100
     assert len(test) == 0
 
@@ -124,9 +129,8 @@ def test_split_stratified_preserves_total():
 
 
 def test_split_stratified_deterministic_with_seed():
-    entries = (
-        _make_entries("https://github.com/test/a", 50)
-        + _make_entries("https://github.com/test/b", 50)
+    entries = _make_entries("https://github.com/test/a", 50) + _make_entries(
+        "https://github.com/test/b", 50
     )
     rel = RepositoryRelationships()
     train1, _ = train_test_split_group_stratified(entries, rel, seed=42)
@@ -135,6 +139,7 @@ def test_split_stratified_deterministic_with_seed():
 
 
 # --- train_val_test_split_group_stratified tests ---
+
 
 def test_three_way_split_empty():
     train, val, test = train_val_test_split_group_stratified([], RepositoryRelationships())
@@ -191,7 +196,8 @@ def test_three_way_split_deterministic_with_seed():
 
 def test_three_way_split_no_group_leakage():
     """Verify related repos stay in same split."""
-    from utils.split.repository_relationships import RepositoryGroup
+    from vfc_datasets.utils.split.repository_relationships import RepositoryGroup
+
     # Create entries from 3 repos, where repo2 and repo3 are related
     entries = (
         _make_entries("https://github.com/test/repo1", 100)
@@ -289,8 +295,9 @@ def test_three_way_split_custom_ratios():
 
 # --- train_val_test_split_random tests ---
 
+
 def test_random_split_empty():
-    train, val, test = train_val_test_split_random([], visualize=False)
+    train, val, test = train_val_test_split_random([])
     assert train == []
     assert val == []
     assert test == []
@@ -302,7 +309,7 @@ def test_random_split_preserves_total():
         + _make_entries("https://github.com/test/b", 300)
         + _make_entries("https://github.com/test/c", 100)
     )
-    train, val, test = train_val_test_split_random(entries, visualize=False)
+    train, val, test = train_val_test_split_random(entries)
     assert len(train) + len(val) + len(test) == 1000
 
 
@@ -312,8 +319,8 @@ def test_random_split_deterministic_with_seed():
         + _make_entries("https://github.com/test/b", 100)
         + _make_entries("https://github.com/test/c", 100)
     )
-    train1, val1, test1 = train_val_test_split_random(entries, seed=42, visualize=False)
-    train2, val2, test2 = train_val_test_split_random(entries, seed=42, visualize=False)
+    train1, val1, test1 = train_val_test_split_random(entries, seed=42)
+    train2, val2, test2 = train_val_test_split_random(entries, seed=42)
     assert len(train1) == len(train2)
     assert len(val1) == len(val2)
     assert len(test1) == len(test2)
@@ -322,12 +329,11 @@ def test_random_split_deterministic_with_seed():
 
 
 def test_random_split_different_seeds_differ():
-    entries = (
-        _make_entries("https://github.com/test/a", 100)
-        + _make_entries("https://github.com/test/b", 100)
+    entries = _make_entries("https://github.com/test/a", 100) + _make_entries(
+        "https://github.com/test/b", 100
     )
-    train1, _, _ = train_val_test_split_random(entries, seed=1, visualize=False)
-    train2, _, _ = train_val_test_split_random(entries, seed=2, visualize=False)
+    train1, _, _ = train_val_test_split_random(entries, seed=1)
+    train2, _, _ = train_val_test_split_random(entries, seed=2)
     # Different seeds should produce different splits (with high probability)
     assert {e.commit_id for e in train1} != {e.commit_id for e in train2}
 
@@ -339,7 +345,6 @@ def test_random_split_respects_ratios():
         train_ratio=0.6,
         val_ratio=0.2,
         test_ratio=0.2,
-        visualize=False,
     )
     # With 1000 entries, ratios should be exact
     assert len(train) == 600
@@ -349,7 +354,10 @@ def test_random_split_respects_ratios():
 
 # --- train_val_test_split_temporal tests ---
 
-def _make_entries_with_timestamps(project_url: str, count: int, start_date: datetime | None = None) -> list[DatasetEntry]:
+
+def _make_entries_with_timestamps(
+    project_url: str, count: int, start_date: datetime | None = None
+) -> list[DatasetEntry]:
     """Create entries with sequential timestamps."""
     if start_date is None:
         start_date = datetime(2020, 1, 1, 0, 0, 0, tzinfo=UTC)
@@ -366,7 +374,7 @@ def _make_entries_with_timestamps(project_url: str, count: int, start_date: date
 
 
 def test_temporal_split_empty():
-    train, val, test = train_val_test_split_temporal([], visualize=False)
+    train, val, test = train_val_test_split_temporal([])
     assert train == []
     assert val == []
     assert test == []
@@ -374,11 +382,17 @@ def test_temporal_split_empty():
 
 def test_temporal_split_preserves_total():
     entries = (
-        _make_entries_with_timestamps("https://github.com/test/a", 600, start_date=datetime(2020, 1, 1, tzinfo=UTC))
-        + _make_entries_with_timestamps("https://github.com/test/b", 300, start_date=datetime(2020, 6, 1, tzinfo=UTC))
-        + _make_entries_with_timestamps("https://github.com/test/c", 100, start_date=datetime(2021, 1, 1, tzinfo=UTC))
+        _make_entries_with_timestamps(
+            "https://github.com/test/a", 600, start_date=datetime(2020, 1, 1, tzinfo=UTC)
+        )
+        + _make_entries_with_timestamps(
+            "https://github.com/test/b", 300, start_date=datetime(2020, 6, 1, tzinfo=UTC)
+        )
+        + _make_entries_with_timestamps(
+            "https://github.com/test/c", 100, start_date=datetime(2021, 1, 1, tzinfo=UTC)
+        )
     )
-    train, val, test = train_val_test_split_temporal(entries, visualize=False)
+    train, val, test = train_val_test_split_temporal(entries)
     assert len(train) + len(val) + len(test) == 1000
 
 
@@ -390,7 +404,6 @@ def test_temporal_split_chronological_ordering():
         train_ratio=0.6,
         val_ratio=0.2,
         test_ratio=0.2,
-        visualize=False,
     )
 
     # All train timestamps should be < all val timestamps < all test timestamps
@@ -411,7 +424,7 @@ def test_temporal_split_requires_timestamps():
     """Entries without timestamps should raise ValueError."""
     entries = _make_entries("https://github.com/test/a", 100)  # No timestamps
     with pytest.raises(ValueError, match="All entries must have commit_timestamp_utc"):
-        train_val_test_split_temporal(entries, visualize=False)
+        train_val_test_split_temporal(entries)
 
 
 def test_temporal_split_respects_ratios():
@@ -421,7 +434,6 @@ def test_temporal_split_respects_ratios():
         train_ratio=0.6,
         val_ratio=0.2,
         test_ratio=0.2,
-        visualize=False,
     )
     # With 1000 entries, ratios should be exact
     assert len(train) == 600

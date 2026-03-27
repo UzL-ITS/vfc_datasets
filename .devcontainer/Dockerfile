@@ -34,4 +34,4 @@ RUN python -m venv /home/vscode/.venv \
     && pip install --upgrade pip
 
 ENV PATH="/home/vscode/.venv/bin:$PATH" \
-    PYTHONPATH="${PYTHONPATH}:/workspace/src"
+    PYTHONPATH="${PYTHONPATH}:/workspace"

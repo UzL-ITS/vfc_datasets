@@ -5,8 +5,8 @@ from typing import Any
 
 import pytest
 
-from dataset_entry import DatasetEntry, create_dataset_entry
-from utils.owasp import OwaspCategory
+from vfc_datasets.dataset_entry import DatasetEntry, create_dataset_entry
+from vfc_datasets.utils.owasp import OwaspCategory
 
 VALID_KWARGS: dict[str, Any] = {
     "project_url": "https://github.com/owner/repo",
@@ -138,7 +138,7 @@ class TestCreateDatasetEntry:
         assert isinstance(e.cve_ids, set)
         assert isinstance(e.files_changed, set)
 
-    def test_owasp_categories_converted_to_int_set(self):
+    def test_owasp_categories_converted_to_owasp_category_set(self):
         data = {
             "project_url": "https://github.com/owner/repo",
             "commit_id": "abcdef12345",
@@ -146,4 +146,7 @@ class TestCreateDatasetEntry:
             "owasp_categories": [1, 3],
         }
         e = create_dataset_entry(data)
-        assert e.owasp_categories == {1, 3}
+        assert e.owasp_categories == {
+            OwaspCategory.BROKEN_ACCESS_CONTROL,
+            OwaspCategory.INJECTION,
+        }

@@ -4,16 +4,16 @@ from datetime import UTC, datetime
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from transformations.enrichment.add_commit_data_local import (
-    _apply_commit_data,
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.enrichment.add_commit_data_local import (
     _get_commit_info,
     add_commit_information_local,
 )
+from vfc_datasets.transformations.enrichment.commit_data_common import CommitData, apply_commit_data
 
 
 class TestApplyCommitData:
-    """Tests for _apply_commit_data helper."""
+    """Tests for apply_commit_data helper."""
 
     def test_updates_all_empty_fields(self):
         entry = DatasetEntry(
@@ -21,14 +21,14 @@ class TestApplyCommitData:
             commit_id="abc1234",
             src_datasets={"test"},
         )
-        data = {
-            "message": "Fix bug",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "diff --git a/file.py",
-            "files_changed": {"file.py", "test.py"},
-        }
+        data = CommitData(
+            message="Fix bug",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="diff --git a/file.py",
+            files_changed={"file.py", "test.py"},
+        )
 
-        _apply_commit_data(entry, data)
+        apply_commit_data(entry, data)
 
         assert entry.commit_message == "Fix bug"
         assert entry.commit_timestamp_utc == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
@@ -45,14 +45,14 @@ class TestApplyCommitData:
             commit_diff="original diff",
             files_changed={"original.py"},
         )
-        data = {
-            "message": "New message",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "new diff",
-            "files_changed": {"new.py"},
-        }
+        data = CommitData(
+            message="New message",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="new diff",
+            files_changed={"new.py"},
+        )
 
-        _apply_commit_data(entry, data)
+        apply_commit_data(entry, data)
 
         assert entry.commit_message == "Original message"
         assert entry.commit_timestamp_utc == datetime(2023, 6, 1, 12, 0, 0, tzinfo=UTC)
@@ -66,14 +66,14 @@ class TestApplyCommitData:
             src_datasets={"test"},
             commit_message="Existing message",
         )
-        data = {
-            "message": "New message",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "new diff",
-            "files_changed": {"new.py"},
-        }
+        data = CommitData(
+            message="New message",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="new diff",
+            files_changed={"new.py"},
+        )
 
-        _apply_commit_data(entry, data)
+        apply_commit_data(entry, data)
 
         assert entry.commit_message == "Existing message"  # Not overwritten
         assert entry.commit_timestamp_utc == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
@@ -87,14 +87,14 @@ class TestApplyCommitData:
             src_datasets={"test"},
             commit_diff="Existing diff",
         )
-        data = {
-            "message": "New message",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "new diff",
-            "files_changed": {"new.py"},
-        }
+        data = CommitData(
+            message="New message",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="new diff",
+            files_changed={"new.py"},
+        )
 
-        _apply_commit_data(entry, data)
+        apply_commit_data(entry, data)
 
         assert entry.commit_message == "New message"
         assert entry.commit_diff == "Existing diff"  # Not overwritten
@@ -107,14 +107,14 @@ class TestApplyCommitData:
             src_datasets={"test"},
             files_changed=set(),  # Empty set
         )
-        data = {
-            "message": "msg",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "diff",
-            "files_changed": {"file.py"},
-        }
+        data = CommitData(
+            message="msg",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="diff",
+            files_changed={"file.py"},
+        )
 
-        _apply_commit_data(entry, data)
+        apply_commit_data(entry, data)
 
         assert entry.files_changed == {"file.py"}
 
@@ -125,14 +125,14 @@ class TestApplyCommitData:
             src_datasets={"test"},
             files_changed={"existing.py"},
         )
-        data = {
-            "message": "msg",
-            "timestamp": "2024-01-15T10:30:00+00:00",
-            "diff": "diff",
-            "files_changed": {"new.py"},
-        }
+        data = CommitData(
+            message="msg",
+            timestamp="2024-01-15T10:30:00+00:00",
+            diff="diff",
+            files_changed={"new.py"},
+        )
 
-        _apply_commit_data(entry, data)
+        apply_commit_data(entry, data)
 
         assert entry.files_changed == {"existing.py"}  # Not overwritten
 
@@ -173,7 +173,7 @@ class TestGetCommitInfo:
     @pytest.fixture
     def curl_repo(self):
         """Get curl repo (clone if needed)."""
-        from utils.git.repository import clone_repository
+        from vfc_datasets.utils.git.repository import clone_repository
 
         repo = clone_repository("https://github.com/curl/curl")
         assert repo is not None
@@ -184,7 +184,9 @@ class TestGetCommitInfo:
     @pytest.mark.slow
     def test_commit_with_parents_has_files_changed(self, curl_repo):
         """Commit with parents should have files_changed populated."""
-        result = _get_commit_info(curl_repo, "79e63a53bb9598af863b0afe49ad662795faeef4", max_diff_size=256 * 1024)
+        result = _get_commit_info(
+            curl_repo, "79e63a53bb9598af863b0afe49ad662795faeef4", max_diff_size=256 * 1024
+        )
 
         assert result is not None
         assert result["files_changed"]

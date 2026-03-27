@@ -8,8 +8,8 @@ from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_compl
 import pytest
 from tqdm import tqdm
 
-from transformations.enrichment.project_urls.url_mappings import _load, get_moved_urls
-from utils.git.repository import clone_repository
+from vfc_datasets.transformations.enrichment.project_urls.url_mappings import _load, get_moved_urls
+from vfc_datasets.utils.git.repository import clone_repository
 
 
 def _get_unreachable_urls() -> dict[str, dict]:

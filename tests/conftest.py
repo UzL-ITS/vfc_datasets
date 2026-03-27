@@ -1,6 +1,6 @@
 import pytest
 
-from dataset_entry import DatasetEntry
+from vfc_datasets.dataset_entry import DatasetEntry
 
 
 @pytest.fixture
@@ -26,6 +26,5 @@ def sample_dataset() -> list[DatasetEntry]:
             commit_id="feedbee",
             src_datasets={"test"},
             is_vfc=False,
-            cve_ids={"CVE-2022-1234"},
         ),
     ]

@@ -2,15 +2,15 @@
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from transformations.enrichment.add_commit_data_api import (
-    _populate_entry,
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.enrichment.add_commit_data_api import (
+    _apply_api_response,
     add_commit_information_api,
 )
 
 
-class TestPopulateEntry:
-    """Tests for _populate_entry helper."""
+class TestApplyApiResponse:
+    """Tests for _apply_api_response helper."""
 
     def test_populates_all_fields_from_api_response(self):
         entry = DatasetEntry(
@@ -29,7 +29,7 @@ class TestPopulateEntry:
             ],
         }
 
-        _populate_entry(entry, api_data)
+        _apply_api_response(entry, api_data)
 
         assert entry.commit_message == "Fix security vulnerability\n\nDetailed description."
         assert entry.commit_timestamp_utc is not None
@@ -52,7 +52,7 @@ class TestPopulateEntry:
             "files": [],
         }
 
-        _populate_entry(entry, api_data)
+        _apply_api_response(entry, api_data)
 
         assert entry.commit_message == "Merge commit"
         assert entry.files_changed == set()
@@ -76,7 +76,7 @@ class TestPopulateEntry:
             ],
         }
 
-        _populate_entry(entry, api_data)
+        _apply_api_response(entry, api_data)
 
         assert entry.files_changed == {"image.png", "src/main.py"}
         assert entry.commit_diff == "@@ -1 +1 @@\n-old\n+new"
@@ -95,7 +95,7 @@ class TestPopulateEntry:
             "files": [],
         }
 
-        _populate_entry(entry, api_data)
+        _apply_api_response(entry, api_data)
 
         assert entry.commit_message == "Commit"
         assert entry.commit_timestamp_utc is None
@@ -108,7 +108,7 @@ class TestPopulateEntry:
         )
         api_data: dict[str, list[str]] = {"files": []}
 
-        _populate_entry(entry, api_data)
+        _apply_api_response(entry, api_data)
 
         assert entry.commit_message is None
         assert entry.commit_timestamp_utc is None
@@ -126,7 +126,7 @@ class TestPopulateEntry:
             },
         }
 
-        _populate_entry(entry, api_data)
+        _apply_api_response(entry, api_data)
 
         assert entry.commit_message == "No files"
         assert entry.files_changed == set()
@@ -146,7 +146,7 @@ class TestPopulateEntry:
             ],
         }
 
-        _populate_entry(entry, api_data)
+        _apply_api_response(entry, api_data)
 
         assert entry.commit_diff == "patch1\npatch2\npatch3"
 
@@ -165,7 +165,7 @@ class TestPopulateEntry:
             ],
         }
 
-        _populate_entry(entry, api_data)
+        _apply_api_response(entry, api_data)
 
         assert entry.files_changed == {"valid.py"}
 

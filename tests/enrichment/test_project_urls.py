@@ -1,9 +1,9 @@
-from dataset_entry import DatasetEntry
-from transformations.enrichment.project_urls.update_project_urls import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.function_level.diversevul import DiverseVulDataset
+from vfc_datasets.transformations.enrichment.project_urls.update_project_urls import (
     filter_unreachable_project_urls,
     update_project_urls_inplace,
 )
-from vfc_datasets.function_level.diversevul import DiverseVulDataset
 
 
 def test_diverse_vul_urls_loaded_from_json() -> None:

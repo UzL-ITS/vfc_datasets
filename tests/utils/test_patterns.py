@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from utils.git.url import COMMIT_HASH_PATTERN
-from utils.patterns import CVE_PATTERN, CWE_PATTERN
+from vfc_datasets.utils.git.url import _COMMIT_HASH_PATTERN
+from vfc_datasets.utils.patterns import CVE_PATTERN, CWE_PATTERN
 
 
 class TestCVEPattern:
@@ -117,7 +117,7 @@ class TestCommitHashPattern:
         ],
     )
     def test_valid_commit_ids(self, commit_id: str) -> None:
-        assert COMMIT_HASH_PATTERN.fullmatch(commit_id), f"'{commit_id}' should match"
+        assert _COMMIT_HASH_PATTERN.fullmatch(commit_id), f"'{commit_id}' should match"
 
     @pytest.mark.parametrize(
         "invalid_commit",
@@ -132,6 +132,6 @@ class TestCommitHashPattern:
         ],
     )
     def test_invalid_commit_ids(self, invalid_commit: str) -> None:
-        assert not COMMIT_HASH_PATTERN.fullmatch(invalid_commit), (
+        assert not _COMMIT_HASH_PATTERN.fullmatch(invalid_commit), (
             f"'{invalid_commit}' should not match"
         )

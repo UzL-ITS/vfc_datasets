@@ -1,5 +1,5 @@
 {
-  "name": "vfc-data DevContainer",
+  "name": "vfc-datasets DevContainer",
   "dockerComposeFile": "docker-compose.yml",
   "service": "devcontainer",
   "workspaceFolder": "/workspace",

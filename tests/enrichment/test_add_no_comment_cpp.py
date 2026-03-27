@@ -2,10 +2,10 @@
 
 import pytest
 
-from dataset_entry import DatasetEntry
-from transformations.enrichment.add_no_comment import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.enrichment.add_no_comment import (
     _strip_comments,
-    add_commit_diff_no_comment,
+    strip_diff_comments,
 )
 
 
@@ -20,7 +20,7 @@ class TestCppRealCommitIntegration:
     @pytest.fixture
     def entry_with_diff(self):
         """Create entry and fetch original diff."""
-        from transformations.enrichment.add_commit_data_local import (
+        from vfc_datasets.transformations.enrichment.add_commit_data_local import (
             add_commit_information_local,
         )
 
@@ -48,35 +48,68 @@ class TestCppRealCommitIntegration:
         original_diff = entry_with_diff.commit_diff
         assert "THANKS" in original_diff
 
-        result = add_commit_diff_no_comment([entry_with_diff], include_unsupported=True)
+        result = strip_diff_comments([entry_with_diff], include_unsupported=True)
 
         assert len(result) == 1
-        assert result[0].commit_diff_no_comment is not None
+        assert result[0].commit_diff is not None
 
         # Should include the unsupported markdown file
-        assert "THANKS" in result[0].commit_diff_no_comment
+        assert "THANKS" in result[0].commit_diff
 
         # C file comments should be stripped - the diff should be smaller
         # (this commit mainly touched comments)
-        assert len(result[0].commit_diff_no_comment) < len(original_diff)
+        assert len(result[0].commit_diff) < len(original_diff)
 
     @pytest.mark.integration
     @pytest.mark.slow
     def test_include_unsupported_false(self, entry_with_diff):
         """Test include_unsupported=False skips unsupported files entirely."""
-        # Reset the no_comment field for fresh test
-        entry_with_diff.commit_diff_no_comment = None
-
-        result = add_commit_diff_no_comment([entry_with_diff], include_unsupported=False)
+        result = strip_diff_comments([entry_with_diff], include_unsupported=False)
 
         assert len(result) == 1
-        assert result[0].commit_diff_no_comment is not None
+        assert result[0].commit_diff is not None
 
         # Should NOT include the unsupported markdown file
-        assert "THANKS" not in result[0].commit_diff_no_comment
+        assert "THANKS" not in result[0].commit_diff
 
         # Should still have the C files (but with comments stripped)
-        assert "lib/" in result[0].commit_diff_no_comment or ".c" in result[0].commit_diff_no_comment
+        assert "lib/" in result[0].commit_diff or ".c" in result[0].commit_diff
+
+
+class TestDeepNesting:
+    """Test that iterative traversal handles deeply nested ASTs."""
+
+    def test_deeply_nested_braces_with_comments(self):
+        """Deeply nested C source (2000+ levels) should not cause RecursionError."""
+        depth = 2500
+        # Build: void f() { /* c0 */ { /* c1 */ { ... } } }
+        opens = "".join(f"{{ /* comment_{i} */ " for i in range(depth))
+        closes = "} " * depth
+        source = f"void f() {opens}{closes}"
+
+        result = _strip_comments(source, "c")
+        assert result is not None
+        # All comments should be stripped
+        assert "comment_" not in result
+        # Code structure should be preserved
+        assert "void f()" in result
+
+    def test_deeply_nested_if_else_with_comments(self):
+        """Deeply nested if/else with comments should not overflow."""
+        depth = 2000
+        lines = []
+        for i in range(depth):
+            indent = "    " * i
+            lines.append(f"{indent}if (x{i}) {{ // check {i}")
+        for i in range(depth - 1, -1, -1):
+            indent = "    " * i
+            lines.append(f"{indent}}}")
+        source = "\n".join(lines)
+
+        result = _strip_comments(source, "c")
+        assert result is not None
+        assert "// check" not in result
+        assert "if (x0)" in result
 
 
 class TestEdgeCases:
@@ -151,7 +184,7 @@ int main() {
 
     def test_complex_mixed_comments_and_strings(self):
         """Test complex case with comment-like content inside strings and real comments."""
-        source = '''#include <stdio.h>
+        source = """#include <stdio.h>
 
 // This is a real comment that should be removed
 const char* url = "https://example.com/path"; // inline comment
@@ -171,7 +204,7 @@ int main() {
        url: https://test.com
        inside */
     return 0; /* trailing */
-}'''
+}"""
         result = _strip_comments(source, "c")
         assert result is not None
 

@@ -1,8 +1,21 @@
-from dataset_entry import DatasetEntry
-from transformations.filters.duplicates import (
+from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.transformations.filters.duplicates import (
     deduplicate_function_level,
     deduplicate_within_repository,
+    merge_entry_group,
 )
+from vfc_datasets.utils.owasp import OwaspCategory
+
+
+def test_merge_entry_group_covers_all_slots():
+    """Every DatasetEntry slot must be handled by merge_entry_group."""
+    key_fields = {"project_url", "commit_id", "function_name", "is_vfc"}
+    set_union = {"cwe_ids", "cve_ids", "src_datasets", "files_changed", "owasp_categories"}
+    first_non_none = {"commit_timestamp_utc", "commit_message", "commit_diff", "ghsa_id"}
+
+    all_attrs = {s.lstrip("_") for s in DatasetEntry.__slots__}
+    covered = key_fields | set_union | first_non_none
+    assert covered == all_attrs, f"Uncovered: {all_attrs - covered}, Extra: {covered - all_attrs}"
 
 
 def test_vfc_conflict_excludes_entries():
@@ -158,6 +171,49 @@ def test_function_level_keeps_separate_functions():
     # Different functions stay separate
     assert len(result) == 2
     assert {e.function_name for e in result} == {"func_a", "func_b"}
+
+
+def test_merge_does_not_mutate_input_entries():
+    """Merging must not modify the original entries' sets."""
+    entries = [
+        DatasetEntry(
+            project_url="https://github.com/test/repo",
+            commit_id="abc123",
+            is_vfc=True,
+            src_datasets={"d1"},
+        ),
+        DatasetEntry(
+            project_url="https://github.com/test/repo",
+            commit_id="abc123",
+            is_vfc=True,
+            src_datasets={"d2"},
+            owasp_categories={
+                OwaspCategory.BROKEN_ACCESS_CONTROL,
+                OwaspCategory.CRYPTOGRAPHIC_FAILURES,
+            },
+        ),
+        DatasetEntry(
+            project_url="https://github.com/test/repo",
+            commit_id="abc123",
+            is_vfc=True,
+            src_datasets={"d3"},
+            owasp_categories={OwaspCategory.INJECTION},
+        ),
+    ]
+
+    merged = merge_entry_group(entries)
+
+    assert entries[0].src_datasets == {"d1"}
+    assert entries[1].src_datasets == {"d2"}
+    assert entries[1].owasp_categories == {
+        OwaspCategory.BROKEN_ACCESS_CONTROL,
+        OwaspCategory.CRYPTOGRAPHIC_FAILURES,
+    }
+    assert merged.owasp_categories == {
+        OwaspCategory.BROKEN_ACCESS_CONTROL,
+        OwaspCategory.CRYPTOGRAPHIC_FAILURES,
+        OwaspCategory.INJECTION,
+    }
 
 
 def test_commit_level_merges_different_functions():
