@@ -1,4 +1,5 @@
 import logging
+import os
 from typing import Any, override
 
 import pandas as pd
@@ -6,7 +7,6 @@ import psycopg2
 from tqdm.auto import tqdm
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.config import MOREFIXES_DB_HOST, MOREFIXES_DB_PORT
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import (
     normalize_cve_ids,
@@ -54,8 +54,8 @@ class MorefixesDataset(BaseDataset):
             "dbname": "postgrescvedumper",
             "user": "postgrescvedumper",
             "password": "a42a18537d74c3b7e584c769152c3d",
-            "host": MOREFIXES_DB_HOST,
-            "port": MOREFIXES_DB_PORT,
+            "host": os.getenv("MOREFIXES_DB_HOST", "morefixes_db"),
+            "port": int(os.getenv("MOREFIXES_DB_PORT", "5432")),
         }
         try:
             connection = psycopg2.connect(**connection_params)
