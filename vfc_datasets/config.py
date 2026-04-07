@@ -39,10 +39,6 @@ RAW_DATA_PATH = DATASET_PATH / "raw"
 CACHE_PATH = DATASET_PATH / "cache"
 REPOSITORY_PATH = _env_path("REPOSITORY_PATH", BASE_DATA_PATH / "repositories")
 
-# Create directories on import
-for _p in [BASE_DATA_PATH, DATASET_PATH, RAW_DATA_PATH, CACHE_PATH, REPOSITORY_PATH]:
-    _p.mkdir(parents=True, exist_ok=True)
-
 # Workers
 MAX_WORKERS = _env_int("MAX_WORKERS", os.cpu_count() or 1, minimum=1)
 
