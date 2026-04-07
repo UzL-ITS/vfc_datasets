@@ -240,6 +240,7 @@
   "https://gitweb.freedesktop.org/?p=xorg/xserver": "https://gitlab.freedesktop.org/xorg/xserver",
   "https://lab.louiz.org/poezio/slixmpp": "https://codeberg.org/poezio/slixmpp.git",
   "https://libvirt.org/git/?p=libvirt.git": "https://gitlab.com/libvirt/libvirt.git",
+  "https://opendev.org/openstack/keystone": "https://github.com/openstack/keystone",
   "https://pagure.io/modulemd/c": "https://src.fedoraproject.org/rpms/pagure.git",
   "https://sourceforge.net/p/expat": "https://github.com/libexpat/libexpat",
   "https://sourceware.org/?p=binutils-gdb": "https://sourceware.org/git/binutils-gdb.git",
