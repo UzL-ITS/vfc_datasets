@@ -39,6 +39,11 @@
         "checked": "2024-12-16",
         "reason": "deleted"
     },
+    "https://github.com/byteband1t/invee": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
+    },
     "https://github.com/calesanz/gibb-modul-151": {
         "checked": "2024-12-16",
         "reason": "deleted"
@@ -149,6 +154,11 @@
         "checked": "2024-12-16",
         "reason": "deleted"
     },
+    "https://github.com/madoxai/fitmind.ai": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
+    },
     "https://github.com/mangoraft/git": {
         "checked": "2024-12-16",
         "reason": "deleted"
@@ -162,13 +172,28 @@
         "checked": "2024-12-16",
         "reason": "deleted"
     },
+    "https://github.com/minio/console": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
+    },
     "https://github.com/mnbikeways/database": {
         "checked": "2024-12-16",
         "reason": "deleted"
     },
+    "https://github.com/mragland-158xo/vyperlang_vyper": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
+    },
     "https://github.com/ndlib/sipity": {
         "checked": "2024-12-16",
         "reason": "deleted"
+    },
+    "https://github.com/nickzren/alsdb": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
     },
     "https://github.com/ninj4c0d3r/ocomon-research": {
         "checked": "2024-12-16",
