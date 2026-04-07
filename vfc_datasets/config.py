@@ -32,7 +32,6 @@ def _env_path(name: str, default: Path) -> Path:
 BASE_DATA_PATH = _env_path("DATA_PATH", Path(".data"))
 DATASET_PATH = _env_path("DATASET_PATH", BASE_DATA_PATH / "datasets")
 RAW_DATA_PATH = DATASET_PATH / "raw"
-CACHE_PATH = DATASET_PATH / "cache"
 REPOSITORY_PATH = _env_path("REPOSITORY_PATH", BASE_DATA_PATH / "repositories")
 
 # Workers
@@ -55,7 +54,3 @@ LOG_DIR = _env_path("LOG_DIR", BASE_DATA_PATH / "logs")
 
 # Max diff size in characters
 MAX_DIFF_SIZE = _env_int("MAX_DIFF_SIZE", 100_000, minimum=0)
-
-# MoreFixes Database (optional)
-MOREFIXES_DB_HOST = os.getenv("MOREFIXES_DB_HOST", "localhost")
-MOREFIXES_DB_PORT = _env_int("MOREFIXES_DB_PORT", 5432, minimum=1, maximum=65535)
