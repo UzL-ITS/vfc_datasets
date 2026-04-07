@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import os
 import re
 import tempfile
 import time
@@ -10,8 +11,6 @@ from urllib.parse import urlparse
 import gdown
 import httpx
 from tqdm.auto import tqdm
-
-from vfc_datasets.config import HF_TOKEN
 
 logger = logging.getLogger(__name__)
 
@@ -179,8 +178,9 @@ def download_file(
             _download_gdrive(file_id, output_path)
         else:
             headers: dict[str, str] | None = None
-            if "huggingface.co" in parsed_url.netloc and HF_TOKEN:
-                headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+            hf_token = os.getenv("HF_TOKEN")
+            if "huggingface.co" in parsed_url.netloc and hf_token:
+                headers = {"Authorization": f"Bearer {hf_token}"}
             _download_http(url, output_path, headers, max_retries)
     else:
         logger.info("File already exists: %s", output_path)

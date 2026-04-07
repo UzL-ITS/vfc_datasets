@@ -2,21 +2,26 @@
 
 import asyncio
 import logging
+import os
 import time
 from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
+from functools import cache
 from typing import Any, Self
 
 import httpx
 from tqdm.asyncio import tqdm as async_tqdm
-
-from vfc_datasets.config import GITHUB_TOKEN
 
 from .url import GitURL
 
 logger = logging.getLogger(__name__)
 
 _DEFAULT_TIMEOUT = httpx.Timeout(120.0, connect=30.0)
+
+
+@cache
+def _get_github_token() -> str | None:
+    return os.getenv("GITHUB_TOKEN")
 
 
 def _github_headers() -> dict[str, str]:
@@ -26,8 +31,8 @@ def _github_headers() -> dict[str, str]:
         "User-Agent": "vfc-datasets/2.0",
         "X-GitHub-Api-Version": "2022-11-28",
     }
-    if GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    if token := _get_github_token():
+        headers["Authorization"] = f"Bearer {token}"
     return headers
 
 
@@ -53,7 +58,7 @@ class AsyncGitHubClient:
 
     async def __aenter__(self) -> Self:
         logging.getLogger("httpx").setLevel(logging.WARNING)
-        if not GITHUB_TOKEN:
+        if not _get_github_token():
             logger.warning(
                 "No GITHUB_TOKEN configured - API rate limits will be severely restricted"
             )

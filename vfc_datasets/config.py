@@ -5,8 +5,6 @@ import os
 from pathlib import Path
 
 
-
-
 def _env_int(
     name: str, default: int, *, minimum: int | None = None, maximum: int | None = None
 ) -> int:
@@ -39,10 +37,6 @@ REPOSITORY_PATH = _env_path("REPOSITORY_PATH", BASE_DATA_PATH / "repositories")
 
 # Workers
 MAX_WORKERS = _env_int("MAX_WORKERS", os.cpu_count() or 1, minimum=1)
-
-# API Tokens (optional)
-HF_TOKEN = os.getenv("HF_TOKEN")
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # API Base URLs
 GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com")
