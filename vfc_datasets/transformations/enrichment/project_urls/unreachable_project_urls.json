@@ -35,6 +35,11 @@
         "checked": "2024-12-16",
         "reason": "deleted"
     },
+    "https://github.com/atm-consulting/dolibarr_module_quicksupplierprice": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
+    },
     "https://github.com/benjjvi/pybb": {
         "checked": "2024-12-16",
         "reason": "deleted"
@@ -211,6 +216,11 @@
     "https://github.com/philippk-de/collabtive": {
         "checked": "2024-12-16",
         "reason": "deleted"
+    },
+    "https://github.com/project-tick-libraries/cmark": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
     },
     "https://github.com/rcook/rgpg": {
         "checked": "2024-12-16",
