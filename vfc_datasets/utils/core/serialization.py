@@ -1,14 +1,16 @@
 import json
 import logging
+import os
 from collections.abc import Sequence
 from pathlib import Path
 
 import pandas as pd
 
-from vfc_datasets.config import DATASET_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 
 logger = logging.getLogger(__name__)
+
+BASE_DATA_PATH = Path(os.getenv("DATA_PATH", ".data"))
 
 
 def load_entries(file_path: str | Path) -> list[DatasetEntry]:
@@ -75,9 +77,9 @@ def save_entries(entries: Sequence[DatasetEntry], file_path: str | Path) -> None
     logger.info("Successfully saved %d entries to %s", len(entries), file_path)
 
 
-def load_cache(dataset_name: str, dataset_path: Path = DATASET_PATH) -> list[DatasetEntry] | None:
+def load_cache(dataset_name: str) -> list[DatasetEntry] | None:
     """Load cached dataset entries if they exist. Returns None if cache doesn't exist."""
-    cache_path = dataset_path / "cache" / f"{dataset_name.lower()}.jsonl"
+    cache_path = BASE_DATA_PATH / "datasets" / "cache" / f"{dataset_name.lower()}.jsonl"
 
     if not cache_path.exists():
         return None
@@ -87,7 +89,7 @@ def load_cache(dataset_name: str, dataset_path: Path = DATASET_PATH) -> list[Dat
 
 def save_cache(entries: Sequence[DatasetEntry], dataset_name: str) -> None:
     """Save entries to cache file as JSONL."""
-    cache_path = DATASET_PATH / "cache" / f"{dataset_name.lower()}.jsonl"
+    cache_path = BASE_DATA_PATH / "datasets" / "cache" / f"{dataset_name.lower()}.jsonl"
     save_entries(entries, cache_path)
 
 

@@ -1,10 +1,11 @@
+import os
 from collections.abc import Callable
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 import vfc_datasets
 from vfc_datasets import transformations
-from vfc_datasets.config import DATASET_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.logging import setup_logging
 from vfc_datasets.utils.core.serialization import load_entries, save_entries
@@ -20,7 +21,7 @@ from vfc_datasets.utils.split import (
 load_dotenv()
 setup_logging("vfcdetective_datasets")
 
-OUTPUT_PATH = DATASET_PATH / "new"
+OUTPUT_PATH = Path(os.getenv("DATA_PATH", ".data")) / "datasets" / "new"
 
 MANUALLY_REVIEWED_DATASETS: list[type[vfc_datasets.BaseDataset]] = [
     vfc_datasets.SecBenchDataset,

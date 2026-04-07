@@ -1,14 +1,15 @@
 import hashlib
 import logging
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Self, override
 from urllib.parse import ParseResult, parse_qs, unquote, urlparse
 
-from vfc_datasets.config import GITHUB_API_URL, REPOSITORY_PATH
-
 logger = logging.getLogger(__name__)
+
+GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com")
 
 # Commit hash validation
 MIN_COMMIT_LENGTH = 5
@@ -401,4 +402,5 @@ def url_to_pathname(url: str) -> str:
 
         dir_name += hashlib.sha256(url.encode()).hexdigest()
 
-    return str(Path(REPOSITORY_PATH) / dir_name)
+    repo_path = Path(os.getenv("REPOSITORY_PATH", ".data/repositories"))
+    return str(repo_path / dir_name)

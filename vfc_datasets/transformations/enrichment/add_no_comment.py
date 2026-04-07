@@ -12,11 +12,12 @@ import tree_sitter_javascript
 import tree_sitter_python
 from git import Repo
 
-from vfc_datasets.config import MAX_DIFF_SIZE
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.extensions import EXTENSION_TO_LANGUAGE
 
 from .batch_processing import process_commits_in_batches
+
+MAX_DIFF_SIZE = int(os.getenv("MAX_DIFF_SIZE", "100000"))
 
 logger = logging.getLogger(__name__)
 

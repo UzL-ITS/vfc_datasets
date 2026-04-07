@@ -1,9 +1,9 @@
 import logging
+import os
 from datetime import UTC, datetime
 
 from git import Repo
 
-from vfc_datasets.config import MAX_DIFF_SIZE
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.commit import get_commit_diff
 
@@ -15,6 +15,7 @@ from .commit_data_common import (
 )
 
 logger = logging.getLogger(__name__)
+MAX_DIFF_SIZE = int(os.getenv("MAX_DIFF_SIZE", "100000"))
 
 
 def _get_commit_info(repo: Repo, commit_id: str, max_diff_size: int) -> CommitData | None:

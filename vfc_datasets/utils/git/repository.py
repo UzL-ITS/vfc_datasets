@@ -11,12 +11,13 @@ from urllib.parse import urlparse
 from git import GitCommandError, InvalidGitRepositoryError, Repo
 from tqdm.auto import tqdm
 
-from vfc_datasets.config import GIT_CLONE_TIMEOUT
 from vfc_datasets.dataset_entry import DatasetEntry
 
 from .url import url_to_pathname
 
 logger = logging.getLogger(__name__)
+
+_GIT_CLONE_TIMEOUT = int(os.getenv("GIT_CLONE_TIMEOUT", "3600"))
 
 # Configure git for non-interactive operation (prevents hanging on auth prompts)
 os.environ.setdefault("GIT_TERMINAL_PROMPT", "0")
@@ -190,7 +191,7 @@ def clone_repository(
         return None
 
     if timeout is None:
-        timeout = GIT_CLONE_TIMEOUT
+        timeout = _GIT_CLONE_TIMEOUT
 
     destination = Path(url_to_pathname(git_url))
 
@@ -216,7 +217,7 @@ def clone_repositories(
         return {}
 
     if timeout is None:
-        timeout = GIT_CLONE_TIMEOUT
+        timeout = _GIT_CLONE_TIMEOUT
 
     if max_workers is None:
         max_workers = min(multiprocessing.cpu_count(), 16, len(project_urls))

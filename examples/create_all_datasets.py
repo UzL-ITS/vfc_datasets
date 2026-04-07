@@ -1,22 +1,22 @@
 """Load all VFC datasets and enrich them with commit information."""
 
+import os
 from collections.abc import Callable
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 import vfc_datasets
 from vfc_datasets import transformations
-from vfc_datasets.config import DATASET_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.logging import setup_logging
-from vfc_datasets.utils.core.serialization import load_entries, save_entries
+from vfc_datasets.utils.core.serialization import save_entries
 from vfc_datasets.utils.core.statistics import print_dataset_stats
 
 load_dotenv()
 setup_logging("create_all_datasets")
 
-OUTPUT_PATH = DATASET_PATH / "all_datasets"
-OUTPUT_FILE = OUTPUT_PATH / "all_datasets.jsonl"
+OUTPUT_FILE = Path(os.getenv("DATA_PATH", ".data")) / "datasets" / "new" / "all_datasets.jsonl"
 
 
 def _all_concrete_datasets(
@@ -58,9 +58,5 @@ def create_all_datasets() -> list[DatasetEntry]:
 
 
 if __name__ == "__main__":
-    if OUTPUT_FILE.exists():
-        print("Dataset already exists, loading from disk...")
-        all_entries = load_entries(OUTPUT_FILE)
-    else:
-        all_entries = create_all_datasets()
+    all_entries = create_all_datasets()
     print_dataset_stats(all_entries)
