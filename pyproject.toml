@@ -44,6 +44,27 @@ exclude = ["examples", "research", "tests"]
 
 [tool.setuptools_scm]
 
+[tool.pyright]
+include = ["vfc_datasets"]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+enableTypeIgnoreComments = true
+reportUnknownArgumentType = false
+reportUnknownVariableType = false
+reportUnknownMemberType = false
+reportUnknownParameterType = false
+reportUnknownLambdaType = false
+reportImplicitStringConcatenation = false
+reportUnusedCallResult = false
+reportMissingTypeStubs = false
+reportUnnecessaryIsInstance = false
+reportUnnecessaryComparison = false
+reportUnnecessaryContains = false
+reportPropertyTypeMismatch = false
+reportMatchNotExhaustive = false
+reportUnsupportedDunderAll = false
+
 [tool.ruff]
 line-length = 100
 src = ["vfc_datasets", "tests"]
