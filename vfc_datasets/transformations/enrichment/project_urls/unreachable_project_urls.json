@@ -1,4 +1,9 @@
 {
+    "https://bitbucket.org/ritt/elog": {
+        "checked": "2026-04-08",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
+    },
     "https://git.eclipse.org/r/hudson/org.eclipse.hudson.core": {
         "checked": "2024-12-16",
         "note": "Eclipse Hudson project discontinued",
@@ -25,10 +30,6 @@
     "https://github.com/apache/axis2-java": {
         "checked": "2024-12-16",
         "note": "Apache Axis2 archived/removed from GitHub",
-        "reason": "deleted"
-    },
-    "https://github.com/apache/wss4j": {
-        "checked": "2024-12-16",
         "reason": "deleted"
     },
     "https://github.com/assfugil/nickchanbot": {
@@ -72,6 +73,11 @@
     "https://github.com/dream0x01/weblogic-framework": {
         "checked": "2024-12-16",
         "reason": "deleted"
+    },
+    "https://github.com/enalean/tuleap": {
+        "checked": "2026-04-08",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
     },
     "https://github.com/enviragallery/envira-gallery-lite": {
         "checked": "2024-12-16",
@@ -173,6 +179,11 @@
         "note": "Auth failure - repo is private or deleted",
         "reason": "private"
     },
+    "https://github.com/minical/minical": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "deleted"
+    },
     "https://github.com/minerstat/minerstat-os": {
         "checked": "2024-12-16",
         "reason": "deleted"
@@ -184,6 +195,11 @@
     },
     "https://github.com/mnbikeways/database": {
         "checked": "2024-12-16",
+        "reason": "deleted"
+    },
+    "https://github.com/mragland-158xo/pypa_setuptools": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
         "reason": "deleted"
     },
     "https://github.com/mragland-158xo/vyperlang_vyper": {
@@ -202,6 +218,21 @@
     },
     "https://github.com/ninj4c0d3r/ocomon-research": {
         "checked": "2024-12-16",
+        "reason": "deleted"
+    },
+    "https://github.com/onyx-sean/calibre": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "deleted"
+    },
+    "https://github.com/opcfoundation/ua-java": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "deleted"
+    },
+    "https://github.com/opcfoundation/ua-java-legacy": {
+        "checked": "2026-04-07",
+        "note": "Auth failure - repo is private or deleted",
         "reason": "deleted"
     },
     "https://github.com/opcode1300/sopel-karma": {
@@ -225,6 +256,11 @@
     "https://github.com/rcook/rgpg": {
         "checked": "2024-12-16",
         "reason": "deleted"
+    },
+    "https://github.com/redteambrasil/nuclei-templates": {
+        "checked": "2026-04-08",
+        "note": "Auth failure - repo is private or deleted",
+        "reason": "private"
     },
     "https://github.com/robertbachmann/openbsd-libssl": {
         "checked": "2024-12-16",
