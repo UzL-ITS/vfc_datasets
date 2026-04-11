@@ -1,3 +1,5 @@
+from dataclasses import fields as dc_fields
+
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.transformations.filters.duplicates import (
     deduplicate_function_level,
@@ -7,13 +9,13 @@ from vfc_datasets.transformations.filters.duplicates import (
 from vfc_datasets.utils.owasp import OwaspCategory
 
 
-def test_merge_entry_group_covers_all_slots():
-    """Every DatasetEntry slot must be handled by merge_entry_group."""
+def test_merge_entry_group_covers_all_fields():
+    """Every DatasetEntry field must be handled by merge_entry_group."""
     key_fields = {"project_url", "commit_id", "function_name", "is_vfc"}
     set_union = {"cwe_ids", "cve_ids", "src_datasets", "files_changed", "owasp_categories"}
     first_non_none = {"commit_timestamp_utc", "commit_message", "commit_diff", "ghsa_id"}
 
-    all_attrs = {s.lstrip("_") for s in DatasetEntry.__slots__}
+    all_attrs = {f.name for f in dc_fields(DatasetEntry)}
     covered = key_fields | set_union | first_non_none
     assert covered == all_attrs, f"Uncovered: {all_attrs - covered}, Extra: {covered - all_attrs}"
 

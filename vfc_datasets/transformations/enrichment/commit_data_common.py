@@ -2,7 +2,7 @@
 
 from typing import TypedDict
 
-from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.dataset_entry import DatasetEntry, normalize_commit_timestamp
 
 
 class CommitData(TypedDict, total=False):
@@ -29,7 +29,7 @@ def apply_commit_data(entry: DatasetEntry, data: CommitData) -> None:
     if entry.commit_message is None:
         entry.commit_message = data.get("message")
     if entry.commit_timestamp_utc is None:
-        entry.commit_timestamp_utc = data.get("timestamp")
+        entry.commit_timestamp_utc = normalize_commit_timestamp(data.get("timestamp"))
     if entry.commit_diff is None:
         entry.commit_diff = data.get("diff")
     if not entry.files_changed:

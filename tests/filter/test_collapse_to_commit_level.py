@@ -230,13 +230,12 @@ class TestCollapseToCommitLevel:
 
         assert len(result) == 0
 
-    def test_files_changed_is_always_set(self):
-        """files_changed is normalized to set by DatasetEntry, never None."""
+    def test_files_changed_defaults_to_empty_set(self):
+        """Default files_changed is an empty set. Collapse handles it without crashing."""
         entry = DatasetEntry(
             project_url="https://github.com/test/repo",
             commit_id="abc123def456",
             src_datasets={"ds1"},
-            files_changed=None,
         )
 
         result = collapse_to_commit_level([entry])

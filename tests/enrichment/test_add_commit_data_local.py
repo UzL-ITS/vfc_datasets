@@ -41,7 +41,7 @@ class TestApplyCommitData:
             commit_id="abc1234",
             src_datasets={"test"},
             commit_message="Original message",
-            commit_timestamp_utc="2023-06-01T12:00:00+00:00",
+            commit_timestamp_utc=datetime(2023, 6, 1, 12, 0, 0, tzinfo=UTC),
             commit_diff="original diff",
             files_changed={"original.py"},
         )
@@ -148,7 +148,7 @@ class TestAddCommitInformationLocal:
                 src_datasets={"test"},
                 commit_message="msg",
                 commit_diff="diff",
-                commit_timestamp_utc="2024-01-15T10:30:00+00:00",
+                commit_timestamp_utc=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
                 files_changed={"file.py"},
             ),
         ]

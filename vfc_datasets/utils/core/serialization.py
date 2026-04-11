@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from collections.abc import Sequence
+from dataclasses import fields as dc_fields
 from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
@@ -18,8 +19,6 @@ BASE_DATA_PATH = Path(os.getenv("DATA_PATH", ".data"))
 
 def load_entries(file_path: str | Path) -> list[DatasetEntry]:
     """Load dataset entries from a JSONL file."""
-    from vfc_datasets.dataset_entry import create_dataset_entry
-
     file_path = Path(file_path)
     if not file_path.exists():
         raise FileNotFoundError(f"File not found: {file_path}")
@@ -43,7 +42,7 @@ def load_entries(file_path: str | Path) -> list[DatasetEntry]:
                 continue
 
             try:
-                entries.append(create_dataset_entry(data))
+                entries.append(DatasetEntry.from_dict(data))
             except (TypeError, ValueError) as exc:
                 skipped += 1
                 last_error = exc
@@ -121,7 +120,7 @@ def save_entries_csv(
     if fields is None:
         fields = ["project_url", "commit_id", "is_vfc", "commit_timestamp_utc"]
 
-    valid_fields = {s.lstrip("_") for s in DatasetEntry.__slots__}
+    valid_fields = {f.name for f in dc_fields(DatasetEntry)}
     if invalid_fields := set(fields) - valid_fields:
         raise ValueError(f"Invalid field names: {invalid_fields}")
 

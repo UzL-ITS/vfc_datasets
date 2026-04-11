@@ -4,7 +4,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.dataset_entry import DatasetEntry, normalize_commit_timestamp
 from vfc_datasets.download_helper import download_and_extract_zip
 from vfc_datasets.parsing_helpers import (
     extract_url_and_commit,
@@ -104,5 +104,5 @@ class ICVulDataset(BaseDataset):
             function_name=function_name,
             files_changed={file_name} if file_name else set(),
             commit_message=row.get("msg"),
-            commit_timestamp_utc=row.get("author_date"),
+            commit_timestamp_utc=normalize_commit_timestamp(row.get("author_date")),
         )
