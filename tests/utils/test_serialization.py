@@ -47,6 +47,26 @@ class TestSaveAndLoadEntries:
         loaded = load_entries(path)
         assert len(loaded) == 1
 
+    def test_metadata_header_written(self, tmp_path):
+        entries = [_entry(), _entry(commit="bcdef123456")]
+        path = tmp_path / "test.jsonl"
+        save_entries(entries, path)
+        with open(path) as f:
+            header = json.loads(f.readline())
+        meta = header["_metadata"]
+        assert "version" in meta
+        assert "created" in meta
+        assert meta["entry_count"] == 2
+
+    def test_roundtrip_with_metadata(self, tmp_path):
+        entries = [_entry(), _entry(commit="bcdef123456")]
+        path = tmp_path / "test.jsonl"
+        save_entries(entries, path)
+        loaded = load_entries(path)
+        assert len(loaded) == 2
+        assert loaded[0].commit_id == "abcdef12345"
+        assert loaded[1].commit_id == "bcdef123456"
+
     def test_creates_parent_directories(self, tmp_path):
         path = tmp_path / "sub" / "dir" / "test.jsonl"
         save_entries([_entry()], path)

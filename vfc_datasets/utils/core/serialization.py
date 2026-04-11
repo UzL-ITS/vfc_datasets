@@ -2,7 +2,10 @@ import json
 import logging
 import os
 from collections.abc import Sequence
+from datetime import UTC, datetime
+from importlib.metadata import version
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -34,6 +37,10 @@ def load_entries(file_path: str | Path) -> list[DatasetEntry]:
                 continue
 
             data = json.loads(line)
+
+            if "_metadata" in data:
+                logger.info("Dataset metadata: %s", data["_metadata"])
+                continue
 
             try:
                 entries.append(create_dataset_entry(data))
@@ -70,6 +77,15 @@ def save_entries(entries: Sequence[DatasetEntry], file_path: str | Path) -> None
     logger.info("Saving %d entries to %s", len(entries), file_path)
 
     with open(file_path, "w", encoding="utf-8") as f:
+        metadata: dict[str, dict[str, Any]] = {
+            "_metadata": {
+                "version": version("vfc_datasets"),
+                "created": datetime.now(UTC).isoformat(),
+                "entry_count": len(entries),
+            }
+        }
+        json.dump(metadata, f, allow_nan=False)
+        f.write("\n")
         for entry in entries:
             json.dump(entry.to_dict(), f, allow_nan=False)
             f.write("\n")
