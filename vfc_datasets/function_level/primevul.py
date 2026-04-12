@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Any, cast, override
+from typing import Any, override
 
 import pandas as pd
 
@@ -77,27 +77,18 @@ class PrimeVulDataset(BaseDataset):
             raise FileNotFoundError(f"No .jsonl files found in {primevul_path}")
 
         # Read with stdlib json to handle arbitrarily large integers
-        frames = []
+        records: list[dict[str, Any]] = []
         for fp in jsonl_files:
-            rows = []
             with open(fp, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
                         continue
-                    rows.append(json.loads(line))  # Python int handles big integers safely
-            frames.append(pd.DataFrame(rows))
+                    row = json.loads(line)
+                    row["resolved_project_url"] = self._resolve_project_url(row)
+                    records.append(row)
 
-        df = pd.concat(frames, ignore_index=True)
-
-        # Add resolved project URLs for proper deduplication
-        records = cast(list[dict[str, Any]], df.to_dict(orient="records"))
-        resolved_project_urls = [self._resolve_project_url(row) for row in records]
-        df["resolved_project_url"] = pd.Series(
-            resolved_project_urls, index=df.index, dtype="string"
-        )
-
-        return df
+        return pd.DataFrame(records)
 
     def _resolve_project_url(self, row: dict[str, Any]) -> str | None:
         project_url = self._normalize_candidate_url(row.get("project_url"))
