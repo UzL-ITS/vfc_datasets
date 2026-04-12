@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-import os
 import re
 from pathlib import Path
 from typing import Any, NamedTuple, override
@@ -11,6 +10,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import GITHUB_API_URL
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import normalize_cve_ids
@@ -18,8 +18,6 @@ from vfc_datasets.utils.git.github_client import AsyncGitHubClient
 from vfc_datasets.utils.git.url import GitURL, normalize_commit_id
 
 logger = logging.getLogger(__name__)
-
-GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com")
 
 
 class _CommitInfo(NamedTuple):

@@ -1,19 +1,18 @@
 import asyncio
 import logging
-import os
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from tqdm.asyncio import tqdm as async_tqdm
 from tqdm.auto import tqdm
 
+from vfc_datasets.config import MAX_WORKERS
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.github_client import AsyncGitHubClient
 from vfc_datasets.utils.git.repository import clone_repository
 from vfc_datasets.utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
-MAX_WORKERS = int(os.getenv("MAX_WORKERS", os.cpu_count() or 1))
 
 
 def _resolve_commit_ids(args: tuple[str, list[str]]) -> dict[str, str]:

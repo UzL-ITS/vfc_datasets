@@ -5,7 +5,6 @@ import hashlib
 import json
 import logging
 import multiprocessing
-import os
 from collections import defaultdict
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -15,6 +14,7 @@ from typing import Any, NamedTuple, Self
 from git import Repo
 from tqdm.auto import tqdm
 
+from vfc_datasets.config import BASE_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.commit import (
     get_all_commit_ids,
@@ -26,8 +26,7 @@ from vfc_datasets.utils.git.url import GitURL
 
 logger = logging.getLogger(__name__)
 
-_BASE_DATA_PATH = Path(os.getenv("DATA_PATH", ".data"))
-_RELATIONSHIPS_PATH = _BASE_DATA_PATH / "repo_relationships"
+_RELATIONSHIPS_PATH = BASE_DATA_PATH / "repo_relationships"
 _REPO_CACHE_FILE_PATH = _RELATIONSHIPS_PATH / "github_repo_cache.json"
 
 

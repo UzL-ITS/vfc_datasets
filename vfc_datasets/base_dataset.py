@@ -1,7 +1,6 @@
 """Base dataset class for vulnerability-fixing commit datasets."""
 
 import logging
-import os
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
@@ -11,12 +10,11 @@ from typing import Any, Literal, cast, override
 import pandas as pd
 from tqdm.auto import tqdm
 
+from vfc_datasets.config import DATASET_PATH, RAW_DATA_PATH, USE_DATASET_CACHE
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import load_cache, save_cache
 
 logger = logging.getLogger(__name__)
-
-BASE_DATA_PATH = Path(os.getenv("DATA_PATH", ".data"))
 
 
 @dataclass(frozen=True)
@@ -66,7 +64,7 @@ class BaseDataset(ABC):
     @property
     def _raw_dir(self) -> Path:
         """Directory for raw dataset files."""
-        return BASE_DATA_PATH / "datasets" / "raw"
+        return RAW_DATA_PATH
 
     @abstractmethod
     def _load_data(self) -> pd.DataFrame:
@@ -84,10 +82,9 @@ class BaseDataset(ABC):
             return self._entries
 
         name = self.metadata.name
-        use_cache = os.getenv("USE_DATASET_CACHE", "true").lower() in ("true", "yes")
 
-        if use_cache:
-            cached: list[DatasetEntry] | None = load_cache(name)
+        if USE_DATASET_CACHE:
+            cached: list[DatasetEntry] | None = load_cache(name, DATASET_PATH)
             if cached is not None:
                 self._entries = cached
                 return cached
@@ -108,7 +105,7 @@ class BaseDataset(ABC):
             self._entries = entries
             return entries
 
-        if use_cache:
+        if USE_DATASET_CACHE:
             save_cache(entries, name)
         self._entries = entries
         return entries

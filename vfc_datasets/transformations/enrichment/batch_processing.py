@@ -1,6 +1,5 @@
 import contextlib
 import logging
-import os
 from collections import defaultdict
 from collections.abc import Callable
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -10,11 +9,9 @@ from typing import Any
 
 from tqdm.auto import tqdm
 
+from vfc_datasets.config import MAX_WORKERS
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.repository import clone_repositories
-
-MAX_WORKERS = int(os.getenv("MAX_WORKERS", os.cpu_count() or 1))
-
 
 logger = logging.getLogger(__name__)
 
