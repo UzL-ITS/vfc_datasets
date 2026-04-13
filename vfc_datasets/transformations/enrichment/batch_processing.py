@@ -9,13 +9,24 @@ from typing import Any
 
 from tqdm.auto import tqdm
 
-from vfc_datasets.config import MAX_WORKERS
+from vfc_datasets.config import FULL_CLONE_THRESHOLD, MAX_WORKERS
 from vfc_datasets.dataset_entry import DatasetEntry
-from vfc_datasets.utils.git.repository import clone_repositories
+from vfc_datasets.utils.git.repository import CloneStrategy, clone_repositories
 
 logger = logging.getLogger(__name__)
 
 BATCH_SIZE = 200
+
+
+def _pick_clone_strategy(
+    commits_by_url: dict[str, set[str]],
+    threshold: int = FULL_CLONE_THRESHOLD,
+) -> dict[str, CloneStrategy]:
+    """Pick FULL for repos with >= threshold commits to enrich, else BLOBLESS."""
+    return {
+        url: (CloneStrategy.FULL if len(cids) >= threshold else CloneStrategy.BLOBLESS)
+        for url, cids in commits_by_url.items()
+    }
 
 
 def process_commits_in_batches(
@@ -46,8 +57,19 @@ def process_commits_in_batches(
     for e in to_process:
         commits_by_url[e.project_url].add(e.commit_id)
 
+    # Pick strategy per repo based on how many commits we need from it.
+    strategy_by_url = _pick_clone_strategy(commits_by_url)
+    full_count = sum(1 for s in strategy_by_url.values() if s is CloneStrategy.FULL)
+    if full_count:
+        logger.info(
+            "Clone strategy: %d full, %d blobless (threshold %d commits/repo)",
+            full_count,
+            len(strategy_by_url) - full_count,
+            FULL_CLONE_THRESHOLD,
+        )
+
     # Clone
-    repo_objects = clone_repositories(to_process)
+    repo_objects = clone_repositories(to_process, strategy=strategy_by_url)
     repo_paths = {
         url: fspath(r.working_dir) for url, r in repo_objects.items() if r and r.working_dir
     }
