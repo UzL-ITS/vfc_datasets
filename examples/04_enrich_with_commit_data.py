@@ -1,0 +1,16 @@
+"""Enrich a dataset with commit messages, diffs, and timestamps via local clones.
+
+Devign contains only 2 projects (FFmpeg, QEMU).
+"""
+
+import vfc_datasets
+from vfc_datasets import transformations
+from vfc_datasets.utils.core.logging import setup_logging
+from vfc_datasets.utils.core.statistics import print_dataset_stats
+
+setup_logging("enrich_with_commit_data")
+
+if __name__ == "__main__":
+    entries = list(vfc_datasets.DevignDataset())
+    entries = transformations.add_commit_information_local(entries)
+    print_dataset_stats(entries)
