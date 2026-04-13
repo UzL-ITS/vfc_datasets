@@ -1,7 +1,7 @@
+import enum
 import errno
 import logging
 import multiprocessing
-import os
 import shutil
 from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor, as_completed
@@ -18,9 +18,16 @@ from .url import url_to_pathname
 
 logger = logging.getLogger(__name__)
 
-# Configure git for non-interactive operation (prevents hanging on auth prompts)
-os.environ.setdefault("GIT_TERMINAL_PROMPT", "0")
-os.environ.setdefault("GIT_ASKPASS", "echo")
+
+class CloneStrategy(enum.Enum):
+    """How much of a repository to fetch.
+
+    BLOBLESS: partial clone, on-demand blob fetch. Cheap for few commits/repo.
+    FULL: all objects local. Cheaper once commits/repo exceeds FULL_CLONE_THRESHOLD.
+    """
+
+    BLOBLESS = "blobless"
+    FULL = "full"
 
 
 def _delete_corrupted_repo(destination: Path) -> None:
@@ -92,10 +99,36 @@ def _clone_with_auth_bypass(
         return None
 
 
+def _is_partial_clone(repo: Repo) -> bool:
+    """Return True if the repo was cloned with any --filter=... option."""
+    try:
+        repo.git.config("--get", "remote.origin.partialclonefilter")
+    except GitCommandError:
+        return False
+    return True
+
+
+def _upgrade_to_full(repo: Repo, timeout: int) -> bool:
+    """Remove partial-clone filter and refetch all objects. Requires git >= 2.41."""
+    try:
+        for key in ("remote.origin.promisor", "remote.origin.partialclonefilter"):
+            try:
+                repo.git.config("--unset", key)
+            except GitCommandError:
+                pass
+        repo.git.fetch("origin", "--refetch", kill_after_timeout=timeout)
+        logger.info("Upgraded %s from partial to full clone", repo.working_dir)
+        return True
+    except GitCommandError as exc:
+        logger.warning("Failed to upgrade %s to full clone: %s", repo.working_dir, exc)
+        return False
+
+
 def _handle_existing_repo(
     destination: Path,
     branch: str | None,
     timeout: int,
+    strategy: CloneStrategy,
 ) -> Repo | None:
     """Return existing repo if valid, optionally checking out branch."""
     try:
@@ -109,6 +142,15 @@ def _handle_existing_repo(
         logger.warning("Failed to access repository %s: %s", destination, exc)
         return None
 
+    if strategy is CloneStrategy.FULL and _is_partial_clone(repo):
+        if not _upgrade_to_full(repo, timeout):
+            # Upgrade mutates filter config before fetching; on fetch failure
+            # the repo is in an inconsistent state and must be recloned.
+            logger.warning("Upgrade failed for %s, discarding for reclone", destination)
+            repo.close()
+            _delete_corrupted_repo(destination)
+            return None
+
     if branch is not None:
         _fetch_updates(repo, timeout)
         _checkout_branch(repo, branch, checkout_files=False)
@@ -121,6 +163,7 @@ def _clone_new_repo(
     destination: Path,
     branch: str | None,
     timeout: int,
+    strategy: CloneStrategy,
 ) -> Repo | None:
     """Clone repository to destination path."""
     parsed = urlparse(git_url)
@@ -135,8 +178,6 @@ def _clone_new_repo(
 
     clone_options = [
         "--quiet",
-        "--filter",
-        "blob:none",
         "--no-checkout",
         # Disable credential helpers to prevent auth prompts
         "-c",
@@ -147,6 +188,8 @@ def _clone_new_repo(
         "-c",
         "http.lowSpeedTime=600",  # 10 min before timeout
     ]
+    if strategy is CloneStrategy.BLOBLESS:
+        clone_options.extend(["--filter", "blob:none"])
 
     try:
         repo = Repo.clone_from(
@@ -182,6 +225,7 @@ def clone_repository(
     git_url: str,
     branch: str | None = None,
     timeout: int | None = None,
+    strategy: CloneStrategy = CloneStrategy.BLOBLESS,
 ) -> Repo | None:
     """Clone or reuse a git repository with a simplified interface."""
     git_url = (git_url or "").strip()
@@ -195,11 +239,11 @@ def clone_repository(
     destination = Path(url_to_pathname(git_url))
 
     if destination.exists():
-        repo = _handle_existing_repo(destination, branch, timeout)
+        repo = _handle_existing_repo(destination, branch, timeout, strategy)
         if repo:
             return repo
 
-    return _clone_new_repo(git_url, destination, branch, timeout)
+    return _clone_new_repo(git_url, destination, branch, timeout, strategy)
 
 
 def clone_repositories(
@@ -207,8 +251,14 @@ def clone_repositories(
     max_workers: int | None = None,
     branch: str | None = None,
     timeout: int | None = None,
+    strategy: CloneStrategy | dict[str, CloneStrategy] = CloneStrategy.BLOBLESS,
 ) -> dict[str, Repo | None]:
-    """Clone all repositories from dataset entries using parallel processing."""
+    """Clone all repositories from dataset entries using parallel processing.
+
+    ``strategy`` may be a single CloneStrategy applied to every URL, or a dict
+    mapping project_url -> CloneStrategy. URLs missing from the dict fall back
+    to BLOBLESS.
+    """
     project_urls = {entry.project_url for entry in entries if entry.project_url}
 
     if not project_urls:
@@ -221,12 +271,23 @@ def clone_repositories(
     if max_workers is None:
         max_workers = min(multiprocessing.cpu_count(), 16, len(project_urls))
 
+    def _strategy_for(url: str) -> CloneStrategy:
+        if isinstance(strategy, dict):
+            return strategy.get(url, CloneStrategy.BLOBLESS)
+        return strategy
+
     results = {}
     failed_urls = []
 
     with ProcessPoolExecutor(max_workers=max_workers) as executor:
         future_to_url = {
-            executor.submit(clone_repository, url, branch=branch, timeout=timeout): url
+            executor.submit(
+                clone_repository,
+                url,
+                branch=branch,
+                timeout=timeout,
+                strategy=_strategy_for(url),
+            ): url
             for url in project_urls
         }
 
