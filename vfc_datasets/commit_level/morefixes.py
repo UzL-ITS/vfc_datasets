@@ -54,7 +54,7 @@ class MorefixesDataset(BaseDataset):
             "dbname": "postgrescvedumper",
             "user": "postgrescvedumper",
             "password": "a42a18537d74c3b7e584c769152c3d",
-            "host": os.getenv("MOREFIXES_DB_HOST", "morefixes_db"),
+            "host": os.getenv("MOREFIXES_DB_HOST", "localhost"),
             "port": int(os.getenv("MOREFIXES_DB_PORT", "5432")),
         }
         try:

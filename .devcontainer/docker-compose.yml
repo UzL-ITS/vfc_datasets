@@ -7,5 +7,12 @@ services:
       - ..:/workspace
       - ${REPOSITORY_PATH:-../.data/repositories}:/workspace/.data/repositories
 
+    environment:
+      MOREFIXES_DB_HOST: ${MOREFIXES_DB_HOST:-host.docker.internal}
+      MOREFIXES_DB_PORT: ${MOREFIXES_DB_PORT:-5432}
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     stdin_open: true
     tty: true
