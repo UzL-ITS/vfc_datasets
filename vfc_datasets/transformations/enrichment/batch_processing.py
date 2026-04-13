@@ -93,7 +93,6 @@ def process_commits_in_batches(
             continue
         for batch in batched(cids, BATCH_SIZE):
             batches.append((repo_paths[url], list(batch), *batch_extra_args))
-    batches.sort(key=lambda b: len(b[1]), reverse=True)
 
     total = sum(len(b[1]) for b in batches)
     logger.info("Processing %d commits across %d repos", total, len(repo_paths))
@@ -105,7 +104,7 @@ def process_commits_in_batches(
         futures = {executor.submit(batch_fn, b): b for b in batches}
         with tqdm(total=total, desc=desc, unit="commits") as pbar:
             for future in as_completed(futures):
-                batch = futures[future]
+                batch = futures.pop(future)
                 url = path_to_url[batch[0]]
                 try:
                     for commit_id, data in future.result().items():
