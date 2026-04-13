@@ -2,7 +2,7 @@
 
 A Python toolkit for loading, unifying, and enriching **Vulnerability-Fixing Commit (VFC)** datasets.
 
-Plenty of VFC datasets exist, but schemas and completeness vary. `vfc_datasets` loads them through a single interface and yields a shared `DatasetEntry`. Optional transformations let you deduplicate, filter, sanitize, and enrich entries with commit data (message, diff, files changed, timestamp).
+Plenty of VFC datasets exist, but they differ in schema, content, and completeness (some were built years ago and contain stale data, such as project URLs that have since moved between hosting platforms). `vfc_datasets` loads the datasets through a single interface and yields a shared `DatasetEntry`. Optional transformations let you deduplicate, filter, sanitize, and enrich entries with commit data (message, diff, files changed, timestamp).
 
 ## Installation
 
