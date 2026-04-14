@@ -22,6 +22,10 @@ def _pretty_name(cls: type[BaseDataset]) -> str:
     return cls.__name__.replace("Dataset", "")
 
 
+def _sort_key(cls: type[BaseDataset]) -> tuple[int, str]:
+    return (cls.metadata.publication_year, _pretty_name(cls))
+
+
 def _fmt_int(value: int | None) -> str:
     return f"{value:,}" if value is not None else "—"
 
@@ -37,13 +41,13 @@ def _fmt_name(cls: type[BaseDataset]) -> str:
 
 def _render_commit_table(classes: list[type[BaseDataset]]) -> str:
     lines = [
-        "| Dataset | Year | VFCs | Non-VFCs | Projects | Paper |",
-        "|---------|------|------|----------|----------|-------|",
+        "| Year | Dataset | VFCs | Non-VFCs | Projects | Paper |",
+        "|------|---------|------|----------|----------|-------|",
     ]
     for cls in classes:
         m = cls.metadata
         lines.append(
-            f"| {_fmt_name(cls)} | {m.publication_year} "
+            f"| {m.publication_year} | {_fmt_name(cls)} "
             f"| {_fmt_int(m.vfcs)} | {_fmt_int(m.non_vfcs)} | {_fmt_int(m.projects)} "
             f"| {_fmt_paper(m)} |"
         )
@@ -52,13 +56,13 @@ def _render_commit_table(classes: list[type[BaseDataset]]) -> str:
 
 def _render_function_table(classes: list[type[BaseDataset]]) -> str:
     lines = [
-        "| Dataset | Year | Vuln. Fns | Benign Fns | Projects | Paper |",
-        "|---------|------|-----------|------------|----------|-------|",
+        "| Year | Dataset | Vuln. Fns | Benign Fns | Projects | Paper |",
+        "|------|---------|-----------|------------|----------|-------|",
     ]
     for cls in classes:
         m = cls.metadata
         lines.append(
-            f"| {_fmt_name(cls)} | {m.publication_year} "
+            f"| {m.publication_year} | {_fmt_name(cls)} "
             f"| {_fmt_int(m.vulnerable_functions)} | {_fmt_int(m.benign_functions)} "
             f"| {_fmt_int(m.projects)} | {_fmt_paper(m)} |"
         )
@@ -87,10 +91,10 @@ if __name__ == "__main__":
 
     all_classes = _concrete_datasets(BaseDataset)
     commit = sorted(
-        (c for c in all_classes if c.metadata.granularity == "commit"), key=_pretty_name
+        (c for c in all_classes if c.metadata.granularity == "commit"), key=_sort_key
     )
     function = sorted(
-        (c for c in all_classes if c.metadata.granularity == "function"), key=_pretty_name
+        (c for c in all_classes if c.metadata.granularity == "function"), key=_sort_key
     )
 
     commit_table = _render_commit_table(commit)
