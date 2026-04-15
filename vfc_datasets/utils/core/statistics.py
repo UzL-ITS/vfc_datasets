@@ -45,8 +45,8 @@ def compute_dataset_stats(entries: Iterable[DatasetEntry]) -> dict[str, DatasetS
     }
 
 
-def print_dataset_stats(entries: Iterable[DatasetEntry]) -> None:
-    """Print dataset statistics table to logging."""
+def log_dataset_stats(entries: Iterable[DatasetEntry]) -> None:
+    """Log dataset statistics table."""
     entries = list(entries)
     stats = compute_dataset_stats(entries)
 

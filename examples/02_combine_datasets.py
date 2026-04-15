@@ -2,7 +2,7 @@
 
 import vfc_datasets
 from vfc_datasets.utils.core.logging import setup_logging
-from vfc_datasets.utils.core.statistics import print_dataset_stats
+from vfc_datasets.utils.core.statistics import log_dataset_stats
 
 setup_logging("combine_datasets")
 
@@ -16,4 +16,4 @@ if __name__ == "__main__":
         + vfc_datasets.CC900Dataset()
         + vfc_datasets.SecBenchDataset()
     )
-    print_dataset_stats(entries)
+    log_dataset_stats(entries)

@@ -8,7 +8,7 @@ from vfc_datasets.config import DATASET_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.logging import setup_logging
 from vfc_datasets.utils.core.serialization import load_entries, save_entries
-from vfc_datasets.utils.core.statistics import print_dataset_stats
+from vfc_datasets.utils.core.statistics import log_dataset_stats
 from vfc_datasets.utils.extensions import extensions_for
 from vfc_datasets.utils.split import (
     create_random_split,
@@ -111,7 +111,7 @@ def create_vfc_datasets() -> dict[str, list[DatasetEntry]]:
 
     # Apply transformations
     entries = apply_transformations(entries)
-    print_dataset_stats(entries)
+    log_dataset_stats(entries)
 
     # Build and save variants
     vfc_dataset_variants = build_dataset_variants(entries)
