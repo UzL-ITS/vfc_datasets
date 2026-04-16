@@ -21,12 +21,15 @@ def _get_commit_info(repo: Repo, commit_id: str, max_diff_size: int) -> CommitDa
     """Get commit info from an open Repo object."""
     try:
         commit = repo.commit(commit_id)
-        diff_text = get_commit_diff(repo, commit_id)
 
-        # Check diff size limit
-        diff_data: str | None = diff_text
-        if len(diff_text) > max_diff_size:
-            diff_data = None
+        # Note: Using line count as a safe fast-path heuristic for max_diff_size (chars).
+        if commit.stats.total["lines"] > max_diff_size:
+            return None
+
+        diff_data: str | None = None
+        diff_text = get_commit_diff(repo, commit_id)
+        if len(diff_text) <= max_diff_size:
+            diff_data = diff_text
 
         return CommitData(
             message=str(commit.message),

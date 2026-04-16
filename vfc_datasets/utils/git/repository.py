@@ -4,14 +4,14 @@ import logging
 import multiprocessing
 import shutil
 from collections.abc import Iterable
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from urllib.parse import urlparse
 
 from git import GitCommandError, InvalidGitRepositoryError, Repo
 from tqdm.auto import tqdm
 
-from vfc_datasets.config import GIT_CLONE_TIMEOUT
+from vfc_datasets.config import GIT_CLONE_TIMEOUT, MAX_CLONE_WORKERS
 from vfc_datasets.dataset_entry import DatasetEntry
 
 from .url import url_to_pathname
@@ -269,7 +269,7 @@ def clone_repositories(
         timeout = GIT_CLONE_TIMEOUT
 
     if max_workers is None:
-        max_workers = min(multiprocessing.cpu_count(), 16, len(project_urls))
+        max_workers = min(MAX_CLONE_WORKERS, len(project_urls))
 
     def _strategy_for(url: str) -> CloneStrategy:
         if isinstance(strategy, dict):
@@ -279,7 +279,7 @@ def clone_repositories(
     results = {}
     failed_urls = []
 
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_url = {
             executor.submit(
                 clone_repository,

@@ -232,19 +232,24 @@ def _process_diff_item(diff_item: Any, repo: Repo, include_unsupported: bool) ->
 
 
 def _get_diff_no_comments(
-    repo: Repo, commit_id: str, include_unsupported: bool = True
+    repo: Repo, commit_id: str, max_diff_size: int, include_unsupported: bool = True
 ) -> str | None:
     """Generate diff with comments stripped.
 
     Args:
         repo: Git repository object
         commit_id: Commit SHA to process
+        max_diff_size: Maximum diff size (heuristic)
         include_unsupported: If True, include original diff for unsupported files.
                             If False, skip unsupported files entirely.
     """
     try:
         commit = repo.commit(commit_id)
         if not commit.parents:
+            return None
+
+        # Note: Using line count as a safe fast-path heuristic for max_diff_size (chars).
+        if commit.stats.total["lines"] > max_diff_size:
             return None
 
         diffs = commit.parents[0].diff(commit, create_patch=True)
@@ -261,15 +266,17 @@ def _get_diff_no_comments(
         return None
 
 
-def _process_batch(args: tuple[str, list[str], bool]) -> dict[str, str]:
+def _process_batch(args: tuple[str, list[str], int, bool]) -> dict[str, str]:
     """Process a batch of commits."""
-    repo_path, commit_ids, include_unsupported = args
+    repo_path, commit_ids, max_diff_size, include_unsupported = args
     results: dict[str, str] = {}
 
     try:
         with Repo(repo_path) as repository:
             for commit_id in commit_ids:
-                diff = _get_diff_no_comments(repository, commit_id, include_unsupported)
+                diff = _get_diff_no_comments(
+                    repository, commit_id, max_diff_size, include_unsupported
+                )
                 if diff is not None:
                     results[commit_id] = diff
     except Exception as e:
@@ -313,6 +320,6 @@ def strip_diff_comments(
         ),
         batch_fn=_process_batch,
         apply_fn=_apply_diff,
-        batch_extra_args=(include_unsupported,),
+        batch_extra_args=(MAX_DIFF_SIZE, include_unsupported),
         desc="Stripping comments",
     )
