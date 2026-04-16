@@ -42,6 +42,7 @@ GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com")
 
 # Git Operations
 GIT_CLONE_TIMEOUT = _env_int("GIT_CLONE_TIMEOUT", 3600, minimum=1)  # 1 hour default
+MAX_CLONE_WORKERS = _env_int("MAX_CLONE_WORKERS", 4, minimum=1)
 
 # Clone strategy: repos with >= this many commits to enrich get a full clone
 FULL_CLONE_THRESHOLD = _env_int("FULL_CLONE_THRESHOLD", 100, minimum=1)
