@@ -6,10 +6,10 @@ from vfc_datasets.utils.git.repository import CloneStrategy
 
 
 class TestPickCloneStrategy:
-    def test_below_threshold_is_blobless(self):
+    def test_below_threshold_is_partial(self):
         commits = {"https://github.com/a/a": {"c1", "c2", "c3"}}
         assert _pick_clone_strategy(commits, threshold=10) == {
-            "https://github.com/a/a": CloneStrategy.BLOBLESS
+            "https://github.com/a/a": CloneStrategy.PARTIAL
         }
 
     def test_at_threshold_is_full(self):
@@ -24,7 +24,7 @@ class TestPickCloneStrategy:
             "https://github.com/big/repo": {f"c{i}" for i in range(50)},
         }
         result = _pick_clone_strategy(commits, threshold=10)
-        assert result["https://github.com/small/repo"] is CloneStrategy.BLOBLESS
+        assert result["https://github.com/small/repo"] is CloneStrategy.PARTIAL
         assert result["https://github.com/big/repo"] is CloneStrategy.FULL
 
     def test_default_threshold_matches_config(self):
@@ -34,7 +34,7 @@ class TestPickCloneStrategy:
         }
         result = _pick_clone_strategy(commits)
         assert result["https://github.com/a/a"] is CloneStrategy.FULL
-        assert result["https://github.com/b/b"] is CloneStrategy.BLOBLESS
+        assert result["https://github.com/b/b"] is CloneStrategy.PARTIAL
 
     def test_empty_input(self):
         assert _pick_clone_strategy({}) == {}

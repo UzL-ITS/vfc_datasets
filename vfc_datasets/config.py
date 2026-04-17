@@ -47,6 +47,10 @@ MAX_CLONE_WORKERS = _env_int("MAX_CLONE_WORKERS", 4, minimum=1)
 # Clone strategy: repos with >= this many commits to enrich get a full clone
 FULL_CLONE_THRESHOLD = _env_int("FULL_CLONE_THRESHOLD", 100, minimum=1)
 
+# Partial clone size filter. Git accepts suffixes (k/m/g). Blobs above this
+# size are omitted during clone and fetched lazily on access.
+BLOB_SIZE_LIMIT = os.getenv("BLOB_SIZE_LIMIT", "1m")
+
 # Dataset Caching
 USE_DATASET_CACHE = os.getenv("USE_DATASET_CACHE", "true").lower() in ("true", "yes")
 
