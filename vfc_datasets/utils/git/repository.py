@@ -1,7 +1,6 @@
 import enum
 import errno
 import logging
-import multiprocessing
 import shutil
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -11,7 +10,7 @@ from urllib.parse import urlparse
 from git import GitCommandError, InvalidGitRepositoryError, Repo
 from tqdm.auto import tqdm
 
-from vfc_datasets.config import GIT_CLONE_TIMEOUT, MAX_CLONE_WORKERS
+from vfc_datasets.config import BLOB_SIZE_LIMIT, GIT_CLONE_TIMEOUT, MAX_CLONE_WORKERS
 from vfc_datasets.dataset_entry import DatasetEntry
 
 from .url import url_to_pathname
@@ -22,11 +21,11 @@ logger = logging.getLogger(__name__)
 class CloneStrategy(enum.Enum):
     """How much of a repository to fetch.
 
-    BLOBLESS: partial clone, on-demand blob fetch. Cheap for few commits/repo.
+    PARTIAL: partial clone filtered by BLOB_SIZE_LIMIT; large blobs fetched on demand.
     FULL: all objects local. Cheaper once commits/repo exceeds FULL_CLONE_THRESHOLD.
     """
 
-    BLOBLESS = "blobless"
+    PARTIAL = "partial"
     FULL = "full"
 
 
@@ -188,8 +187,8 @@ def _clone_new_repo(
         "-c",
         "http.lowSpeedTime=600",  # 10 min before timeout
     ]
-    if strategy is CloneStrategy.BLOBLESS:
-        clone_options.extend(["--filter", "blob:none"])
+    if strategy is CloneStrategy.PARTIAL:
+        clone_options.extend(["--filter", f"blob:limit={BLOB_SIZE_LIMIT}"])
 
     try:
         repo = Repo.clone_from(
@@ -225,7 +224,7 @@ def clone_repository(
     git_url: str,
     branch: str | None = None,
     timeout: int | None = None,
-    strategy: CloneStrategy = CloneStrategy.BLOBLESS,
+    strategy: CloneStrategy = CloneStrategy.PARTIAL,
 ) -> Repo | None:
     """Clone or reuse a git repository with a simplified interface."""
     git_url = (git_url or "").strip()
@@ -251,13 +250,13 @@ def clone_repositories(
     max_workers: int | None = None,
     branch: str | None = None,
     timeout: int | None = None,
-    strategy: CloneStrategy | dict[str, CloneStrategy] = CloneStrategy.BLOBLESS,
+    strategy: CloneStrategy | dict[str, CloneStrategy] = CloneStrategy.PARTIAL,
 ) -> dict[str, Repo | None]:
     """Clone all repositories from dataset entries using parallel processing.
 
     ``strategy`` may be a single CloneStrategy applied to every URL, or a dict
     mapping project_url -> CloneStrategy. URLs missing from the dict fall back
-    to BLOBLESS.
+    to PARTIAL.
     """
     project_urls = {entry.project_url for entry in entries if entry.project_url}
 
@@ -273,7 +272,7 @@ def clone_repositories(
 
     def _strategy_for(url: str) -> CloneStrategy:
         if isinstance(strategy, dict):
-            return strategy.get(url, CloneStrategy.BLOBLESS)
+            return strategy.get(url, CloneStrategy.PARTIAL)
         return strategy
 
     results = {}

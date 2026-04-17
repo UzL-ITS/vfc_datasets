@@ -22,9 +22,9 @@ def _pick_clone_strategy(
     commits_by_url: dict[str, set[str]],
     threshold: int = FULL_CLONE_THRESHOLD,
 ) -> dict[str, CloneStrategy]:
-    """Pick FULL for repos with >= threshold commits to enrich, else BLOBLESS."""
+    """Pick FULL for repos with >= threshold commits to enrich, else PARTIAL."""
     return {
-        url: (CloneStrategy.FULL if len(cids) >= threshold else CloneStrategy.BLOBLESS)
+        url: (CloneStrategy.FULL if len(cids) >= threshold else CloneStrategy.PARTIAL)
         for url, cids in commits_by_url.items()
     }
 
