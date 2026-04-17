@@ -1,9 +1,4 @@
 {
-    "https://bitbucket.org/ritt/elog": {
-        "checked": "2026-04-08",
-        "note": "Auth failure - repo is private or deleted",
-        "reason": "private"
-    },
     "https://git.eclipse.org/r/hudson/org.eclipse.hudson.core": {
         "checked": "2024-12-16",
         "note": "Eclipse Hudson project discontinued",
