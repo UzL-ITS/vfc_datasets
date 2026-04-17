@@ -1,4 +1,4 @@
-"""Combine multiple VFC datasets and print joint statistics."""
+"""Combine multiple VFC datasets and log joint statistics."""
 
 import vfc_datasets
 from vfc_datasets.utils.core.logging import setup_logging

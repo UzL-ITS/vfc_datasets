@@ -1,10 +1,12 @@
+"""Deduplicate entries."""
+
 import logging
 
 import vfc_datasets
 from vfc_datasets import transformations
 from vfc_datasets.utils.core.logging import setup_logging
 
-setup_logging("apply_transformations")
+setup_logging("deduplicate_entries")
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
