@@ -14,7 +14,7 @@ class TestTimestamps:
     def test_get_commit_info_linux_repo(self):
         entry = DatasetEntry(
             project_url="https://github.com/torvalds/linux",
-            commit_id="2b38afce25c4e1b8f943ff4f0a2b51d6c40f2ed2",
+            commit_id="0184d2b386f836925ff2f9b4e6d4f9a8048cf58f",
             src_datasets={"test"},
             files_changed=set(),
             commit_message=None,
@@ -22,5 +22,5 @@ class TestTimestamps:
         )
         add_commit_information_local([entry])
 
-        expected_timestamp = datetime.datetime(2025, 8, 10, 6, 2, 36, tzinfo=datetime.UTC)
+        expected_timestamp = datetime.datetime(2026, 4, 16, 2, 58, 23, tzinfo=datetime.UTC)
         assert entry.commit_timestamp_utc == expected_timestamp
