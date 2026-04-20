@@ -6,7 +6,6 @@ import os
 import time
 from dataclasses import dataclass
 from email.utils import parsedate_to_datetime
-from functools import cache
 from typing import Any, Self
 
 import httpx
@@ -19,7 +18,6 @@ logger = logging.getLogger(__name__)
 _DEFAULT_TIMEOUT = httpx.Timeout(120.0, connect=30.0)
 
 
-@cache
 def _get_github_token() -> str | None:
     return os.getenv("GITHUB_TOKEN")
 
