@@ -164,7 +164,7 @@ async def _resolve_project_urls(
             if meta.author_email:
                 query_parts.append(f"author-email:{quote(meta.author_email)}")
             elif meta.author_username:
-                query_parts.append(f"author:{meta.author_username}")
+                query_parts.append(f"author:{quote(meta.author_username)}")
             api_url = f"{GITHUB_API_URL}/search/commits?q={'+'.join(query_parts)}"
 
             response = await client.query_api(api_url)
