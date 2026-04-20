@@ -279,8 +279,8 @@ def _process_batch(args: tuple[str, list[str], int, bool]) -> dict[str, str]:
                 )
                 if diff is not None:
                     results[commit_id] = diff
-    except Exception as e:
-        logger.error("Batch error for %s: %s: %s", repo_path, type(e).__name__, e)
+    except Exception:
+        logger.exception("Batch error for %s", repo_path)
 
     return results
 

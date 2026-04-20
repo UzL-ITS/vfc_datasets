@@ -306,8 +306,8 @@ def clone_repositories(
                         failed_urls.append(url)
                         pbar.set_postfix_str(f"Failed: {len(failed_urls)}")
 
-                except Exception as e:
-                    logger.exception("Exception cloning %s: %s: %s", url, type(e).__name__, e)
+                except Exception:
+                    logger.exception("Exception cloning %s", url)
                     results[url] = None
                     failed_urls.append(url)
                     pbar.set_postfix_str(f"Failed: {len(failed_urls)}")
