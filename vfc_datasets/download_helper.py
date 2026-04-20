@@ -186,6 +186,7 @@ def download_file(
         logger.info("File already exists: %s", output_path)
 
     if checksum and not _verify_checksum(output_path, checksum):
+        output_path.unlink(missing_ok=True)
         raise RuntimeError(f"Checksum mismatch for {output_path}")
 
     return output_path
