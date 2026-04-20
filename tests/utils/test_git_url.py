@@ -123,6 +123,21 @@ class TestGitURL:
         assert git_url is not None
         assert git_url.to_https_url() == expected
 
+    @pytest.mark.parametrize(
+        "input_url,expected",
+        [
+            ("https://GitHub.com/Foo/Bar", "https://github.com/foo/bar"),
+            ("https://GitLab.com/Foo/Bar", "https://gitlab.com/Foo/Bar"),
+            ("https://gitlab.freedesktop.org/DRM/Misc", "https://gitlab.freedesktop.org/DRM/Misc"),
+            ("https://BitBucket.org/Foo/Bar", "https://bitbucket.org/Foo/Bar"),
+            ("https://bitbucket.example.com/Foo/Bar", "https://bitbucket.example.com/Foo/Bar"),
+        ],
+    )
+    def test_case_insensitive_host_normalization(self, input_url, expected):
+        git_url = GitURL.parse(input_url)
+        assert git_url is not None
+        assert git_url.to_https_url() == expected
+
     def test_googlesource_url(self):
         url = "https://android.googlesource.com/platform/frameworks/base"
         git_url = GitURL.parse(url)

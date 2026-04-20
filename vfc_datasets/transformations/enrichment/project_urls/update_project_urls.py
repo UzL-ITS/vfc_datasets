@@ -30,9 +30,8 @@ def update_project_urls_inplace(entries: list[DatasetEntry]) -> list[DatasetEntr
     changed_urls = 0
     moved_urls = get_moved_urls()
     for entry in entries:
-        lookup_key = entry.project_url.lower()
-        if lookup_key in moved_urls:
-            entry.project_url = moved_urls[lookup_key]
+        if entry.project_url in moved_urls:
+            entry.project_url = moved_urls[entry.project_url]
             changed_urls += 1
 
     logger.info("%d project_urls were updated", changed_urls)
