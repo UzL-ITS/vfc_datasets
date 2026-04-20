@@ -105,7 +105,7 @@ class DatasetEntry:
         """Create a DatasetEntry from a serialized dict (e.g. loaded from JSON)."""
         set_fields = {"src_datasets", "cve_ids", "cwe_ids", "files_changed"}
         converted: dict[str, Any] = {
-            k: set(v) if k in set_fields and isinstance(v, list) else v
+            k: set(v or []) if k in set_fields else v
             for k, v in data.items()
         }
         if converted.get("owasp_categories") is not None:

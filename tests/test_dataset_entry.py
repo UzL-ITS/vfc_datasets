@@ -158,6 +158,20 @@ class TestFromDict:
         assert isinstance(e.cve_ids, set)
         assert isinstance(e.files_changed, set)
 
+    def test_null_set_fields_treated_as_empty(self):
+        data = {
+            "project_url": "https://github.com/owner/repo",
+            "commit_id": "abcdef12345",
+            "src_datasets": ["ds"],
+            "cve_ids": None,
+            "cwe_ids": None,
+            "files_changed": None,
+        }
+        e = DatasetEntry.from_dict(data)
+        assert e.cve_ids == set()
+        assert e.cwe_ids == set()
+        assert e.files_changed == set()
+
     def test_owasp_categories_converted_to_owasp_category_set(self):
         data = {
             "project_url": "https://github.com/owner/repo",
