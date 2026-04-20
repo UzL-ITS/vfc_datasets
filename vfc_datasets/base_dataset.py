@@ -1,5 +1,6 @@
 """Base dataset class for vulnerability-fixing commit datasets."""
 
+import hashlib
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
@@ -10,11 +11,15 @@ from typing import Any, Literal, cast, override
 import pandas as pd
 from tqdm.auto import tqdm
 
-from vfc_datasets.config import DATASET_PATH, RAW_DATA_PATH, USE_DATASET_CACHE
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import load_cache, save_cache
 
 logger = logging.getLogger(__name__)
+
+_ENTRY_SCHEMA_FP = hashlib.blake2b(
+    repr(DatasetEntry.__annotations__).encode(), digest_size=4
+).hexdigest()
 
 
 @dataclass(frozen=True)
@@ -76,18 +81,30 @@ class BaseDataset(ABC):
         """Parse one row into DatasetEntry. Return None to skip."""
         ...
 
+    @classmethod
+    def _cache_key(cls) -> str:
+        """Cache key combining dataset name, entry-schema fingerprint, and parser hash.
+
+        Any change to DatasetEntry fields or the subclass's _parse_row bytecode
+        yields a new key, so a stale cache can never silently shadow a fix.
+        """
+        parser_fp = hashlib.blake2b(
+            cls._parse_row.__code__.co_code, digest_size=4
+        ).hexdigest()
+        return f"{cls.metadata.name}-s{_ENTRY_SCHEMA_FP}-p{parser_fp}"
+
     def _parse(self) -> list[DatasetEntry]:
         """Parse dataset with caching."""
         if self._entries is not None:
             return self._entries
 
         name = self.metadata.name
+        cache_key = type(self)._cache_key()
 
-        if USE_DATASET_CACHE:
-            cached: list[DatasetEntry] | None = load_cache(name, DATASET_PATH)
-            if cached is not None:
-                self._entries = cached
-                return cached
+        cached: list[DatasetEntry] | None = load_cache(cache_key)
+        if cached is not None:
+            self._entries = cached
+            return cached
 
         df = self._load_data()
 
@@ -105,8 +122,7 @@ class BaseDataset(ABC):
             self._entries = entries
             return entries
 
-        if USE_DATASET_CACHE:
-            save_cache(entries, name)
+        save_cache(entries, cache_key)
         self._entries = entries
         return entries
 

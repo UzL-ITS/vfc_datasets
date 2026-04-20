@@ -90,9 +90,9 @@ def save_entries(entries: Sequence[DatasetEntry], file_path: str | Path) -> None
     logger.info("Successfully saved %d entries to %s", len(entries), file_path)
 
 
-def load_cache(dataset_name: str, dataset_path: Path = DATASET_PATH) -> list[DatasetEntry] | None:
+def load_cache(cache_key: str, dataset_path: Path = DATASET_PATH) -> list[DatasetEntry] | None:
     """Load cached dataset entries if they exist. Returns None if cache doesn't exist."""
-    cache_path = dataset_path / "cache" / f"{dataset_name.lower()}.jsonl"
+    cache_path = dataset_path / "cache" / f"{cache_key.lower()}.jsonl"
 
     if not cache_path.exists():
         return None
@@ -100,9 +100,9 @@ def load_cache(dataset_name: str, dataset_path: Path = DATASET_PATH) -> list[Dat
     return load_entries(cache_path)
 
 
-def save_cache(entries: Sequence[DatasetEntry], dataset_name: str) -> None:
+def save_cache(entries: Sequence[DatasetEntry], cache_key: str) -> None:
     """Save entries to cache file as JSONL."""
-    cache_path = DATASET_PATH / "cache" / f"{dataset_name.lower()}.jsonl"
+    cache_path = DATASET_PATH / "cache" / f"{cache_key.lower()}.jsonl"
     save_entries(entries, cache_path)
 
 

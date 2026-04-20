@@ -51,9 +51,6 @@ FULL_CLONE_THRESHOLD = _env_int("FULL_CLONE_THRESHOLD", 100, minimum=1)
 # size are omitted during clone and fetched lazily on access.
 BLOB_SIZE_LIMIT = os.getenv("BLOB_SIZE_LIMIT", "1m")
 
-# Dataset Caching
-USE_DATASET_CACHE = os.getenv("USE_DATASET_CACHE", "true").lower() in ("true", "yes")
-
 # Logging
 LOG_LEVEL: int = logging.getLevelNamesMapping().get(
     os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO
