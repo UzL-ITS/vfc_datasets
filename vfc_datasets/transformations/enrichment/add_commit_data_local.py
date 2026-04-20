@@ -22,14 +22,13 @@ def _get_commit_info(repo: Repo, commit_id: str, max_diff_size: int) -> CommitDa
     try:
         commit = repo.commit(commit_id)
 
-        # Note: Using line count as a safe fast-path heuristic for max_diff_size (chars).
-        if commit.stats.total["lines"] > max_diff_size:
-            return None
-
         diff_data: str | None = None
-        diff_text = get_commit_diff(repo, commit_id)
-        if len(diff_text) <= max_diff_size:
-            diff_data = diff_text
+        # Line count is a fast-path heuristic for max_diff_size (chars): skip
+        # rendering the diff if it clearly exceeds the limit.
+        if commit.stats.total["lines"] <= max_diff_size:
+            diff_text = get_commit_diff(repo, commit_id)
+            if len(diff_text) <= max_diff_size:
+                diff_data = diff_text
 
         return CommitData(
             message=str(commit.message),

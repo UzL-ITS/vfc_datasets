@@ -201,6 +201,21 @@ class TestGetCommitInfo:
         assert result is not None
         assert result["files_changed"]
 
+    @pytest.mark.integration
+    @pytest.mark.slow
+    def test_large_commit_keeps_metadata_drops_diff(self, curl_repo):
+        """When the commit exceeds max_diff_size, metadata and files_changed are still
+        returned; only the diff is nulled."""
+        result = _get_commit_info(
+            curl_repo, "79e63a53bb9598af863b0afe49ad662795faeef4", max_diff_size=1
+        )
+
+        assert result is not None
+        assert result.get("message")
+        assert result.get("timestamp")
+        assert result.get("files_changed")
+        assert result.get("diff") is None
+
 
 class TestAddCommitInformationLocalIntegration:
     """Integration tests for add_commit_information_local."""
