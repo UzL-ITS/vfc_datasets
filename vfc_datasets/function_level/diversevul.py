@@ -9,7 +9,8 @@ import pandas as pd
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
-from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cwe_ids
+from vfc_datasets.parsing_helpers import normalize_cwe_ids
+from vfc_datasets.utils.git.url import normalize_commit_id
 
 logger = logging.getLogger(__name__)
 

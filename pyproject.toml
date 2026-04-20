@@ -26,7 +26,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pyright>=1.1.0",
+    "basedpyright>=1.39.0",
     "ruff>=0.3.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
@@ -44,7 +44,7 @@ exclude = ["examples", "research", "tests"]
 
 [tool.setuptools_scm]
 
-[tool.pyright]
+[tool.basedpyright]
 include = ["vfc_datasets"]
 pythonVersion = "3.12"
 venvPath = "."
@@ -64,6 +64,9 @@ reportUnnecessaryContains = false
 reportPropertyTypeMismatch = false
 reportMatchNotExhaustive = false
 reportUnsupportedDunderAll = false
+reportAny = false
+reportExplicitAny = false
+reportUnannotatedClassAttribute = false
 
 [tool.ruff]
 line-length = 100

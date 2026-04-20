@@ -42,7 +42,7 @@ class CleanVulDataset(BaseDataset):
         ds = load_dataset("yikun-li/CleanVul")
         df = ds["train"].to_pandas()
         # Filter for Threshold 3
-        return df[df["vulnerability_score"] >= 3].copy()  # pyright: ignore[reportIndexIssue]
+        return df[df["vulnerability_score"] >= 3].copy()  # pyright: ignore[reportIndexIssue, reportReturnType]
 
     @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:
