@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import subprocess
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from typing import Any
 
 import pytest
 from tqdm import tqdm
@@ -12,7 +13,7 @@ from vfc_datasets.transformations.enrichment.project_urls.url_mappings import _l
 from vfc_datasets.utils.git.repository import clone_repository
 
 
-def _get_unreachable_urls() -> dict[str, dict]:
+def _get_unreachable_urls() -> dict[str, Any]:
     """Get full unreachable URLs dict (not just keys)."""
     return _load("unreachable_project_urls.json")
 

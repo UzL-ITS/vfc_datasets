@@ -189,7 +189,7 @@ class TestGetCommitInfo:
         )
 
         assert result is not None
-        assert result["files_changed"]
+        assert result.get("files_changed")
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -199,7 +199,7 @@ class TestGetCommitInfo:
         result = _get_commit_info(curl_repo, root_commit, max_diff_size=256 * 1024)
 
         assert result is not None
-        assert result["files_changed"]
+        assert result.get("files_changed")
 
     @pytest.mark.integration
     @pytest.mark.slow

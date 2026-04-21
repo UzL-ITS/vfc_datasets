@@ -45,7 +45,8 @@ exclude = ["examples", "research", "tests"]
 [tool.setuptools_scm]
 
 [tool.basedpyright]
-include = ["vfc_datasets"]
+include = ["vfc_datasets", "tests"]
+extraPaths = ["."]
 pythonVersion = "3.12"
 venvPath = "."
 venv = ".venv"
@@ -67,6 +68,11 @@ reportUnsupportedDunderAll = false
 reportAny = false
 reportExplicitAny = false
 reportUnannotatedClassAttribute = false
+
+[[tool.basedpyright.executionEnvironments]]
+root = "tests"
+reportMissingParameterType = false
+reportPrivateUsage = false
 
 [tool.ruff]
 line-length = 100
