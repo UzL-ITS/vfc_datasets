@@ -94,7 +94,7 @@ class DatasetEntry:
         for f in fields(self):
             value: Any = getattr(self, f.name)
             if isinstance(value, set):
-                value = sorted(value, key=str)
+                value = sorted(value)
             elif isinstance(value, datetime):
                 value = value.isoformat().replace("+00:00", "Z")
             d[f.name] = value
