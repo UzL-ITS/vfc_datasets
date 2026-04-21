@@ -36,7 +36,7 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-exclude = ["examples", "research", "tests"]
+where = ["src"]
 
 [tool.setuptools.package-data]
 "vfc_datasets.transformations.enrichment.project_urls" = ["*.json"]
@@ -45,8 +45,8 @@ exclude = ["examples", "research", "tests"]
 [tool.setuptools_scm]
 
 [tool.basedpyright]
-include = ["vfc_datasets", "tests"]
-extraPaths = ["."]
+include = ["src", "tests"]
+extraPaths = ["src"]
 pythonVersion = "3.12"
 venvPath = "."
 venv = ".venv"
@@ -76,7 +76,7 @@ reportPrivateUsage = false
 
 [tool.ruff]
 line-length = 100
-src = ["vfc_datasets", "tests"]
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP", "B", "C4", "SIM", "RUF"]
@@ -97,7 +97,6 @@ exclude_lines = [
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]
 #addopts = ["-x", "-m", "not integration and not slow"]
 markers = [
     "asyncio: async tests",
