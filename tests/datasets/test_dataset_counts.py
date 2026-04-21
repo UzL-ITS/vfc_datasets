@@ -11,7 +11,7 @@ from vfc_datasets.transformations.filters import collapse_to_commit_level
 pytestmark = [pytest.mark.slow]
 
 
-def get_datasets() -> list[type[BaseDataset]]:
+def _get_datasets() -> list[type[BaseDataset]]:
     """Discover all datasets."""
     return sorted(
         [
@@ -25,7 +25,7 @@ def get_datasets() -> list[type[BaseDataset]]:
     )
 
 
-@pytest.mark.parametrize("dataset_class", get_datasets(), ids=lambda c: c.metadata.name)
+@pytest.mark.parametrize("dataset_class", _get_datasets(), ids=lambda c: c.metadata.name)
 def test_vfc_counts(dataset_class: type[BaseDataset]):
     """Verify that parsed counts meet thresholds defined in metadata."""
     metadata = dataset_class.metadata
@@ -46,7 +46,7 @@ def test_vfc_counts(dataset_class: type[BaseDataset]):
 
 @pytest.mark.parametrize(
     "dataset_class",
-    [d for d in get_datasets() if d.metadata.granularity == "function"],
+    [d for d in _get_datasets() if d.metadata.granularity == "function"],
     ids=lambda c: c.metadata.name,
 )
 def test_function_counts(dataset_class: type[BaseDataset]):
