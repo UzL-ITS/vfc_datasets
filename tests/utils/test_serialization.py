@@ -8,13 +8,17 @@ from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import load_entries, save_entries, save_entries_csv
 
 
-def _entry(commit="abcdef12345", diff=None, files=None):
+def _entry(
+    commit: str = "abcdef12345",
+    diff: str | None = None,
+    files: set[str] | None = None,
+):
     return DatasetEntry(
         project_url="https://github.com/owner/repo",
         commit_id=commit,
         src_datasets={"test"},
         commit_diff=diff,
-        files_changed=files,
+        files_changed=files if files is not None else set(),
     )
 
 
