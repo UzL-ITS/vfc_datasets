@@ -10,8 +10,8 @@ setup_logging("filter_by_language")
 logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
-    dataset = vfc_datasets.BigVulDataset()
+    entries = transformations.add_commit_information_local(vfc_datasets.DevignDataset())
 
-    logger.info("Entries before filtering: %d", len(dataset))
-    entries = transformations.filter_by_extension(dataset, {"c", "h", "cpp", "hpp", "cc"})
+    logger.info("Entries before filtering: %d", len(entries))
+    entries = transformations.filter_by_extension(entries, {"c", "h", "cpp", "hpp", "cc"})
     logger.info("Entries after filtering: %d", len(entries))
