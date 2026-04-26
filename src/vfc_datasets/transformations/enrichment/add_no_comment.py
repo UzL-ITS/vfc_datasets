@@ -1,6 +1,7 @@
 import logging
 import os
 import tempfile
+from collections.abc import Iterable
 from pathlib import PurePosixPath
 from typing import Any
 
@@ -290,18 +291,19 @@ def _apply_diff(entry: DatasetEntry, diff: str) -> None:
 
 
 def strip_diff_comments(
-    entries: list[DatasetEntry], *, include_unsupported: bool = True
+    entries: Iterable[DatasetEntry], *, include_unsupported: bool = True
 ) -> list[DatasetEntry]:
     """Strip comments from commit diffs in-place using tree-sitter.
 
     Args:
-        entries: List of dataset entries to process
+        entries: Dataset entries to process
         include_unsupported: If True (default), include original diff for unsupported files.
                             If False, skip unsupported files entirely.
     """
     logger.info("Strip comments from commit diffs [LOCAL]")
     logger.info("Max diff size: %dK chars", MAX_DIFF_SIZE // 1000)
 
+    entries = list(entries)
     needs_processing = [e for e in entries if e.commit_diff]
     skipped = sum(
         1

@@ -8,7 +8,6 @@ from vfc_datasets.utils.core.statistics import log_dataset_stats
 setup_logging("enrich_with_commit_data")
 
 if __name__ == "__main__":
-    entries = list(vfc_datasets.DevignDataset()) # Devign contains only 2 projects (FFmpeg, QEMU).
-
-    entries = transformations.add_commit_information_local(entries)
+    # Devign contains only 2 projects (FFmpeg, QEMU).
+    entries = transformations.add_commit_information_local(vfc_datasets.DevignDataset())
     log_dataset_stats(entries)

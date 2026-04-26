@@ -9,7 +9,7 @@ from vfc_datasets.utils.core.serialization import save_entries, save_entries_csv
 setup_logging("save_and_export")
 
 if __name__ == "__main__":
-    entries = list(vfc_datasets.DevignDataset())
+    entries = vfc_datasets.DevignDataset()
 
     output_dir = Path(".data/exports")
     save_entries(entries, output_dir / "devign.jsonl")

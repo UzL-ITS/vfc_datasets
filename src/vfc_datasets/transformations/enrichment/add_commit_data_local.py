@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterable
 from datetime import UTC, datetime
 
 from git import Repo
@@ -53,13 +54,13 @@ def _process_commit_batch(args: tuple[str, list[str], int]) -> dict[str, CommitD
     return results
 
 
-def add_commit_information_local(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def add_commit_information_local(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Enrich DatasetEntry objects with commit information from local git repos."""
     logger.info("Add commit information [LOCAL]")
     logger.info("Max diff size limit: %dK chars", MAX_DIFF_SIZE // 1000)
 
     return process_commits_in_batches(
-        entries,
+        list(entries),
         filter_fn=needs_enrichment,
         batch_fn=_process_commit_batch,
         apply_fn=apply_commit_data,

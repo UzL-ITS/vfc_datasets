@@ -187,7 +187,7 @@ class TestAddCommitInformationApi:
 
         result = add_commit_information_api(entries)
 
-        assert result is entries
+        assert result == entries
         assert result[0].commit_message == "Already has message"
         assert result[0].commit_diff == "Already has diff"
 
@@ -217,7 +217,7 @@ class TestAddCommitInformationApi:
 
         result = add_commit_information_api(entries)
 
-        assert result is entries
+        assert result == entries
         assert len(result) == 2
 
 

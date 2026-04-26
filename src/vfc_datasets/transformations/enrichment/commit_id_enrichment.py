@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from collections import defaultdict
+from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from tqdm.asyncio import tqdm as async_tqdm
@@ -114,9 +115,9 @@ async def _extend_commit_id_api_async(
     return entry, entry.commit_id, False
 
 
-def extend_commit_ids_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def extend_commit_ids_api(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Extend commit IDs using the GitHub API (async) and return the (possibly) modified list of entries."""
-    # Filter entries that need extension
+    entries = list(entries)
     entries_to_process = [
         entry for entry in entries if entry.commit_id and len(entry.commit_id) < 40
     ]
@@ -139,8 +140,9 @@ def extend_commit_ids_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     return entries
 
 
-def extend_commit_ids_local(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def extend_commit_ids_local(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Extend commit IDs in-place by cloning repositories locally and return the list of modified entries."""
+    entries = list(entries)
     entries_to_process = [
         entry for entry in entries if entry.commit_id and len(entry.commit_id) < 40
     ]

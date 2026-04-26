@@ -2,7 +2,7 @@ import copy
 import hashlib
 import logging
 from collections import Counter, defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from typing import Any
 
 from tqdm.auto import tqdm
@@ -92,19 +92,19 @@ def _merge_duplicates(
     return result_entries
 
 
-def deduplicate_function_level(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def deduplicate_function_level(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Deduplicate by (project_url, commit_id, function_name)."""
     return _merge_duplicates(
-        entries,
+        list(entries),
         key_func=lambda entry: (entry.project_url, entry.commit_id, entry.function_name),
         level_name="function",
     )
 
 
-def deduplicate_within_repository(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def deduplicate_within_repository(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Deduplicate by (project_url, commit_id). Clears function_name."""
     result = _merge_duplicates(
-        entries,
+        list(entries),
         key_func=lambda entry: (entry.project_url, entry.commit_id),
         level_name="commit",
     )
@@ -113,7 +113,7 @@ def deduplicate_within_repository(entries: list[DatasetEntry]) -> list[DatasetEn
     return result
 
 
-def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def filter_by_has_unique_diff(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Remove entries with duplicate (diff, files_changed) pairs. Entries without diff are kept."""
     seen_by_hash: dict[tuple[str, tuple[str, ...] | None], DatasetEntry] = {}
     # Entries without diffs are kept separately - we can't determine if they're duplicates
@@ -164,7 +164,7 @@ def filter_by_has_unique_diff(entries: list[DatasetEntry]) -> list[DatasetEntry]
 
 
 def deduplicate_across_related_repositories(
-    entries: list[DatasetEntry],
+    entries: Iterable[DatasetEntry],
     relationships: RepositoryRelationships | None = None,
 ) -> list[DatasetEntry]:
     """Remove duplicate commits across related repositories.
@@ -174,6 +174,7 @@ def deduplicate_across_related_repositories(
 
     If relationships is None, discovers them automatically.
     """
+    entries = list(entries)
     if relationships is None:
         relationships = discover_repository_relationships(entries)
 

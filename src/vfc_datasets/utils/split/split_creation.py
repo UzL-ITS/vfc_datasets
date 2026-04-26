@@ -1,6 +1,7 @@
 """Split creation utilities."""
 
 import logging
+from collections.abc import Iterable
 from pathlib import Path
 
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -78,7 +79,7 @@ def _evaluate_split_quality(
 
 
 def create_random_split(
-    entries: list[DatasetEntry],
+    entries: Iterable[DatasetEntry],
     name: str,
     output_path: Path,
     seed: int,
@@ -92,7 +93,7 @@ def create_random_split(
     logger.info("Creating random split for %s - seed %d", name, seed)
 
     train, val, test = train_val_test_split_random(
-        entries,
+        list(entries),
         train_ratio=train_ratio,
         val_ratio=val_ratio,
         test_ratio=test_ratio,
@@ -106,7 +107,7 @@ def create_random_split(
 
 
 def create_temporal_split(
-    entries: list[DatasetEntry],
+    entries: Iterable[DatasetEntry],
     name: str,
     output_path: Path,
     *,
@@ -119,7 +120,7 @@ def create_temporal_split(
     logger.info("Creating temporal split for %s", name)
 
     train, val, test = train_val_test_split_temporal(
-        entries,
+        list(entries),
         train_ratio=train_ratio,
         val_ratio=val_ratio,
         test_ratio=test_ratio,
@@ -132,7 +133,7 @@ def create_temporal_split(
 
 
 def create_top_n_group_stratified_splits(
-    entries: list[DatasetEntry],
+    entries: Iterable[DatasetEntry],
     name: str,
     output_path: Path,
     relationships: RepositoryRelationships,
@@ -146,6 +147,7 @@ def create_top_n_group_stratified_splits(
     """Find the best *top_n* group-stratified splits out of *num_seeds* seeds and save them."""
     logger.info("Creating group-stratified splits for %s (evaluating %d seeds)", name, num_seeds)
 
+    entries = list(entries)
     seed_results = []
     for seed in range(1, num_seeds + 1):
         train, val, test = train_val_test_split_group_stratified(

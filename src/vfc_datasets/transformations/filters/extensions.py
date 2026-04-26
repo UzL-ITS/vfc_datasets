@@ -1,4 +1,5 @@
 import logging
+from collections.abc import Iterable
 from pathlib import PurePosixPath
 
 from tqdm.auto import tqdm
@@ -9,10 +10,11 @@ logger = logging.getLogger(__name__)
 
 
 def filter_by_extension(
-    entries: list[DatasetEntry],
+    entries: Iterable[DatasetEntry],
     extensions: set[str],
 ) -> list[DatasetEntry]:
     """Filter entries to those with at least one changed file matching the given extensions."""
+    entries = list(entries)
     normalized = {(e if e.startswith(".") else f".{e}").lower() for e in extensions}
 
     filtered: list[DatasetEntry] = []

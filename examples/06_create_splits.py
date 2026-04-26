@@ -9,10 +9,8 @@ from vfc_datasets.utils.split import create_random_split
 setup_logging("create_splits")
 
 if __name__ == "__main__":
-    entries = list(vfc_datasets.DevignDataset())
-
     create_random_split(
-        entries,
+        vfc_datasets.DevignDataset(),
         name="devign",
         output_path=Path(".data/splits"),
         seed=42,

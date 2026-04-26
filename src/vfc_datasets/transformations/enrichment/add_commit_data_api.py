@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from collections.abc import Iterable
 from typing import Any
 
 from tqdm.asyncio import tqdm
@@ -75,8 +76,9 @@ async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
     return success, len(entries) - success
 
 
-def add_commit_information_api(entries: list[DatasetEntry]) -> list[DatasetEntry]:
+def add_commit_information_api(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Enrich entries with commit data from the GitHub API and return the modified list."""
+    entries = list(entries)
     entries_to_process = [e for e in entries if needs_enrichment(e)]
 
     if not entries_to_process:

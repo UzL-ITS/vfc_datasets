@@ -1,5 +1,6 @@
 import logging
 from collections import defaultdict
+from collections.abc import Iterable
 
 from vfc_datasets.dataset_entry import DatasetEntry
 
@@ -9,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def collapse_to_commit_level(
-    entries: list[DatasetEntry],
+    entries: Iterable[DatasetEntry],
     *,
     include_benign_only: bool = True,
 ) -> list[DatasetEntry]:
@@ -23,12 +24,12 @@ def collapse_to_commit_level(
             "functions. This could lead to mislabeling VFCs as non-VFC."
         )
 
-    if not entries:
-        return []
-
     groups: dict[tuple[str, str], list[DatasetEntry]] = defaultdict(list)
     for entry in entries:
         groups[(entry.project_url, entry.commit_id)].append(entry)
+
+    if not groups:
+        return []
 
     result = []
     dropped = 0

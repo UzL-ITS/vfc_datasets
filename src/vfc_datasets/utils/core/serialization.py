@@ -1,6 +1,6 @@
 import json
 import logging
-from collections.abc import Sequence
+from collections.abc import Iterable
 from dataclasses import fields as dc_fields
 from datetime import UTC, datetime
 from importlib.metadata import version
@@ -63,8 +63,9 @@ def load_entries(file_path: str | Path) -> list[DatasetEntry]:
     return entries
 
 
-def save_entries(entries: Sequence[DatasetEntry], file_path: str | Path) -> None:
+def save_entries(entries: Iterable[DatasetEntry], file_path: str | Path) -> None:
     """Save dataset entries to a JSONL file."""
+    entries = list(entries)
     if not entries:
         raise ValueError(f"Cannot save empty entries to {file_path}. No entries to store.")
 
@@ -100,18 +101,19 @@ def load_cache(cache_key: str, dataset_path: Path = DATASET_PATH) -> list[Datase
     return load_entries(cache_path)
 
 
-def save_cache(entries: Sequence[DatasetEntry], cache_key: str) -> None:
+def save_cache(entries: Iterable[DatasetEntry], cache_key: str) -> None:
     """Save entries to cache file as JSONL."""
     cache_path = DATASET_PATH / "cache" / f"{cache_key.lower()}.jsonl"
     save_entries(entries, cache_path)
 
 
 def save_entries_csv(
-    entries: Sequence[DatasetEntry],
+    entries: Iterable[DatasetEntry],
     file_path: str | Path,
     fields: list[str] | None = None,
 ) -> None:
     """Save dataset entries to a CSV file."""
+    entries = list(entries)
     if not entries:
         raise ValueError(f"Cannot export empty entries to {file_path}. No entries to export.")
 

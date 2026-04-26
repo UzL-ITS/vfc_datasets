@@ -155,7 +155,7 @@ class TestAddCommitInformationLocal:
 
         result = add_commit_information_local(entries)
 
-        assert result is entries
+        assert result == entries
         assert len(result) == 1
         # Verify nothing changed
         assert result[0].commit_message == "msg"
