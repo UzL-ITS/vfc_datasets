@@ -16,5 +16,5 @@ if __name__ == "__main__":
     save_entries_csv(
         entries,
         output_dir / "devign.csv",
-        fields=["project_url", "commit_id", "is_vfc", "cve_id", "cwe_ids"],
+        fields=["project_url", "commit_id", "is_vfc", "cve_ids", "cwe_ids"],
     )
