@@ -1,7 +1,5 @@
 """Tests for CloneStrategy helpers in utils.git.repository."""
 
-from __future__ import annotations
-
 import shutil
 from pathlib import Path
 
@@ -43,12 +41,12 @@ def _full_clone(bare: Path, dest: Path) -> Repo:
 
 @pytest.mark.integration
 class TestIsPartialClone:
-    def test_blobless_clone_detected(self, tmp_path):
+    def test_blobless_clone_detected(self, tmp_path: Path) -> None:
         bare = _init_bare_source(tmp_path)
         repo = _blobless_clone(bare, tmp_path / "clone")
         assert _is_partial_clone(repo) is True
 
-    def test_full_clone_not_partial(self, tmp_path):
+    def test_full_clone_not_partial(self, tmp_path: Path) -> None:
         bare = _init_bare_source(tmp_path)
         repo = _full_clone(bare, tmp_path / "clone")
         assert _is_partial_clone(repo) is False
@@ -56,7 +54,7 @@ class TestIsPartialClone:
 
 @pytest.mark.integration
 class TestUpgradeToFull:
-    def test_unsets_filter_config(self, tmp_path):
+    def test_unsets_filter_config(self, tmp_path: Path) -> None:
         bare = _init_bare_source(tmp_path)
         repo = _blobless_clone(bare, tmp_path / "clone")
         assert _is_partial_clone(repo)
@@ -64,7 +62,7 @@ class TestUpgradeToFull:
         assert _upgrade_to_full(repo, timeout=60) is True
         assert not _is_partial_clone(repo)
 
-    def test_returns_false_when_remote_gone(self, tmp_path):
+    def test_returns_false_when_remote_gone(self, tmp_path: Path) -> None:
         """If fetch fails, caller needs False so it can recover."""
         bare = _init_bare_source(tmp_path)
         repo = _blobless_clone(bare, tmp_path / "clone")

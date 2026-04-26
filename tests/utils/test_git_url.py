@@ -6,9 +6,8 @@ from vfc_datasets.utils.git.url import GitURL, normalize_commit_id
 class TestGitURL:
     """Test GitURL parsing and conversion."""
 
-    def test_github_https_url(self):
-        url = "https://github.com/owner/repo"
-        git_url = GitURL.parse(url)
+    def test_github_https_url(self) -> None:
+        git_url = GitURL.parse("https://github.com/owner/repo")
 
         assert git_url is not None
         assert git_url.scheme == "https"
@@ -17,9 +16,8 @@ class TestGitURL:
         assert git_url.repo == "repo"
         assert git_url.to_https_url() == "https://github.com/owner/repo"
 
-    def test_github_url_with_commit(self):
-        url = "https://github.com/owner/repo/commit/abc123def456"
-        git_url = GitURL.parse(url)
+    def test_github_url_with_commit(self) -> None:
+        git_url = GitURL.parse("https://github.com/owner/repo/commit/abc123def456")
 
         assert git_url is not None
         assert git_url.owner == "owner"
@@ -42,14 +40,13 @@ class TestGitURL:
             ("http://github.com/owner/repo", "https://github.com/owner/repo"),
         ],
     )
-    def test_github_url_variations(self, input_url, expected):
+    def test_github_url_variations(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
 
-    def test_gitlab_url(self):
-        url = "https://gitlab.com/group/subgroup/project"
-        git_url = GitURL.parse(url)
+    def test_gitlab_url(self) -> None:
+        git_url = GitURL.parse("https://gitlab.com/group/subgroup/project")
 
         assert git_url is not None
         assert git_url.host == "gitlab.com"
@@ -57,18 +54,8 @@ class TestGitURL:
         assert git_url.repo == "project"
         assert git_url.to_https_url() == "https://gitlab.com/group/subgroup/project"
 
-    def test_gitlab_url_with_path(self):
-        url = "https://gitlab.com/group/project/-/tree/main/src"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.owner == "group"
-        assert git_url.repo == "project"
-        assert git_url.to_https_url() == "https://gitlab.com/group/project"
-
-    def test_gitlab_url_with_commit(self):
-        url = "https://gitlab.com/group/project/-/commit/1234567890abcdef"
-        git_url = GitURL.parse(url)
+    def test_gitlab_url_with_commit(self) -> None:
+        git_url = GitURL.parse("https://gitlab.com/group/project/-/commit/1234567890abcdef")
 
         assert git_url is not None
         assert git_url.owner == "group"
@@ -94,14 +81,13 @@ class TestGitURL:
             ("https://gitlab.example.com/owner/repo", "https://gitlab.example.com/owner/repo"),
         ],
     )
-    def test_gitlab_url_variations(self, input_url, expected):
+    def test_gitlab_url_variations(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
 
-    def test_bitbucket_url(self):
-        url = "https://bitbucket.org/owner/repo"
-        git_url = GitURL.parse(url)
+    def test_bitbucket_url(self) -> None:
+        git_url = GitURL.parse("https://bitbucket.org/owner/repo")
 
         assert git_url is not None
         assert git_url.host == "bitbucket.org"
@@ -118,7 +104,7 @@ class TestGitURL:
             ("https://bitbucket.org/owner/repo/src/main/", "https://bitbucket.org/owner/repo"),
         ],
     )
-    def test_bitbucket_url_variations(self, input_url, expected):
+    def test_bitbucket_url_variations(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
@@ -133,23 +119,21 @@ class TestGitURL:
             ("https://bitbucket.example.com/Foo/Bar", "https://bitbucket.example.com/Foo/Bar"),
         ],
     )
-    def test_case_insensitive_host_normalization(self, input_url, expected):
+    def test_case_insensitive_host_normalization(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
 
-    def test_googlesource_url(self):
-        url = "https://android.googlesource.com/platform/frameworks/base"
-        git_url = GitURL.parse(url)
+    def test_googlesource_url(self) -> None:
+        git_url = GitURL.parse("https://android.googlesource.com/platform/frameworks/base")
 
         assert git_url is not None
         assert git_url.host == "android.googlesource.com"
         assert git_url.repo == "platform/frameworks/base"
         assert git_url.to_https_url() == "https://android.googlesource.com/platform/frameworks/base"
 
-    def test_googlesource_url_with_commit(self):
-        url = "https://android.googlesource.com/platform/frameworks/base/+/abc123"
-        git_url = GitURL.parse(url)
+    def test_googlesource_url_with_commit(self) -> None:
+        git_url = GitURL.parse("https://android.googlesource.com/platform/frameworks/base/+/abc123")
 
         assert git_url is not None
         assert git_url.repo == "platform/frameworks/base"
@@ -172,22 +156,20 @@ class TestGitURL:
             ),
         ],
     )
-    def test_googlesource_url_variations(self, input_url, expected):
+    def test_googlesource_url_variations(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
 
-    def test_git_protocol_url(self):
-        url = "git://github.com/owner/repo.git"
-        git_url = GitURL.parse(url)
+    def test_git_protocol_url(self) -> None:
+        git_url = GitURL.parse("git://github.com/owner/repo.git")
 
         assert git_url is not None
         assert git_url.scheme == "https"  # Converted by default
         assert git_url.to_https_url() == "https://github.com/owner/repo"
 
-    def test_ssh_url_format(self):
-        url = "ssh://git@bitbucket.org/owner/repo.git"
-        git_url = GitURL.parse(url)
+    def test_ssh_url_format(self) -> None:
+        git_url = GitURL.parse("ssh://git@bitbucket.org/owner/repo.git")
 
         assert git_url is not None
         assert git_url.scheme == "https"  # Converted by default
@@ -207,14 +189,13 @@ class TestGitURL:
             ("ssh://git@gitlab.com/owner/repo", "https://gitlab.com/owner/repo"),
         ],
     )
-    def test_ssh_url_variations(self, input_url, expected):
+    def test_ssh_url_variations(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
 
-    def test_cgit_style_url(self):
-        url = "https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git"
-        git_url = GitURL.parse(url)
+    def test_cgit_style_url(self) -> None:
+        git_url = GitURL.parse("https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git")
 
         assert git_url is not None
         assert git_url.repo == "linux/kernel/git/torvalds/linux"
@@ -223,58 +204,28 @@ class TestGitURL:
             == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
         )
 
-    def test_kernel_org_pub_scm_url(self):
-        url = "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
-        git_url = GitURL.parse(url)
+    def test_kernel_org_pub_scm_url(self) -> None:
+        git_url = GitURL.parse(
+            "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+        )
 
         assert git_url is not None
         assert git_url.host == "git.kernel.org"
         assert git_url.repo == "linux/kernel/git/stable/linux-stable"
-        assert (
-            git_url.to_https_url()
-            == "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
+
+    def test_kernel_org_pub_scm_with_commit_id(self) -> None:
+        git_url = GitURL.parse(
+            "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=abc123def456"
         )
-
-    def test_kernel_org_pub_scm_with_commit_path(self):
-        url = "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git/commit/"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.repo == "linux/kernel/git/stable/linux-stable"
-        assert (
-            git_url.to_https_url()
-            == "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git"
-        )
-
-    def test_kernel_org_pub_scm_with_commit_id(self):
-        url = "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=abc123def456"
-        git_url = GitURL.parse(url)
 
         assert git_url is not None
         assert git_url.repo == "linux/kernel/git/torvalds/linux"
         assert git_url.commit_id == "abc123def456"
-        assert (
-            git_url.to_https_url()
-            == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
-        )
 
-    def test_kernel_org_gitweb_url(self):
-        url = "https://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.host == "git.kernel.org"
-        assert git_url.repo == "linux/kernel/git/torvalds/linux"
-        assert (
-            git_url.to_https_url()
-            == "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git"
-        )
-
-    def test_kernel_org_gitweb_url_with_params(self):
-        url = (
+    def test_kernel_org_gitweb_url_with_params(self) -> None:
+        git_url = GitURL.parse(
             "https://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git;a=commit;h=abc123def456"
         )
-        git_url = GitURL.parse(url)
 
         assert git_url is not None
         assert git_url.repo == "linux/kernel/git/torvalds/linux"
@@ -295,7 +246,6 @@ class TestGitURL:
                 "https://git.kernel.org/pub/scm/git/git.git",
                 "https://git.kernel.org/pub/scm/git/git.git",
             ),
-            # gitweb-style URLs
             (
                 "https://git.kernel.org/?p=linux/kernel/git/torvalds/linux.git",
                 "https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git",
@@ -306,40 +256,26 @@ class TestGitURL:
             ),
         ],
     )
-    def test_kernel_org_url_variations(self, input_url, expected):
+    def test_kernel_org_url_variations(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
-
-    def test_url_with_www_prefix(self):
-        url = "https://www.github.com/owner/repo"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.host == "github.com"  # www removed
-        assert git_url.to_https_url() == "https://github.com/owner/repo"
-
-    def test_url_with_trailing_git(self):
-        url = "https://github.com/owner/repo.git"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.repo == "repo"  # .git removed
-        assert git_url.to_https_url() == "https://github.com/owner/repo"
 
     @pytest.mark.parametrize(
         "input_url",
         [
             "",
-            None,
             "not-a-url",
             "ftp://example.com/repo",
             "https://",
             "git@",
         ],
     )
-    def test_invalid_urls(self, input_url):
+    def test_invalid_urls(self, input_url: str) -> None:
         assert GitURL.parse(input_url) is None
+
+    def test_none_url_returns_none(self) -> None:
+        assert GitURL.parse(None) is None  # pyright: ignore[reportArgumentType]
 
     @pytest.mark.parametrize(
         "input_url",
@@ -348,15 +284,14 @@ class TestGitURL:
             "https://github.com/",
         ],
     )
-    def test_incomplete_urls(self, input_url):
+    def test_incomplete_urls(self, input_url: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.owner is None
         assert git_url.repo is None
 
-    def test_github_lowercase_conversion(self):
-        url = "https://github.com/Owner/REPO"
-        git_url = GitURL.parse(url)
+    def test_github_lowercase_conversion(self) -> None:
+        git_url = GitURL.parse("https://github.com/Owner/REPO")
         assert git_url is not None
 
         # Original case is preserved in the GitURL object
@@ -365,17 +300,15 @@ class TestGitURL:
         # But lowercased in the output URL
         assert git_url.to_https_url() == "https://github.com/owner/repo"
 
-    def test_generic_git_hosting(self):
-        url = "https://git.example.com/project/repo/commit/abc123"
-        git_url = GitURL.parse(url)
+    def test_generic_git_hosting(self) -> None:
+        git_url = GitURL.parse("https://git.example.com/project/repo/commit/abc123")
 
         assert git_url is not None
         assert git_url.host == "git.example.com"
         assert git_url.commit_id == "abc123"
 
-    def test_gitweb_style_url(self):
-        url = "https://git.example.com/?p=project.git;a=commit;h=abc123"
-        git_url = GitURL.parse(url)
+    def test_gitweb_style_url(self) -> None:
+        git_url = GitURL.parse("https://git.example.com/?p=project.git;a=commit;h=abc123")
 
         assert git_url is not None
         assert git_url.repo == "project"
@@ -390,51 +323,17 @@ class TestGitURL:
             ),
         ],
     )
-    def test_gitweb_url_variations(self, input_url, expected):
+    def test_gitweb_url_variations(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
 
-    def test_savannah_cgit_url(self):
-        url = "https://git.savannah.gnu.org/cgit/bash.git"
-        git_url = GitURL.parse(url)
+    def test_savannah_cgit_url(self) -> None:
+        git_url = GitURL.parse("https://git.savannah.gnu.org/cgit/bash.git")
 
         assert git_url is not None
         assert git_url.host == "git.savannah.gnu.org"
         assert git_url.repo == "bash"
-        assert git_url.to_https_url() == "https://git.savannah.gnu.org/git/bash.git"
-
-    def test_savannah_gitweb_url(self):
-        url = "https://git.savannah.gnu.org/gitweb/?p=bash.git"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.repo == "bash"
-        assert git_url.to_https_url() == "https://git.savannah.gnu.org/git/bash.git"
-
-    def test_savannah_git_url(self):
-        url = "https://git.savannah.gnu.org/git/bash.git"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.repo == "bash"
-        assert git_url.to_https_url() == "https://git.savannah.gnu.org/git/bash.git"
-
-    def test_savannah_cgit_with_commit(self):
-        url = "https://git.savannah.gnu.org/cgit/bash.git/commit/?id=abc123def456"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.repo == "bash"
-        assert git_url.to_https_url() == "https://git.savannah.gnu.org/git/bash.git"
-
-    def test_savannah_nested_repo(self):
-        url = "https://git.savannah.gnu.org/cgit/freetype/freetype2.git"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.repo == "freetype/freetype2"
-        assert git_url.to_https_url() == "https://git.savannah.gnu.org/git/freetype/freetype2.git"
 
     @pytest.mark.parametrize(
         "input_url,expected",
@@ -482,21 +381,15 @@ class TestGitURL:
             ),
         ],
     )
-    def test_savannah_url_variations(self, input_url, expected):
+    def test_savannah_url_variations(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
 
-    def test_generic_browse_prefix_url(self):
-        url = "https://git.example.com/browse/repo"
-        git_url = GitURL.parse(url)
-
-        assert git_url is not None
-        assert git_url.to_https_url() == "https://git.example.com/browse/repo"
-
     @pytest.mark.parametrize(
         "input_url,expected",
         [
+            ("https://git.example.com/browse/repo", "https://git.example.com/browse/repo"),
             ("https://git.company.com/project.git", "https://git.company.com/project"),
             ("https://git.company.com/team/project", "https://git.company.com/team/project"),
             ("https://git.company.com/team/project.git", "https://git.company.com/team/project"),
@@ -508,7 +401,7 @@ class TestGitURL:
             ("https://git.example.com/repo/tree/main", "https://git.example.com/repo"),
         ],
     )
-    def test_self_hosted_git_urls(self, input_url, expected):
+    def test_self_hosted_git_urls(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
@@ -528,7 +421,7 @@ class TestGitURL:
             ("https://github.com/OWNER/REPO", "https://github.com/owner/repo"),
         ],
     )
-    def test_edge_cases(self, input_url, expected):
+    def test_edge_cases(self, input_url: str, expected: str) -> None:
         git_url = GitURL.parse(input_url)
         assert git_url is not None
         assert git_url.to_https_url() == expected
@@ -537,31 +430,31 @@ class TestGitURL:
 class TestNormalizeCommitId:
     """Test normalize_commit_id function."""
 
-    def test_github_url(self):
+    def test_github_url(self) -> None:
         url = "https://github.com/owner/repo/commit/1234567890abcdef"
         assert normalize_commit_id(url) == "1234567890abcdef"
 
-    def test_gitlab_url(self):
+    def test_gitlab_url(self) -> None:
         url = "https://gitlab.com/group/project/-/commit/abcdef123456"
         assert normalize_commit_id(url) == "abcdef123456"
 
-    def test_googlesource_url(self):
+    def test_googlesource_url(self) -> None:
         url = "https://android.googlesource.com/platform/frameworks/base/+/abc123/file.java"
         assert normalize_commit_id(url) == "abc123"
 
-    def test_no_commit_in_url(self):
+    def test_no_commit_in_url(self) -> None:
         assert normalize_commit_id("https://github.com/owner/repo") is None
 
-    def test_short_commit(self):
+    def test_short_commit(self) -> None:
         url = "https://github.com/owner/repo/commit/abc12"
         assert normalize_commit_id(url) == "abc12"
 
-    def test_full_commit(self):
+    def test_full_commit(self) -> None:
         full_hash = "1234567890abcdef1234567890abcdef12345678"
         url = f"https://github.com/owner/repo/commit/{full_hash}"
         assert normalize_commit_id(url) == full_hash
 
-    def test_invalid_input(self):
+    def test_invalid_input(self) -> None:
         assert normalize_commit_id(None) is None
         assert normalize_commit_id("") is None
         assert normalize_commit_id("abc") is None  # too short

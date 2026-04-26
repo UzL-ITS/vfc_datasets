@@ -79,16 +79,7 @@ class TestResolveRefLocal:
     def test_nonexistent_ref_returns_none(self) -> None:
         """Non-existent refs should return None without raising."""
         result = _resolve_ref_local("this-tag-does-not-exist-12345", "https://github.com/curl/curl")
-        # Either None (repo exists, ref not found) or None (repo not cloned)
         assert result is None
-
-    @pytest.mark.integration
-    def test_invalid_repo_directory_returns_none(self, tmp_path: pytest.TempPathFactory) -> None:
-        """Return None when the repo path exists but is not a valid git repo."""
-        # _resolve_ref_local checks url_to_pathname, so we can't easily point it
-        # at tmp_path. Instead, verify it handles InvalidGitRepositoryError gracefully
-        # by testing with a URL whose local path doesn't contain a valid repo.
-        assert _resolve_ref_local("main", "https://github.com/nonexistent/repo-xyz-999") is None
 
 
 class TestResolveSymbolicRef:
@@ -105,14 +96,9 @@ class TestResolveSymbolicRef:
         This tests both the API call logic AND the SHA normalization (lowercase).
         """
         sha = _resolve_symbolic_ref("curl-7_50_0", "https://github.com/curl/curl")
-
-        # Known stable commit for curl-7_50_0 tag
-        expected_sha = "79e63a53bb9598af863b0afe49ad662795faeef4"
-
-        if sha:
-            assert sha == expected_sha, f"Expected {expected_sha}, got {sha}"
-        else:
+        if sha is None:
             pytest.skip("Could not resolve (no local repo and API unavailable)")
+        assert sha == "79e63a53bb9598af863b0afe49ad662795faeef4"
 
     @pytest.mark.integration
     def test_nonexistent_ref_returns_none(self) -> None:

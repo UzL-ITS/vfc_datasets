@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pytest
 
 from vfc_datasets.utils.git.url import _COMMIT_HASH_PATTERN
