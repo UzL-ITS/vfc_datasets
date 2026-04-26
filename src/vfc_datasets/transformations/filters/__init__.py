@@ -7,7 +7,7 @@ from .duplicates import (
     deduplicate_within_repository,
     filter_by_has_unique_diff,
 )
-from .programming_languages import filter_by_extension
+from .extensions import filter_by_extension
 
 __all__ = [
     # Deduplication
@@ -17,6 +17,6 @@ __all__ = [
     "filter_by_has_unique_diff",
     # Granularity
     "collapse_to_commit_level",
-    # Language filtering
+    # Extension filtering
     "filter_by_extension",
 ]
