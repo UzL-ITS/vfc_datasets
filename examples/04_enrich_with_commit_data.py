@@ -9,5 +9,6 @@ setup_logging("enrich_with_commit_data")
 
 if __name__ == "__main__":
     # Devign contains only 2 projects (FFmpeg, QEMU).
-    entries = transformations.add_commit_information_local(vfc_datasets.DevignDataset())
+    entries = vfc_datasets.DevignDataset()
+    entries = transformations.add_commit_information_local(entries)
     log_dataset_stats(entries)
