@@ -1,3 +1,4 @@
+import contextlib
 import enum
 import errno
 import logging
@@ -113,10 +114,8 @@ def _upgrade_to_full(repo: Repo, timeout: int) -> bool:
     """Remove partial-clone filter and refetch all objects. Requires git >= 2.41."""
     try:
         for key in ("remote.origin.promisor", "remote.origin.partialclonefilter"):
-            try:
+            with contextlib.suppress(GitCommandError):
                 repo.git.config("--unset", key)
-            except GitCommandError:
-                pass
         repo.git.fetch("origin", "--refetch", kill_after_timeout=timeout)
         logger.info("Upgraded %s from partial to full clone", repo.working_dir)
         return True
@@ -144,13 +143,12 @@ def _handle_existing_repo(
         return None
 
     with repo:
-        if strategy is CloneStrategy.FULL and _is_partial_clone(repo):
-            if not _upgrade_to_full(repo, timeout):
-                # Upgrade mutates filter config before fetching; on fetch failure
-                # the repo is in an inconsistent state and must be recloned.
-                logger.warning("Upgrade failed for %s, discarding for reclone", destination)
-                _delete_corrupted_repo(destination)
-                return None
+        if strategy is CloneStrategy.FULL and _is_partial_clone(repo) and not _upgrade_to_full(repo, timeout):
+            # Upgrade mutates filter config before fetching; on fetch failure
+            # the repo is in an inconsistent state and must be recloned.
+            logger.warning("Upgrade failed for %s, discarding for reclone", destination)
+            _delete_corrupted_repo(destination)
+            return None
 
         if branch is not None:
             _fetch_updates(repo, timeout)
