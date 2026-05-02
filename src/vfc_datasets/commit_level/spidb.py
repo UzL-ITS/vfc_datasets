@@ -75,26 +75,21 @@ class SPIDBDataset(BaseDataset):
     def _read_clean_csv(self, path: Path) -> pd.DataFrame:
         return self._drop_unnamed_columns(pd.read_csv(path))
 
-    def _load_all_commit_messages(
-        self, project_url: str
-    ) -> tuple[dict[str, list[str]], Repo | None]:
-        repo = clone_repository(project_url)
+    def _load_all_commit_messages(self, repo: Repo) -> dict[str, list[str]]:
         repo_dict: dict[str, list[str]] = {}
-        if repo:
-            for commit in repo.iter_commits():
-                message = str(commit.message)
-                c_key = message.replace("\n", "").replace(" ", "").strip()
-                if c_key not in repo_dict:
-                    repo_dict[c_key] = []
-                repo_dict[c_key].append(commit.hexsha)
-        return repo_dict, repo
+        for commit in repo.iter_commits():
+            message = str(commit.message)
+            c_key = message.replace("\n", "").replace(" ", "").strip()
+            if c_key not in repo_dict:
+                repo_dict[c_key] = []
+            repo_dict[c_key].append(commit.hexsha)
+        return repo_dict
 
     def _add_commit_id(
         self,
         project_dataframe: pd.DataFrame,
         commit_dict: dict[str, list[str]],
-        project_url: str,
-        repo: Repo | None = None,
+        repo: Repo,
     ) -> pd.DataFrame:
         project_dataframe = project_dataframe.copy()
         if "commit_id" not in project_dataframe.columns:
@@ -136,14 +131,6 @@ class SPIDBDataset(BaseDataset):
                 if len(candidate_shas) > 2:
                     logger.warning(
                         "[spidb] Skipping row %d: >2 commits match message", row_position
-                    )
-                    continue
-
-                if repo is None:
-                    repo = clone_repository(project_url)
-                if repo is None:
-                    logger.warning(
-                        "[spidb] Skipping row %d: unable to clone %s", row_position, project_url
                     )
                     continue
 
@@ -189,14 +176,17 @@ class SPIDBDataset(BaseDataset):
         download_file(f"https://drive.google.com/uc?id={file_id}", csv_path, checksum=checksum)
 
         project_data = self._read_clean_csv(csv_path)
-        commit_dict, repo = self._load_all_commit_messages(project_url)
-
-        return self._add_commit_id(
-            project_dataframe=project_data,
-            commit_dict=commit_dict,
-            project_url=project_url,
-            repo=repo,
-        )
+        path = clone_repository(project_url)
+        if path is None:
+            logger.warning("[spidb] Unable to clone %s", project_url)
+            return project_data
+        with Repo(path) as repo:
+            commit_dict = self._load_all_commit_messages(repo)
+            return self._add_commit_id(
+                project_dataframe=project_data,
+                commit_dict=commit_dict,
+                repo=repo,
+            )
 
     @override
     def _load_data(self) -> pd.DataFrame:

@@ -4,6 +4,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+from git import Repo
 from tqdm.asyncio import tqdm as async_tqdm
 from tqdm.auto import tqdm
 
@@ -21,24 +22,25 @@ def _resolve_commit_ids(args: tuple[str, list[str]]) -> dict[str, str]:
     project_url, commit_ids = args
     logger.debug("Processing repository: %s with %d commits", project_url, len(commit_ids))
 
-    repo = clone_repository(project_url)
-    if not repo:
+    path = clone_repository(project_url)
+    if not path:
         logger.error("Could not clone repository for project_url %s", project_url)
         return {}
 
     resolved: dict[str, str] = {}
-    for commit_id in commit_ids:
-        try:
-            full_sha = repo.commit(commit_id).hexsha
-            if full_sha != commit_id:
-                resolved[commit_id] = full_sha
-        except Exception as e:
-            logger.debug(
-                "Failed to extend commit ID %s for repository %s: %s",
-                commit_id,
-                project_url,
-                e,
-            )
+    with Repo(path) as repo:
+        for commit_id in commit_ids:
+            try:
+                full_sha = repo.commit(commit_id).hexsha
+                if full_sha != commit_id:
+                    resolved[commit_id] = full_sha
+            except Exception as e:
+                logger.debug(
+                    "Failed to extend commit ID %s for repository %s: %s",
+                    commit_id,
+                    project_url,
+                    e,
+                )
 
     return resolved
 

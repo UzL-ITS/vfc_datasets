@@ -1,4 +1,3 @@
-import contextlib
 import logging
 from collections import defaultdict
 from collections.abc import Callable
@@ -69,10 +68,8 @@ def process_commits_in_batches(
         )
 
     # Clone
-    repo_objects = clone_repositories(to_process, strategy=strategy_by_url)
-    repo_paths = {
-        url: fspath(r.working_dir) for url, r in repo_objects.items() if r and r.working_dir
-    }
+    cloned_paths = clone_repositories(to_process, strategy=strategy_by_url)
+    repo_paths = {url: fspath(p) for url, p in cloned_paths.items() if p}
     path_to_url: dict[str, str] = {}
     for url, path in repo_paths.items():
         if path in path_to_url:
@@ -97,9 +94,6 @@ def process_commits_in_batches(
     total = sum(len(b[1]) for b in batches)
     logger.info("Processing %d commits across %d repos", total, len(repo_paths))
 
-    # Track pending commits per URL for early repo cleanup
-    pending_by_url: dict[str, int] = {url: len(cids) for url, cids in commits_by_url.items()}
-
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {executor.submit(batch_fn, b): b for b in batches}
         with tqdm(total=total, desc=desc, unit="commits") as pbar:
@@ -113,19 +107,5 @@ def process_commits_in_batches(
                 except Exception:
                     logger.exception("Batch failed for %s", batch[0])
                 pbar.update(len(batch[1]))
-
-                # Close repo early when all its commits are done
-                pending_by_url[url] -= len(batch[1])
-                if pending_by_url[url] <= 0:
-                    repo = repo_objects.pop(url, None)
-                    if repo:
-                        with contextlib.suppress(BrokenPipeError, OSError):
-                            repo.close()
-
-    # Cleanup any remaining repos (e.g. if batches failed)
-    for repo in repo_objects.values():
-        with contextlib.suppress(BrokenPipeError, OSError):
-            if repo:
-                repo.close()
 
     return entries

@@ -75,7 +75,7 @@ def _clone_with_auth_bypass(
     destination: Path,
     clone_options: list[str],
     timeout: int,
-) -> Repo | None:
+) -> Path | None:
     """Retry cloning after stripping credentials from URL."""
 
     parsed = urlparse(git_url)
@@ -86,13 +86,15 @@ def _clone_with_auth_bypass(
 
     try:
         logger.debug("Retrying clone without auth: %s", clean_url)
-        return Repo.clone_from(
+        with Repo.clone_from(
             clean_url,
             str(destination),
             multi_options=clone_options,
             kill_after_timeout=timeout,
             allow_unsafe_options=True,  # Required for -c options
-        )
+        ):
+            pass
+        return destination
     except Exception as exc:
         logger.error("Auth bypass clone failed for %s: %s", clean_url, exc)
         return None
@@ -128,8 +130,8 @@ def _handle_existing_repo(
     branch: str | None,
     timeout: int,
     strategy: CloneStrategy,
-) -> Repo | None:
-    """Return existing repo if valid, optionally checking out branch."""
+) -> Path | None:
+    """Validate existing repo (optionally fetch/checkout); return its path."""
     try:
         repo = Repo(destination)
         _ = repo.head.commit
@@ -141,20 +143,20 @@ def _handle_existing_repo(
         logger.warning("Failed to access repository %s: %s", destination, exc)
         return None
 
-    if strategy is CloneStrategy.FULL and _is_partial_clone(repo):
-        if not _upgrade_to_full(repo, timeout):
-            # Upgrade mutates filter config before fetching; on fetch failure
-            # the repo is in an inconsistent state and must be recloned.
-            logger.warning("Upgrade failed for %s, discarding for reclone", destination)
-            repo.close()
-            _delete_corrupted_repo(destination)
-            return None
+    with repo:
+        if strategy is CloneStrategy.FULL and _is_partial_clone(repo):
+            if not _upgrade_to_full(repo, timeout):
+                # Upgrade mutates filter config before fetching; on fetch failure
+                # the repo is in an inconsistent state and must be recloned.
+                logger.warning("Upgrade failed for %s, discarding for reclone", destination)
+                _delete_corrupted_repo(destination)
+                return None
 
-    if branch is not None:
-        _fetch_updates(repo, timeout)
-        _checkout_branch(repo, branch, checkout_files=False)
+        if branch is not None:
+            _fetch_updates(repo, timeout)
+            _checkout_branch(repo, branch, checkout_files=False)
 
-    return repo
+    return destination
 
 
 def _clone_new_repo(
@@ -163,7 +165,7 @@ def _clone_new_repo(
     branch: str | None,
     timeout: int,
     strategy: CloneStrategy,
-) -> Repo | None:
+) -> Path | None:
     """Clone repository to destination path."""
     parsed = urlparse(git_url)
     if not parsed.scheme or not parsed.hostname:
@@ -191,16 +193,16 @@ def _clone_new_repo(
         clone_options.extend(["--filter", f"blob:limit={BLOB_SIZE_LIMIT}"])
 
     try:
-        repo = Repo.clone_from(
+        with Repo.clone_from(
             git_url,
             str(destination),
             multi_options=clone_options,
             kill_after_timeout=timeout,
             allow_unsafe_options=True,  # Required for -c options
-        )
-        if branch:
-            _checkout_branch(repo, branch, checkout_files=False)
-        return repo
+        ) as repo:
+            if branch:
+                _checkout_branch(repo, branch, checkout_files=False)
+        return destination
     except GitCommandError as exc:
         message = str(exc).lower()
         if "authentication" in message:
@@ -225,8 +227,8 @@ def clone_repository(
     branch: str | None = None,
     timeout: int | None = None,
     strategy: CloneStrategy = CloneStrategy.PARTIAL,
-) -> Repo | None:
-    """Clone or reuse a git repository with a simplified interface."""
+) -> Path | None:
+    """Clone or reuse a git repository; return its on-disk path."""
     git_url = (git_url or "").strip()
     if not git_url:
         logger.error("Empty git URL provided")
@@ -238,9 +240,9 @@ def clone_repository(
     destination = Path(url_to_pathname(git_url))
 
     if destination.exists():
-        repo = _handle_existing_repo(destination, branch, timeout, strategy)
-        if repo:
-            return repo
+        path = _handle_existing_repo(destination, branch, timeout, strategy)
+        if path:
+            return path
 
     return _clone_new_repo(git_url, destination, branch, timeout, strategy)
 
@@ -251,7 +253,7 @@ def clone_repositories(
     branch: str | None = None,
     timeout: int | None = None,
     strategy: CloneStrategy | dict[str, CloneStrategy] = CloneStrategy.PARTIAL,
-) -> dict[str, Repo | None]:
+) -> dict[str, Path | None]:
     """Clone all repositories from dataset entries using parallel processing.
 
     ``strategy`` may be a single CloneStrategy applied to every URL, or a dict
@@ -299,10 +301,10 @@ def clone_repositories(
             for future in as_completed(future_to_url):
                 url = future_to_url[future]
                 try:
-                    repo = future.result()
-                    results[url] = repo
+                    path = future.result()
+                    results[url] = path
 
-                    if repo is None:
+                    if path is None:
                         failed_urls.append(url)
                         pbar.set_postfix_str(f"Failed: {len(failed_urls)}")
 
@@ -315,7 +317,7 @@ def clone_repositories(
                 pbar.update(1)
 
     # Summary logging
-    successful = sum(1 for repo in results.values() if repo is not None)
+    successful = sum(1 for path in results.values() if path is not None)
     logger.info(
         "Clone complete: %d/%d successful, %d failed",
         successful,

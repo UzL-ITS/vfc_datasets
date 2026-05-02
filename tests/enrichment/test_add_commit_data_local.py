@@ -3,6 +3,7 @@
 from datetime import UTC, datetime
 
 import pytest
+from git import Repo
 
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.transformations.enrichment.add_commit_data_local import (
@@ -10,6 +11,7 @@ from vfc_datasets.transformations.enrichment.add_commit_data_local import (
     add_commit_information_local,
 )
 from vfc_datasets.transformations.enrichment.commit_data_common import CommitData, apply_commit_data
+from vfc_datasets.utils.git.repository import clone_repository
 
 
 class TestApplyCommitData:
@@ -173,12 +175,10 @@ class TestGetCommitInfo:
     @pytest.fixture
     def curl_repo(self):
         """Get curl repo (clone if needed)."""
-        from vfc_datasets.utils.git.repository import clone_repository
-
-        repo = clone_repository("https://github.com/curl/curl")
-        assert repo is not None
-        yield repo
-        repo.close()
+        path = clone_repository("https://github.com/curl/curl")
+        assert path is not None
+        with Repo(path) as repo:
+            yield repo
 
     @pytest.mark.integration
     @pytest.mark.slow
