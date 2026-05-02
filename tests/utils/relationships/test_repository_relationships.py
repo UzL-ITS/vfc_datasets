@@ -2,24 +2,31 @@
 
 import pytest
 
+from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.commit import TEMPLATE_FILE_PATTERNS, is_template_file
-from vfc_datasets.utils.split.repository_relationships import (
+from vfc_datasets.utils.relationships.discovery import (
+    _build_edges_from_signatures,
+    _find_shared_commits,
+    _sample_commits,
+    compute_config_hash,
+)
+from vfc_datasets.utils.relationships.models import (
     RelationshipEdge,
     RepositoryGroup,
     RepositoryRelationships,
     _find_connected_groups,
-    _find_suspicious_project_relationships,
-    _link_key,
+    link_key,
 )
+from vfc_datasets.utils.relationships.validation import _find_suspicious_project_relationships
 
 
 class TestLinkKey:
     def test_sorts_urls(self) -> None:
-        assert _link_key("b", "a") == ("a", "b")
-        assert _link_key("a", "b") == ("a", "b")
+        assert link_key("b", "a") == ("a", "b")
+        assert link_key("a", "b") == ("a", "b")
 
     def test_consistent_key(self) -> None:
-        assert _link_key("x", "y") == _link_key("y", "x")
+        assert link_key("x", "y") == link_key("y", "x")
 
 
 class TestRelationshipEdge:
@@ -220,7 +227,6 @@ class TestRepositoryRelationships:
                 "https://github.com/a/b": 0,
                 "https://github.com/c/d": 0,
             },
-            _id_to_group={0: group},
         )
 
         result = relationships.get_group("https://github.com/a/b")
@@ -297,6 +303,37 @@ class TestRepositoryRelationships:
         group = relationships.get_group("fork")
         assert group is not None
         assert group.canonical_url == "source"
+
+    def test_from_edges_canonical_falls_back_to_most_commits(self) -> None:
+        """When fork API has no answer, prefer the URL with the most commits."""
+        edges = [RelationshipEdge("fork1", "fork2", "local_history", {"c1"})]
+        commit_history = {"fork1": ["c1", "c2"], "fork2": ["c1", "c2", "c3", "c4"]}
+        relationships = RepositoryRelationships.from_edges(
+            edges, commit_history=commit_history
+        )
+        group = relationships.get_group("fork1")
+        assert group is not None
+        assert group.canonical_url == "fork2"
+
+    def test_from_edges_canonical_prefers_fork_root_over_commit_count(self) -> None:
+        """A known fork-chain root wins even if a fork has more commits locally."""
+        edges = [RelationshipEdge("fork", "source", "github_fork")]
+        url_to_source = {"fork": "source"}
+        commit_history = {"fork": ["c1", "c2", "c3"], "source": ["c1"]}
+        relationships = RepositoryRelationships.from_edges(
+            edges, url_to_source, commit_history=commit_history
+        )
+        group = relationships.get_group("fork")
+        assert group is not None
+        assert group.canonical_url == "source"
+
+    def test_from_edges_canonical_none_without_commit_history(self) -> None:
+        """No fork data and no commit history: canonical stays None."""
+        edges = [RelationshipEdge("a", "b", "local_history")]
+        relationships = RepositoryRelationships.from_edges(edges)
+        group = relationships.get_group("a")
+        assert group is not None
+        assert group.canonical_url is None
 
     def test_from_edges_filters_singletons(self) -> None:
         edges = [RelationshipEdge("a", "b", "github_fork")]
@@ -397,7 +434,6 @@ class TestFindSuspiciousProjectRelationships:
         relationships = RepositoryRelationships(
             groups=[group],
             url_to_group_id={url1: 0, url2: 0},
-            _id_to_group={0: group},
         )
         fork_edges = [RelationshipEdge(url1, url2, "github_fork")]
 
@@ -416,7 +452,6 @@ class TestFindSuspiciousProjectRelationships:
         relationships = RepositoryRelationships(
             groups=[group],
             url_to_group_id={url1: 0, url2: 0},
-            _id_to_group={0: group},
         )
 
         _find_suspicious_project_relationships(relationships, [])
@@ -434,7 +469,6 @@ class TestFindSuspiciousProjectRelationships:
         relationships = RepositoryRelationships(
             groups=[group],
             url_to_group_id={url1: 0, url2: 0},
-            _id_to_group={0: group},
         )
 
         _find_suspicious_project_relationships(relationships, [])
@@ -453,7 +487,6 @@ class TestFindSuspiciousProjectRelationships:
         relationships = RepositoryRelationships(
             groups=[group],
             url_to_group_id={url1: 0, url2: 0},
-            _id_to_group={0: group},
         )
         fork_edges = [RelationshipEdge(url1, url2, "github_fork")]
 
@@ -472,7 +505,6 @@ class TestFindSuspiciousProjectRelationships:
         relationships = RepositoryRelationships(
             groups=[group],
             url_to_group_id={url1: 0, url2: 0},
-            _id_to_group={0: group},
         )
 
         _find_suspicious_project_relationships(relationships, [])
@@ -493,7 +525,6 @@ class TestFindSuspiciousProjectRelationships:
         relationships = RepositoryRelationships(
             groups=[group],
             url_to_group_id={url1: 0, url2: 0, url3: 0},
-            _id_to_group={0: group},
         )
 
         _find_suspicious_project_relationships(relationships, [])
@@ -513,10 +544,251 @@ class TestFindSuspiciousProjectRelationships:
         relationships = RepositoryRelationships(
             groups=[group],
             url_to_group_id={url1: 0, url2: 0, url3: 0},
-            _id_to_group={0: group},
         )
         fork_edges = [RelationshipEdge(url1, url2, "github_fork")]
 
         _find_suspicious_project_relationships(relationships, fork_edges)
         # url1 and url2 validated via fork, url3 suspicious (single commit)
         assert group.suspicious_urls == {url3}
+
+
+class TestSampleCommits:
+    def test_empty_history_returns_empty(self) -> None:
+        assert _sample_commits(set(), {}, num_recent_commits=10, num_early_commits=10, skip_oldest_commits=0) == set()
+
+    def test_url_with_no_commits_skipped(self) -> None:
+        sampled = _sample_commits({"a"}, {"a": []}, num_recent_commits=10, num_early_commits=10, skip_oldest_commits=0)
+        assert sampled == set()
+
+    def test_short_history_returns_only_recent(self) -> None:
+        # 5 commits, num_recent=10: all 5 are recent. Early sampling skipped because
+        # len(commits) <= num_early + skip_oldest.
+        commits = [f"c{i}" for i in range(5)]
+        sampled = _sample_commits(
+            {"a"}, {"a": commits}, num_recent_commits=10, num_early_commits=10, skip_oldest_commits=0
+        )
+        assert sampled == set(commits)
+
+    def test_recent_commits_sampled_from_start(self) -> None:
+        # Commit history is newest-first. num_early > len(commits) so early branch skipped.
+        commits = [f"c{i}" for i in range(100)]
+        sampled = _sample_commits(
+            {"a"}, {"a": commits}, num_recent_commits=3, num_early_commits=200, skip_oldest_commits=0
+        )
+        assert sampled == {"c0", "c1", "c2"}
+
+    def test_num_early_zero_skips_early_branch(self) -> None:
+        # num_early=0 must not pull any early commits regardless of skip_oldest.
+        commits = [f"c{i}" for i in range(100)]
+        sampled = _sample_commits(
+            {"a"}, {"a": commits}, num_recent_commits=3, num_early_commits=0, skip_oldest_commits=0
+        )
+        assert sampled == {"c0", "c1", "c2"}
+
+    def test_early_commits_sampled_from_end_with_skip(self) -> None:
+        # 100 commits, num_early=3, skip_oldest=2 → take c95, c96, c97 (skip c98, c99).
+        commits = [f"c{i}" for i in range(100)]
+        sampled = _sample_commits(
+            {"a"}, {"a": commits}, num_recent_commits=0, num_early_commits=3, skip_oldest_commits=2
+        )
+        assert sampled == {"c95", "c96", "c97"}
+
+    def test_early_commits_no_skip_uses_full_tail(self) -> None:
+        commits = [f"c{i}" for i in range(100)]
+        sampled = _sample_commits(
+            {"a"}, {"a": commits}, num_recent_commits=0, num_early_commits=3, skip_oldest_commits=0
+        )
+        assert sampled == {"c97", "c98", "c99"}
+
+    def test_combines_across_repos(self) -> None:
+        sampled = _sample_commits(
+            {"a", "b"},
+            {"a": ["c1", "c2"], "b": ["c3", "c4"]},
+            num_recent_commits=2,
+            num_early_commits=0,
+            skip_oldest_commits=0,
+        )
+        assert sampled == {"c1", "c2", "c3", "c4"}
+
+
+class TestFindSharedCommits:
+    def test_no_shared_returns_empty(self) -> None:
+        result = _find_shared_commits(
+            {"a", "b"},
+            {"a": ["c1"], "b": ["c2"]},
+            sampled_commits={"c1", "c2"},
+        )
+        assert result == []
+
+    def test_pair_sharing_one_commit(self) -> None:
+        result = _find_shared_commits(
+            {"a", "b"},
+            {"a": ["c1"], "b": ["c1"]},
+            sampled_commits={"c1"},
+        )
+        assert result == [("c1", {"a", "b"})]
+
+    def test_three_repos_sharing_commit(self) -> None:
+        result = _find_shared_commits(
+            {"a", "b", "c"},
+            {"a": ["c1"], "b": ["c1"], "c": ["c1"]},
+            sampled_commits={"c1"},
+        )
+        assert len(result) == 1
+        assert result[0] == ("c1", {"a", "b", "c"})
+
+    def test_unsampled_commits_ignored(self) -> None:
+        result = _find_shared_commits(
+            {"a", "b"},
+            {"a": ["c1", "c2"], "b": ["c1", "c2"]},
+            sampled_commits={"c1"},  # c2 shared but not sampled
+        )
+        assert result == [("c1", {"a", "b"})]
+
+    def test_results_sorted_by_url_count(self) -> None:
+        # c2 is in 3 repos, c1 in 2 → c1 first (smaller group), then c2.
+        result = _find_shared_commits(
+            {"a", "b", "c"},
+            {"a": ["c1", "c2"], "b": ["c1", "c2"], "c": ["c2"]},
+            sampled_commits={"c1", "c2"},
+        )
+        assert [cid for cid, _ in result] == ["c1", "c2"]
+
+
+class TestBuildEdgesFromSignatures:
+    HIGH_OVERLAP = {"a": ["c1", "c2", "c3"], "b": ["c1", "c2", "c3"], "c": ["c1", "c2", "c3"]}
+
+    def test_empty_input_returns_no_edges(self) -> None:
+        assert _build_edges_from_signatures([], {}, {}, 0.1) == []
+
+    def test_substantial_signature_creates_edge(self) -> None:
+        edges = _build_edges_from_signatures(
+            [("c1", {"a", "b"})],
+            {"c1": ("content_hash", "files_hash")},
+            self.HIGH_OVERLAP,
+            0.1,
+        )
+        assert len(edges) == 1
+        assert edges[0].key == ("a", "b")
+        assert edges[0].method == "local_history"
+        assert edges[0].commit_ids == {"c1"}
+
+    def test_missing_signature_no_edge(self) -> None:
+        edges = _build_edges_from_signatures(
+            [("c1", {"a", "b"})], {}, self.HIGH_OVERLAP, 0.1
+        )
+        assert edges == []
+
+    def test_none_signature_no_edge(self) -> None:
+        edges = _build_edges_from_signatures(
+            [("c1", {"a", "b"})], {"c1": None}, self.HIGH_OVERLAP, 0.1
+        )
+        assert edges == []
+
+    def test_multiple_commits_same_pair_accumulate_commit_ids(self) -> None:
+        sig = ("h", "f")
+        edges = _build_edges_from_signatures(
+            [("c1", {"a", "b"}), ("c2", {"a", "b"})],
+            {"c1": sig, "c2": sig},
+            self.HIGH_OVERLAP,
+            0.1,
+        )
+        assert len(edges) == 1
+        assert edges[0].commit_ids == {"c1", "c2"}
+
+    def test_three_url_commit_creates_pairwise_edges(self) -> None:
+        edges = _build_edges_from_signatures(
+            [("c1", {"a", "b", "c"})],
+            {"c1": ("h", "f")},
+            self.HIGH_OVERLAP,
+            0.1,
+        )
+        assert {e.key for e in edges} == {("a", "b"), ("a", "c"), ("b", "c")}
+
+    def test_low_overlap_pair_rejected(self) -> None:
+        # b shares only 1/100 commits with a, well below threshold.
+        commit_history = {"a": [f"c{i}" for i in range(100)], "b": ["c0"] + [f"x{i}" for i in range(99)]}
+        edges = _build_edges_from_signatures(
+            [("c0", {"a", "b"})],
+            {"c0": ("h", "f")},
+            commit_history,
+            0.1,
+        )
+        assert edges == []
+
+    def test_overlap_threshold_at_zero_disables_gate(self) -> None:
+        # Same low-overlap data as above, but threshold=0 admits everything.
+        commit_history = {"a": [f"c{i}" for i in range(100)], "b": ["c0"] + [f"x{i}" for i in range(99)]}
+        edges = _build_edges_from_signatures(
+            [("c0", {"a", "b"})],
+            {"c0": ("h", "f")},
+            commit_history,
+            0.0,
+        )
+        assert len(edges) == 1
+
+    def test_mixed_cluster_only_high_overlap_pairs_kept(self) -> None:
+        # 'real_a' and 'real_b' overlap fully; 'unrelated' shares only c0 with each.
+        # Sizing matters: with 100-commit repos and one shared commit, overlap is
+        # 1/100 = 0.01 — below the 0.1 threshold.
+        shared_history = ["c0"] + [f"y{i}" for i in range(99)]
+        commit_history = {
+            "real_a": shared_history,
+            "real_b": shared_history,
+            "unrelated": ["c0"] + [f"x{i}" for i in range(99)],
+        }
+        edges = _build_edges_from_signatures(
+            [("c0", {"real_a", "real_b", "unrelated"})],
+            {"c0": ("h", "f")},
+            commit_history,
+            0.1,
+        )
+        assert {e.key for e in edges} == {("real_a", "real_b")}
+
+
+class TestComputeConfigHash:
+    def _entry(self, url: str) -> DatasetEntry:
+        return DatasetEntry(project_url=url, commit_id="abc123", src_datasets={"test"})
+
+    def test_deterministic(self) -> None:
+        entries = [self._entry("https://github.com/a/b")]
+        h1 = compute_config_hash(entries, 2, 100, 100, 10, 0.1)
+        h2 = compute_config_hash(entries, 2, 100, 100, 10, 0.1)
+        assert h1 == h2
+
+    def test_returns_16_char_hex(self) -> None:
+        h = compute_config_hash([self._entry("https://github.com/a/b")], 2, 100, 100, 10, 0.1)
+        assert len(h) == 16
+        assert all(c in "0123456789abcdef" for c in h)
+
+    def test_entry_order_does_not_affect_hash(self) -> None:
+        # URLs are sorted internally before hashing.
+        a, b = self._entry("https://github.com/a/a"), self._entry("https://github.com/b/b")
+        assert compute_config_hash([a, b], 2, 100, 100, 10, 0.1) == compute_config_hash(
+            [b, a], 2, 100, 100, 10, 0.1
+        )
+
+    def test_different_urls_differ(self) -> None:
+        h1 = compute_config_hash([self._entry("https://github.com/a/b")], 2, 100, 100, 10, 0.1)
+        h2 = compute_config_hash([self._entry("https://github.com/c/d")], 2, 100, 100, 10, 0.1)
+        assert h1 != h2
+
+    @pytest.mark.parametrize("kwargs", [
+        {"min_files_changed": 3},
+        {"num_recent_commits": 50},
+        {"num_early_commits": 50},
+        {"skip_oldest_commits": 5},
+        {"min_overlap_ratio": 0.05},
+    ])
+    def test_each_param_changes_hash(self, kwargs: dict[str, int | float]) -> None:
+        entries = [self._entry("https://github.com/a/b")]
+        defaults: dict[str, int | float] = {
+            "min_files_changed": 2,
+            "num_recent_commits": 100,
+            "num_early_commits": 100,
+            "skip_oldest_commits": 10,
+            "min_overlap_ratio": 0.1,
+        }
+        baseline = compute_config_hash(entries, **defaults)  # pyright: ignore[reportArgumentType]
+        modified = compute_config_hash(entries, **(defaults | kwargs))  # pyright: ignore[reportArgumentType]
+        assert baseline != modified

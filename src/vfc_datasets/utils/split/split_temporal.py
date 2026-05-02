@@ -1,8 +1,8 @@
 """Temporal splitting strategy based on commit timestamps."""
 
 from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.utils.relationships import RepositoryRelationships
 
-from .repository_relationships import RepositoryRelationships
 from .split_common import split_by_ratio, validate_split_ratios, visualize_split
 
 

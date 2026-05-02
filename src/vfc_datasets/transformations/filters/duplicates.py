@@ -8,7 +8,7 @@ from typing import Any
 from tqdm.auto import tqdm
 
 from vfc_datasets.dataset_entry import DatasetEntry
-from vfc_datasets.utils.split.repository_relationships import (
+from vfc_datasets.utils.relationships import (
     RepositoryGroup,
     RepositoryRelationships,
     discover_repository_relationships,

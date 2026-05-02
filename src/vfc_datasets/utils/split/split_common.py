@@ -4,8 +4,7 @@ import logging
 from collections import defaultdict
 
 from vfc_datasets.dataset_entry import DatasetEntry
-
-from .repository_relationships import RepositoryRelationships
+from vfc_datasets.utils.relationships import RepositoryRelationships
 
 type Group = tuple[set[str], int]
 

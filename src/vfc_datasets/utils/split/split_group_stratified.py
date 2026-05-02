@@ -3,8 +3,8 @@
 import random
 
 from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.utils.relationships import RepositoryRelationships
 
-from .repository_relationships import RepositoryRelationships
 from .split_common import (
     Group,
     group_related_repos,

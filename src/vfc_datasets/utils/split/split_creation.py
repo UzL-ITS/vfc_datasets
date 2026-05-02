@@ -6,8 +6,8 @@ from pathlib import Path
 
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import save_entries_csv
+from vfc_datasets.utils.relationships import RepositoryRelationships
 
-from .repository_relationships import RepositoryRelationships
 from .split_common import group_related_repos, visualize_split
 from .split_group_stratified import train_val_test_split_group_stratified
 from .split_random import train_val_test_split_random

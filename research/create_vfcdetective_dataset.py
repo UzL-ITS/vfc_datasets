@@ -10,11 +10,11 @@ from vfc_datasets.utils.core.logging import setup_logging
 from vfc_datasets.utils.core.serialization import load_entries, save_entries
 from vfc_datasets.utils.core.statistics import log_dataset_stats
 from vfc_datasets.utils.extensions import extensions_for
+from vfc_datasets.utils.relationships import discover_repository_relationships
 from vfc_datasets.utils.split import (
     create_random_split,
     create_temporal_split,
     create_top_n_group_stratified_splits,
-    discover_repository_relationships,
 )
 
 load_dotenv()

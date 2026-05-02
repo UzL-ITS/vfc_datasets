@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from vfc_datasets.dataset_entry import DatasetEntry
-from vfc_datasets.utils.split.repository_relationships import RepositoryRelationships
+from vfc_datasets.utils.relationships import RepositoryRelationships
 from vfc_datasets.utils.split.split_group_stratified import (
     _greedy_assign,
     _optimize_assignment,
@@ -196,7 +196,7 @@ def test_three_way_split_deterministic_with_seed():
 
 def test_three_way_split_no_group_leakage():
     """Verify related repos stay in same split."""
-    from vfc_datasets.utils.split.repository_relationships import RepositoryGroup
+    from vfc_datasets.utils.relationships import RepositoryGroup
 
     # Create entries from 3 repos, where repo2 and repo3 are related
     entries = (
@@ -216,7 +216,6 @@ def test_three_way_split_no_group_leakage():
             "https://github.com/test/repo2": 0,
             "https://github.com/test/repo3": 0,
         },
-        _id_to_group={0: group},
     )
 
     train, val, test = train_val_test_split_group_stratified(entries, rel, seed=42)
