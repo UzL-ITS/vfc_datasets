@@ -84,5 +84,13 @@ If you use any of these datasets for your research, please cite the original dat
 If you find our toolkit useful, please consider citing it as:
 
 ```bibtex
-TODO
+@misc{vfc-datasets,
+      title={Code-Centric Detection of Vulnerability-Fixing Commits: A Unified Benchmark and Empirical Study}, 
+      author={Nils Loose and Joseph Bienhüls and Kristoffer Hempel and Felix Mächtle and Thomas Eisenbarth},
+      year={2026},
+      eprint={2605.13138},
+      archivePrefix={arXiv},
+      primaryClass={cs.SE},
+      url={https://arxiv.org/abs/2605.13138}, 
+}
 ```
