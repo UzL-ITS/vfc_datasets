@@ -2,6 +2,7 @@
 
 from .bigvul import BigVulDataset
 from .cc900 import CC900Dataset
+from .commitvulfix import CommitVulFixDataset
 from .cross_vul import CrossVulDataset
 from .cvefixes import CVEFixesDataset
 from .devign import DevignDataset
@@ -22,6 +23,7 @@ from .vudenc import VUDEncDataset
 __all__ = [
     "BigVulDataset",
     "CC900Dataset",
+    "CommitVulFixDataset",
     "CrossVulDataset",
     "CVEFixesDataset",
     "DevignDataset",

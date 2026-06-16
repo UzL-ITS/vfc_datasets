@@ -26,7 +26,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 
 <!-- COMMIT_DATASETS:START -->
 <details>
-<summary>Commit-level (20 datasets)</summary>
+<summary>Commit-level (21 datasets)</summary>
 
 | Year | Dataset | VFCs | Non-VFCs | Projects | Paper |
 |------|---------|------|----------|----------|-------|
@@ -48,6 +48,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 | 2024 | [JavaVFCExtended](https://doi.org/10.5281/zenodo.13731781) | 16,837 | 0 | 2,532 | [link](https://doi.org/10.48550/arXiv.2409.05576) |
 | 2024 | [Morefixes](https://github.com/JafarAkhondali/Morefixes) | 35,130 | 0 | 6,945 | [link](https://doi.org/10.1145/3663533.3664036) |
 | 2024 | [RepoSPD](https://github.com/Xin-Cheng-Wen/RepoSPD) | 18,127 | 31,397 | 348 | [link](https://doi.org/10.48550/arXiv.2412.08068) |
+| 2025 | [CommitVulFix](https://github.com/security-pride/CommitShield) | 681 | 1,118 | 233 | [link](https://doi.org/10.48550/arXiv.2501.03626) |
 | 2025 | [FixSeekerBalanced](https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link) | 9,916 | 10,979 | 2,094 | [link](https://doi.org/10.48550/arXiv.2503.20265) |
 | 2025 | [FixSeekerImbalanced](https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link) | 9,915 | 499,150 | 2,094 | [link](https://doi.org/10.48550/arXiv.2503.20265) |
 
