@@ -1,6 +1,7 @@
 """Commit-level VFC datasets."""
 
 from .bigvul import BigVulDataset
+from .bigvulfixes import BigVulFixesDataset
 from .cc900 import CC900Dataset
 from .commitvulfix import CommitVulFixDataset
 from .cross_vul import CrossVulDataset
@@ -22,6 +23,7 @@ from .vudenc import VUDEncDataset
 
 __all__ = [
     "BigVulDataset",
+    "BigVulFixesDataset",
     "CC900Dataset",
     "CommitVulFixDataset",
     "CrossVulDataset",
