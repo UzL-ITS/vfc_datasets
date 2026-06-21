@@ -2,6 +2,7 @@ import contextlib
 import enum
 import errno
 import logging
+import os
 import shutil
 from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -17,6 +18,11 @@ from vfc_datasets.dataset_entry import DatasetEntry
 from .url import url_to_pathname
 
 logger = logging.getLogger(__name__)
+
+# Run git non-interactively so a private or missing repo fails fast instead of
+# blocking on a credential prompt. setdefault lets an operator override.
+os.environ.setdefault("GIT_TERMINAL_PROMPT", "0")  # no terminal prompt (git >= 2.3)
+os.environ.setdefault("GIT_ASKPASS", "true")  # shadow any GUI SSH_ASKPASS
 
 
 class CloneStrategy(enum.Enum):
