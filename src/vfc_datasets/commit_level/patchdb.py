@@ -7,9 +7,9 @@ from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
+    normalize_commit_id,
     normalize_cve_ids,
     normalize_cwe_ids,
-    normalize_or_resolve_commit,
 )
 
 logger = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ class PatchDBDataset(BaseDataset):
             )
             # Try first part only
             first_part = raw_commit_id_str.split()[0]
-            commit_id = normalize_or_resolve_commit(first_part, project_url)
+            commit_id = normalize_commit_id(first_part)
             if not commit_id:
                 logger.debug(
                     "[%s] Skipping row: could not extract valid commit hash from %r for %s",
@@ -99,7 +99,7 @@ class PatchDBDataset(BaseDataset):
                 )
                 return None
         else:
-            commit_id = normalize_or_resolve_commit(raw_commit_id_str, project_url)
+            commit_id = normalize_commit_id(raw_commit_id_str)
             if not commit_id:
                 return None
 

@@ -6,7 +6,7 @@ import pandas as pd
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
-from vfc_datasets.parsing_helpers import normalize_cve_ids, normalize_or_resolve_commit
+from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cve_ids
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ class MSR2019Dataset(BaseDataset):
             )
             return None
 
-        commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+        commit_id = normalize_commit_id(raw_commit_id)
         if not commit_id:
             return None
 

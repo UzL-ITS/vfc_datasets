@@ -72,7 +72,7 @@ class FixSeekerBalancedDataset(_FixSeekerBase):
             "Our datasets cover four programming languages: C/C++, Java, Python, and PHP, "
             "with a total of 10,258 VFCs across 2,094 open-source projects.",
         ),
-        vfcs=9916,
+        vfcs=9885,
         non_vfcs=10979,
         projects=2094,
     )
@@ -93,7 +93,7 @@ class FixSeekerImbalancedDataset(_FixSeekerBase):
             "Our datasets cover four programming languages: C/C++, Java, Python, and PHP, "
             "with a total of 10,258 VFCs across 2,094 open-source projects.",
         ),
-        vfcs=9915,
+        vfcs=9884,
         non_vfcs=499150,
         projects=2094,
     )

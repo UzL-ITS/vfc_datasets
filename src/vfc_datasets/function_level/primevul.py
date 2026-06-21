@@ -9,9 +9,9 @@ from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
+    normalize_commit_id,
     normalize_cve_ids,
     normalize_cwe_ids,
-    normalize_or_resolve_commit,
 )
 from vfc_datasets.transformations.enrichment.project_urls.url_mappings import get_moved_urls
 from vfc_datasets.utils.git.url import GitURL
@@ -34,11 +34,11 @@ class PrimeVulDataset(BaseDataset):
             "across 755 projects and 6,827 commits.",
         ),
         # NOTE: Currently used version (v0.1 from GDrive) has 224,533 total functions.
-        vfcs=5658,
+        vfcs=5657,
         non_vfcs=0,
         projects=755,
-        vulnerable_functions=6004,
-        benign_functions=218529,
+        vulnerable_functions=6003,
+        benign_functions=218474,
     )
 
     # Special project name mappings for entries missing proper URLs
@@ -143,7 +143,7 @@ class PrimeVulDataset(BaseDataset):
         if project_url == "None" or not project_url:
             project_url = row.get("resolved_project_url")
 
-        commit_id = normalize_or_resolve_commit(row.get("commit_id"), project_url)
+        commit_id = normalize_commit_id(row.get("commit_id"))
 
         # TODO: get function name from func (function code)
         # WORKAROUND: use func_hash as function name

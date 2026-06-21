@@ -32,7 +32,7 @@ class BigVulDataset(BaseDataset):
             # Page 3 (Table 2 - Descriptive statistics)
             # Number of Commits: 4432, Vulnerable Functions: 11823, Non-vulnerable Functions: 253096
         ),
-        vfcs=4432,
+        vfcs=4428,
         non_vfcs=0,
         projects=348,
         # vulnerable_functions=11823,

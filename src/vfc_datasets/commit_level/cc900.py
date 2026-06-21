@@ -8,9 +8,9 @@ from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
     extract_url_and_commit,
+    normalize_commit_id,
     normalize_cve_ids,
     normalize_cwe_ids,
-    normalize_or_resolve_commit,
 )
 
 
@@ -31,7 +31,7 @@ class CC900Dataset(BaseDataset):
             "The result is a dataset with 3,765 positive samples and roughly 6,300 negative samples "
             "that we refer to as 900Repo.",
         ),
-        vfcs=3765,
+        vfcs=3762,
         non_vfcs=6347,
         projects=910,
     )
@@ -78,7 +78,7 @@ class CC900Dataset(BaseDataset):
             project_url, raw_commit_id = extract_from_commit_url(row, "github", self.metadata.name)
             if not project_url or not raw_commit_id:
                 return None
-            commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+            commit_id = normalize_commit_id(raw_commit_id)
             if not commit_id:
                 return None
 

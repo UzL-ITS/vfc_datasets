@@ -1,6 +1,7 @@
 """Base dataset class for vulnerability-fixing commit datasets."""
 
 import hashlib
+import inspect
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
@@ -11,14 +12,26 @@ from typing import Any, Literal, cast, override
 import pandas as pd
 from tqdm.auto import tqdm
 
+import vfc_datasets.parsing_helpers as _parsing_helpers
+import vfc_datasets.utils.git.url as _git_url_module
+import vfc_datasets.utils.patterns as _patterns_module
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import load_cache, save_cache
 
 logger = logging.getLogger(__name__)
 
-_ENTRY_SCHEMA_FP = hashlib.blake2b(
+_ENTRY_SCHEMA_FINGERPRINT = hashlib.blake2b(
     repr(DatasetEntry.__annotations__).encode(), digest_size=4
+).hexdigest()
+
+# Fingerprint the shared parsing helpers too, since _parse_row's bytecode misses changes in them.
+_HELPERS_FINGERPRINT = hashlib.blake2b(
+    b"".join(
+        inspect.getsource(m).encode()
+        for m in (_parsing_helpers, _git_url_module, _patterns_module)
+    ),
+    digest_size=4,
 ).hexdigest()
 
 
@@ -83,15 +96,16 @@ class BaseDataset(ABC):
 
     @classmethod
     def _cache_key(cls) -> str:
-        """Cache key combining dataset name, entry-schema fingerprint, and parser hash.
+        """Cache key combining dataset name, entry-schema fingerprint, parser hash,
+        and a fingerprint of the shared parsing helpers _parse_row calls.
 
-        Any change to DatasetEntry fields or the subclass's _parse_row bytecode
-        yields a new key, so a stale cache can never silently shadow a fix.
+        Any change to DatasetEntry fields, the subclass's _parse_row bytecode, or
+        those helpers yields a new key, so a stale cache can never silently shadow a fix.
         """
-        parser_fp = hashlib.blake2b(
+        parser_fingerprint = hashlib.blake2b(
             cls._parse_row.__code__.co_code, digest_size=4
         ).hexdigest()
-        return f"{cls.metadata.name}-s{_ENTRY_SCHEMA_FP}-p{parser_fp}"
+        return f"{cls.metadata.name}-s{_ENTRY_SCHEMA_FINGERPRINT}-p{parser_fingerprint}-h{_HELPERS_FINGERPRINT}"
 
     def _parse(self) -> list[DatasetEntry]:
         """Parse dataset with caching."""

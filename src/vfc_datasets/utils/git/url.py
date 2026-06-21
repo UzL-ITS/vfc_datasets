@@ -376,6 +376,13 @@ def normalize_commit_id(url_or_commit_id: str | None) -> str | None:
     if not value:
         return None
 
+    # Strip patch/diff extensions and trailing punctuation (e.g. "<sha>.patch", "<sha>,")
+    for ext in (".patch", ".diff"):
+        if value.endswith(ext):
+            value = value[: -len(ext)]
+            break
+    value = value.rstrip(".,;")
+
     if _COMMIT_HASH_PATTERN.fullmatch(value):
         return value.lower()
 

@@ -11,9 +11,9 @@ from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
+    normalize_commit_id,
     normalize_cve_ids,
     normalize_cwe_ids,
-    normalize_or_resolve_commit,
 )
 
 logger = logging.getLogger(__name__)
@@ -128,7 +128,7 @@ class RepoSPDDataset(BaseDataset):
                 return None
 
         raw_commit_id = row.get("commit_id")
-        commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+        commit_id = normalize_commit_id(raw_commit_id)
         if not commit_id:
             return None
 

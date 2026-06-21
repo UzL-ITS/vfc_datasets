@@ -7,8 +7,8 @@ from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
+    normalize_commit_id,
     normalize_cve_ids,
-    normalize_or_resolve_commit,
 )
 
 TRACER_CSV_URL = "https://raw.githubusercontent.com/patch-tracer/patch-tracer.github.io/refs/heads/main/Experimental%20Data/Empirical%20Study/depth_dataset.csv"
@@ -54,7 +54,7 @@ class TracerDataset(BaseDataset):
         if not project_url or not raw_commit_id:
             return None
 
-        commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+        commit_id = normalize_commit_id(raw_commit_id)
         if not commit_id:
             return None
 

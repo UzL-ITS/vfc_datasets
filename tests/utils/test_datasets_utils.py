@@ -1,11 +1,4 @@
-import pytest
-
-from vfc_datasets.parsing_helpers import (
-    _resolve_ref_local,
-    _resolve_symbolic_ref,
-    normalize_commit_id,
-    normalize_cwe_ids,
-)
+from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cwe_ids, pinned_commit
 
 
 class TestNormalizeCweIds:
@@ -46,62 +39,48 @@ class TestNormalizeCweIds:
 class TestNormalizeCommitId:
     """Tests for normalize_commit_id function."""
 
+    SHA = "abcdef1234567890abcdef1234567890abcdef12"
+
     def test_strips_url_fragments_and_whitespace(self) -> None:
         assert (
             normalize_commit_id(" abcdef1234567890?w=1#diff-abcdef1234567890L1")
             == "abcdef1234567890"
         )
 
+    def test_strips_patch_and_diff_extensions(self) -> None:
+        assert normalize_commit_id(self.SHA + ".patch") == self.SHA
+        assert normalize_commit_id(self.SHA + ".diff") == self.SHA
+
+    def test_strips_trailing_punctuation(self) -> None:
+        assert normalize_commit_id(self.SHA + ",") == self.SHA
+        assert normalize_commit_id(self.SHA + ".") == self.SHA
+
+    def test_extracts_sha_from_patch_url(self) -> None:
+        assert normalize_commit_id(f"https://github.com/o/r/commit/{self.SHA}.patch") == self.SHA
+
+    def test_symbolic_ref_is_not_resolved(self) -> None:
+        # Branch/tag names are no longer resolved over the network during parsing.
+        assert normalize_commit_id("master") is None
+
     def test_invalid_sha_returns_none(self) -> None:
         assert normalize_commit_id("not-a-sha") is None
 
 
-class TestResolveRefLocal:
-    """Tests for _resolve_ref_local function."""
+class TestPinnedCommit:
+    """Tests for the static pinned-commit lookup."""
 
-    def test_nonexistent_repo_returns_none(self) -> None:
-        """Return None when the local repo clone does not exist."""
-        assert _resolve_ref_local("main", "https://github.com/nonexistent/repo-xyz-999") is None
+    URL = "https://github.com/dom4j/dom4j"
+    SHA = "177069f0e96a40ddab5ab7f41519ec29e5a39652"
 
-    def test_empty_ref_returns_none(self) -> None:
-        """Return None for an empty ref string."""
-        assert _resolve_ref_local("", "https://github.com/curl/curl") is None
+    def test_returns_pinned_sha_for_known_ref(self) -> None:
+        assert pinned_commit(self.URL, "version-2.0.3") == self.SHA
 
-    @pytest.mark.integration
-    def test_resolves_tag_to_commit_sha(self) -> None:
-        """Resolve a known tag to its commit SHA from a local clone."""
-        sha = _resolve_ref_local("curl-7_50_0", "https://github.com/curl/curl")
-        if sha is None:
-            pytest.skip("Local curl repo not cloned")
-        assert sha == "79e63a53bb9598af863b0afe49ad662795faeef4"
+    def test_unknown_ref_returns_none(self) -> None:
+        assert pinned_commit(self.URL, "not-pinned") is None
 
-    @pytest.mark.integration
-    def test_nonexistent_ref_returns_none(self) -> None:
-        """Non-existent refs should return None without raising."""
-        result = _resolve_ref_local("this-tag-does-not-exist-12345", "https://github.com/curl/curl")
-        assert result is None
+    def test_unknown_project_returns_none(self) -> None:
+        assert pinned_commit("https://github.com/foo/bar", "version-2.0.3") is None
 
-
-class TestResolveSymbolicRef:
-    """Tests for _resolve_symbolic_ref function."""
-
-    def test_non_github_url_returns_none(self) -> None:
-        """Non-GitHub URLs should return None (API only supports github.com)."""
-        assert _resolve_symbolic_ref("main", "https://gitlab.com/foo/bar") is None
-
-    @pytest.mark.integration
-    def test_resolves_curl_tag_to_commit_sha(self) -> None:
-        """Resolve curl-7_50_0 tag to its commit SHA using real GitHub API.
-
-        This tests both the API call logic AND the SHA normalization (lowercase).
-        """
-        sha = _resolve_symbolic_ref("curl-7_50_0", "https://github.com/curl/curl")
-        if sha is None:
-            pytest.skip("Could not resolve (no local repo and API unavailable)")
-        assert sha == "79e63a53bb9598af863b0afe49ad662795faeef4"
-
-    @pytest.mark.integration
-    def test_nonexistent_ref_returns_none(self) -> None:
-        """Non-existent refs should return None gracefully."""
-        sha = _resolve_symbolic_ref("this-tag-does-not-exist-12345", "https://github.com/curl/curl")
-        assert sha is None
+    def test_non_string_or_missing_inputs_return_none(self) -> None:
+        assert pinned_commit(None, "version-2.0.3") is None
+        assert pinned_commit(self.URL, 123) is None

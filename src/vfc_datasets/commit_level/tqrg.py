@@ -9,9 +9,9 @@ from vfc_datasets.parsing_helpers import (
     extract_from_commit_url,
     extract_url_and_commit,
     lookup_broken_commit,
+    normalize_commit_id,
     normalize_cve_ids,
     normalize_cwe_ids,
-    normalize_or_resolve_commit,
 )
 
 
@@ -33,7 +33,7 @@ class TQRGDataset(BaseDataset):
             "security patches: Secbench, Pontas et al. and Big-Vul.",
         ),
         # NOTE: 8057 = security-relevant commits, 5942 = unique security patches (some vulnerabilities need multiple commits)
-        vfcs=8057,
+        vfcs=8053,
         non_vfcs=110161,
         projects=1339,
     )
@@ -82,7 +82,7 @@ class TQRGDataset(BaseDataset):
             project_url, raw_commit_id = extract_from_commit_url(row, "github", self.metadata.name)
             if not project_url or not raw_commit_id:
                 return None
-            commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+            commit_id = normalize_commit_id(raw_commit_id)
             if not commit_id:
                 return None
 

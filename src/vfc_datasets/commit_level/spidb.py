@@ -10,7 +10,7 @@ from tqdm.auto import tqdm
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
-from vfc_datasets.parsing_helpers import normalize_or_resolve_commit
+from vfc_datasets.parsing_helpers import normalize_commit_id
 from vfc_datasets.utils.git.commit import get_commit_diff
 from vfc_datasets.utils.git.repository import clone_repository
 from vfc_datasets.utils.git.url import GitURL
@@ -233,7 +233,7 @@ class SPIDBDataset(BaseDataset):
             )
             return None
 
-        commit_id = normalize_or_resolve_commit(raw_commit_id, project_url)
+        commit_id = normalize_commit_id(raw_commit_id)
         if not commit_id:
             return None
 
