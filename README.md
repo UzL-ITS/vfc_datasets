@@ -26,7 +26,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 
 <!-- COMMIT_DATASETS:START -->
 <details>
-<summary>Commit-level (22 datasets)</summary>
+<summary>Commit-level (23 datasets)</summary>
 
 | Year | Dataset | VFCs | Non-VFCs | Projects | Paper |
 |------|---------|------|----------|----------|-------|
@@ -52,6 +52,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 | 2025 | [CommitVulFix](https://github.com/security-pride/CommitShield) | 681 | 1,118 | 233 | [link](https://doi.org/10.48550/arXiv.2501.03626) |
 | 2025 | [FixSeekerBalanced](https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link) | 9,885 | 10,979 | 2,094 | [link](https://doi.org/10.48550/arXiv.2503.20265) |
 | 2025 | [FixSeekerImbalanced](https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link) | 9,884 | 499,150 | 2,094 | [link](https://doi.org/10.48550/arXiv.2503.20265) |
+| 2025 | [PatchEval](https://github.com/bytedance/PatchEval) | 1,173 | 0 | 694 | [link](https://doi.org/10.48550/arXiv.2511.11019) |
 
 </details>
 <!-- COMMIT_DATASETS:END -->

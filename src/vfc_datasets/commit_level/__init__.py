@@ -12,6 +12,7 @@ from .java_vfc import JavaVFCDataset, JavaVFCDatasetExtended
 from .morefixes import MorefixesDataset
 from .msr2019 import MSR2019Dataset
 from .patchdb import PatchDBDataset
+from .patcheval import PatchEvalDataset
 from .pysecdb import PySecDBDataset
 from .repospd import RepoSPDDataset
 from .secbench import SecBenchDataset
@@ -36,6 +37,7 @@ __all__ = [
     "MorefixesDataset",
     "MSR2019Dataset",
     "PatchDBDataset",
+    "PatchEvalDataset",
     "PySecDBDataset",
     "RepoSPDDataset",
     "SecBenchDataset",
