@@ -8,7 +8,7 @@ from git import Repo
 from tqdm.asyncio import tqdm as async_tqdm
 from tqdm.auto import tqdm
 
-from vfc_datasets.config import MAX_WORKERS
+from vfc_datasets.config import MAX_WORKERS, MP_CONTEXT
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.github_client import AsyncGitHubClient
 from vfc_datasets.utils.git.repository import clone_repository
@@ -173,7 +173,7 @@ def extend_commit_ids_local(entries: Iterable[DatasetEntry]) -> list[DatasetEntr
     tasks.sort(key=lambda t: len(t[1]), reverse=True)
 
     updated_count = 0
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ProcessPoolExecutor(max_workers=MAX_WORKERS, mp_context=MP_CONTEXT) as executor:
         future_to_url = {executor.submit(_resolve_commit_ids, task): task[0] for task in tasks}
 
         with tqdm(

@@ -9,6 +9,7 @@ from typing import Any
 import pytest
 from tqdm import tqdm
 
+from vfc_datasets.config import MP_CONTEXT
 from vfc_datasets.transformations.enrichment.project_urls.url_mappings import _load, get_moved_urls
 from vfc_datasets.utils.git.repository import clone_repository
 
@@ -45,7 +46,7 @@ def find_reachable(urls: list[str], desc: str = "Checking") -> str | None:
 def clone_all(urls: list[str], desc: str = "Cloning") -> list[str]:
     """Clone all URLs, return list of failures."""
     failures = []
-    with ProcessPoolExecutor(max_workers=4) as executor:
+    with ProcessPoolExecutor(max_workers=4, mp_context=MP_CONTEXT) as executor:
         futures = {executor.submit(clone_repository, url): url for url in urls}
         for future in tqdm(as_completed(futures), total=len(urls), desc=desc):
             if future.result() is None:

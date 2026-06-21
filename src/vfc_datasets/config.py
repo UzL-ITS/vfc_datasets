@@ -1,6 +1,7 @@
 """Central configuration for VFC-datasets project."""
 
 import logging
+import multiprocessing
 import os
 from pathlib import Path
 
@@ -36,6 +37,9 @@ REPOSITORY_PATH = _env_path("REPOSITORY_PATH", BASE_DATA_PATH / "repositories")
 
 # Workers
 MAX_WORKERS = _env_int("MAX_WORKERS", os.cpu_count() or 1, minimum=1)
+
+# forkserver avoids fork-in-multithreaded-process deadlocks (Unix-only).
+MP_CONTEXT = multiprocessing.get_context("forkserver")
 
 # API Base URLs
 GITHUB_API_URL = os.getenv("GITHUB_API_URL", "https://api.github.com")

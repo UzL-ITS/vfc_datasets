@@ -14,7 +14,7 @@ from typing import Any
 from git import Repo
 from tqdm.auto import tqdm
 
-from vfc_datasets.config import BASE_DATA_PATH
+from vfc_datasets.config import BASE_DATA_PATH, MP_CONTEXT
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.commit import (
     get_all_commit_ids,
@@ -255,7 +255,7 @@ def _compute_signatures(
 
     max_workers = min(multiprocessing.cpu_count(), len(repo_tasks))
 
-    with ProcessPoolExecutor(max_workers=max_workers) as pool:
+    with ProcessPoolExecutor(max_workers=max_workers, mp_context=MP_CONTEXT) as pool:
         sig_futures = {
             pool.submit(_compute_signatures_for_repo, task): task[0] for task in repo_tasks
         }

@@ -8,7 +8,7 @@ from typing import Any
 
 from tqdm.auto import tqdm
 
-from vfc_datasets.config import FULL_CLONE_THRESHOLD, MAX_WORKERS
+from vfc_datasets.config import FULL_CLONE_THRESHOLD, MAX_WORKERS, MP_CONTEXT
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.repository import CloneStrategy, clone_repositories
 
@@ -94,7 +94,7 @@ def process_commits_in_batches(
     total = sum(len(b[1]) for b in batches)
     logger.info("Processing %d commits across %d repos", total, len(repo_paths))
 
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ProcessPoolExecutor(max_workers=MAX_WORKERS, mp_context=MP_CONTEXT) as executor:
         futures = {executor.submit(batch_fn, b): b for b in batches}
         with tqdm(total=total, desc=desc, unit="commits") as pbar:
             for future in as_completed(futures):
