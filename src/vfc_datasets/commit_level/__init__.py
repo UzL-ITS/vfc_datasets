@@ -7,6 +7,7 @@ from .commitvulfix import CommitVulFixDataset
 from .cross_vul import CrossVulDataset
 from .cvefixes import CVEFixesDataset
 from .devign import DevignDataset
+from .dimva2025 import DIMVA2025Dataset
 from .fixseeker import FixSeekerBalancedDataset, FixSeekerImbalancedDataset
 from .java_vfc import JavaVFCDataset, JavaVFCDatasetExtended
 from .morefixes import MorefixesDataset
@@ -30,6 +31,7 @@ __all__ = [
     "CrossVulDataset",
     "CVEFixesDataset",
     "DevignDataset",
+    "DIMVA2025Dataset",
     "FixSeekerBalancedDataset",
     "FixSeekerImbalancedDataset",
     "JavaVFCDataset",
