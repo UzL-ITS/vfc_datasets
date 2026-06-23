@@ -60,12 +60,13 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 
 <!-- FUNCTION_DATASETS:START -->
 <details>
-<summary>Function-level (7 datasets)</summary>
+<summary>Function-level (8 datasets)</summary>
 
 | Year | Dataset | Vuln. Fns | Benign Fns | Projects | Paper |
 |------|---------|-----------|------------|----------|-------|
 | 2023 | [DiverseVul](https://github.com/wagner-group/diversevul) | 18,945 | 311,547 | 797 | [link](https://doi.org/10.1145/3607199.3607242) |
 | 2023 | [SVEN](https://github.com/eth-sri/sven) | 800 | 0 | — | [link](https://doi.org/10.1145/3576915.3623175) |
+| 2024 | [CWEBenchJava](https://github.com/iris-sast/cwe-bench-java) | 1,119 | 0 | 88 | [link](https://doi.org/10.48550/arXiv.2405.17238) |
 | 2024 | [CleanVul](https://huggingface.co/datasets/yikun-li/CleanVul) | 8,198 | 0 | — | [link](https://doi.org/10.48550/arXiv.2411.17274) |
 | 2024 | [MegaVul](https://github.com/Icyrockton/MegaVul) | 20,267 | 367,147 | 992 | [link](https://doi.org/10.1145/3643991.3644886) |
 | 2024 | [PrimeVul](https://github.com/DLVulDet/PrimeVul) | 6,003 | 218,474 | 755 | [link](https://doi.org/10.48550/arXiv.2403.18624) |
