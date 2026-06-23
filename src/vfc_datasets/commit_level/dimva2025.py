@@ -46,6 +46,7 @@ class DIMVA2025Dataset(BaseDataset):
         ),
         vfcs=2798,  # 1253 multi-file + 1545 single-file patches
         non_vfcs=0,
+        projects=1246,
     )
 
     @override
