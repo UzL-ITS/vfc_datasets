@@ -60,7 +60,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 
 <!-- FUNCTION_DATASETS:START -->
 <details>
-<summary>Function-level (6 datasets)</summary>
+<summary>Function-level (7 datasets)</summary>
 
 | Year | Dataset | Vuln. Fns | Benign Fns | Projects | Paper |
 |------|---------|-----------|------------|----------|-------|
@@ -70,6 +70,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 | 2024 | [MegaVul](https://github.com/Icyrockton/MegaVul) | 20,267 | 367,147 | 992 | [link](https://doi.org/10.1145/3643991.3644886) |
 | 2024 | [PrimeVul](https://github.com/DLVulDet/PrimeVul) | 6,003 | 218,474 | 755 | [link](https://doi.org/10.48550/arXiv.2403.18624) |
 | 2025 | [ICVul](https://github.com/Chaomeng-Lu/ICVul) | 6,276 | 9,120 | 807 | [link](https://doi.org/10.48550/arXiv.2505.08503) |
+| 2025 | [SecVulEval](https://huggingface.co/datasets/arag0rn/SecVulEval) | 10,992 | 14,435 | 736 | [link](https://doi.org/10.48550/arXiv.2505.19828) |
 
 </details>
 <!-- FUNCTION_DATASETS:END -->
