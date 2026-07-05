@@ -38,8 +38,8 @@ class SVENDataset(BaseDataset):
         benign_functions=0,
     )
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self.sven_repo_path: str | None = None
 
     @override

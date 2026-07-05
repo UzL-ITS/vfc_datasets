@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 import vfc_datasets.parsing_helpers as _parsing_helpers
 import vfc_datasets.utils.git.url as _git_url_module
 import vfc_datasets.utils.patterns as _patterns_module
-from vfc_datasets.config import RAW_DATA_PATH
+from vfc_datasets.config import DATASET_PATH, RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import load_cache, save_cache
 
@@ -28,8 +28,7 @@ _ENTRY_SCHEMA_FINGERPRINT = hashlib.blake2b(
 # Fingerprint the shared parsing helpers too, since _parse_row's bytecode misses changes in them.
 _HELPERS_FINGERPRINT = hashlib.blake2b(
     b"".join(
-        inspect.getsource(m).encode()
-        for m in (_parsing_helpers, _git_url_module, _patterns_module)
+        inspect.getsource(m).encode() for m in (_parsing_helpers, _git_url_module, _patterns_module)
     ),
     digest_size=4,
 ).hexdigest()
@@ -66,6 +65,10 @@ class BaseDataset(ABC):
     """Base class for VFC datasets.
 
     Subclasses must define `metadata` and implement `_load_data()` and `_parse_row()`.
+
+    Shipped `commit_message`/`commit_diff`/`commit_timestamp_utc` are stripped by default
+    so they come uniformly from enrichment; pass `include_dataset_commit_data=True` to keep
+    them. `files_changed`/`function_name` are entry identity and are never stripped.
     """
 
     metadata: DatasetMetadata
@@ -76,13 +79,19 @@ class BaseDataset(ABC):
         if not getattr(cls, "metadata", None) and not cls.__name__.startswith("_"):
             raise TypeError(f"{cls.__name__} must define a 'metadata' class attribute")
 
-    def __init__(self) -> None:
+    def __init__(self, *, include_dataset_commit_data: bool = False) -> None:
         self._entries: list[DatasetEntry] | None = None
+        self.include_dataset_commit_data = include_dataset_commit_data
 
     @property
     def _raw_dir(self) -> Path:
         """Directory for raw dataset files."""
         return RAW_DATA_PATH
+
+    @property
+    def _dataset_dir(self) -> Path:
+        """Directory whose `cache/` subdirectory holds parsed entries."""
+        return DATASET_PATH
 
     @abstractmethod
     def _load_data(self) -> pd.DataFrame:
@@ -94,18 +103,21 @@ class BaseDataset(ABC):
         """Parse one row into DatasetEntry. Return None to skip."""
         ...
 
-    @classmethod
-    def _cache_key(cls) -> str:
-        """Cache key combining dataset name, entry-schema fingerprint, parser hash,
-        and a fingerprint of the shared parsing helpers _parse_row calls.
+    def _cache_key(self) -> str:
+        """Cache key over dataset name, entry-schema fingerprint, parser hash, shared
+        parsing helpers, and the include_dataset_commit_data flag.
 
-        Any change to DatasetEntry fields, the subclass's _parse_row bytecode, or
-        those helpers yields a new key, so a stale cache can never silently shadow a fix.
+        A change to any of them yields a new key, so a stale cache can never shadow a fix
+        or serve shipped commit data to a stripped instance.
         """
         parser_fingerprint = hashlib.blake2b(
-            cls._parse_row.__code__.co_code, digest_size=4
+            type(self)._parse_row.__code__.co_code, digest_size=4
         ).hexdigest()
-        return f"{cls.metadata.name}-s{_ENTRY_SCHEMA_FINGERPRINT}-p{parser_fingerprint}-h{_HELPERS_FINGERPRINT}"
+        commit_data_flag = "d1" if self.include_dataset_commit_data else "d0"
+        return (
+            f"{self.metadata.name}-s{_ENTRY_SCHEMA_FINGERPRINT}-p{parser_fingerprint}"
+            f"-h{_HELPERS_FINGERPRINT}-{commit_data_flag}"
+        )
 
     def _parse(self) -> list[DatasetEntry]:
         """Parse dataset with caching."""
@@ -113,9 +125,9 @@ class BaseDataset(ABC):
             return self._entries
 
         name = self.metadata.name
-        cache_key = type(self)._cache_key()
+        cache_key = self._cache_key()
 
-        cached: list[DatasetEntry] | None = load_cache(cache_key)
+        cached: list[DatasetEntry] | None = load_cache(cache_key, self._dataset_dir)
         if cached is not None:
             self._entries = cached
             return cached
@@ -128,15 +140,20 @@ class BaseDataset(ABC):
             entry = self._parse_row(
                 {k: None if isinstance(v, float) and v != v else v for k, v in row.items()}
             )
-            if entry:
-                entries.append(entry)
+            if not entry:
+                continue
+            if not self.include_dataset_commit_data:
+                entry.commit_message = None
+                entry.commit_diff = None
+                entry.commit_timestamp_utc = None
+            entries.append(entry)
 
         if not entries:
             logger.warning("[%s] Parsed 0 entries; skipping cache write.", name)
             self._entries = entries
             return entries
 
-        save_cache(entries, cache_key)
+        save_cache(entries, cache_key, self._dataset_dir)
         self._entries = entries
         return entries
 
