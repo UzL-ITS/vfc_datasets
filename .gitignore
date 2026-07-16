@@ -1,6 +1,8 @@
 .venv/
 .data/
 .env
+.claude/
+.notes/
 .vscode
 .coverage
 .pytest_cache/
