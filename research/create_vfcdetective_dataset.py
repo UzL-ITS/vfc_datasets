@@ -1,7 +1,5 @@
 from collections.abc import Callable
 
-from dotenv import load_dotenv
-
 import vfc_datasets
 from vfc_datasets import transformations
 from vfc_datasets.config import DATASET_PATH
@@ -17,7 +15,6 @@ from vfc_datasets.utils.split import (
     create_top_n_group_stratified_splits,
 )
 
-load_dotenv()
 setup_logging("vfcdetective_datasets")
 
 OUTPUT_PATH = DATASET_PATH / "new"

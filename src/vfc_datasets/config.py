@@ -5,6 +5,10 @@ import multiprocessing
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 def _env_int(
     name: str, default: int, *, minimum: int | None = None, maximum: int | None = None
