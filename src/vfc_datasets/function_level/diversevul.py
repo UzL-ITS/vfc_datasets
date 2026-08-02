@@ -7,6 +7,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import normalize_cwe_ids
@@ -44,7 +45,7 @@ class DiverseVulDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        raw_dataset_path = self._raw_dir / "diversevul.json"
+        raw_dataset_path = RAW_DATA_PATH / "diversevul.json"
         download_file(
             "https://drive.google.com/uc?id=12IWKhmLhq7qn5B_iXgn5YerOQtkH-6RG", raw_dataset_path
         )

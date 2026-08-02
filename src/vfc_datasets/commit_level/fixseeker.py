@@ -6,6 +6,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_and_extract_zip
 from vfc_datasets.parsing_helpers import extract_and_normalize_from_commit_url
@@ -24,7 +25,7 @@ class _FixSeekerBase(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        raw_dir = download_and_extract_zip(self.metadata.source_url, self._raw_dir / "fixseeker")
+        raw_dir = download_and_extract_zip(self.metadata.source_url, RAW_DATA_PATH / "fixseeker")
         json_files = sorted(raw_dir.rglob(self._file_glob))
         if not json_files:
             raise RuntimeError(f"No files matching {self._file_glob} in {raw_dir}")

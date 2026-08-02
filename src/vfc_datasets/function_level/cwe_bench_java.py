@@ -4,6 +4,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
@@ -40,7 +41,7 @@ class CWEBenchJavaDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        dataset_dir = self._raw_dir / "cwe_bench_java"
+        dataset_dir = RAW_DATA_PATH / "cwe_bench_java"
 
         project_path = download_file(
             f"{_BASE_URL}/project_info.csv", dataset_dir / "project_info.csv"

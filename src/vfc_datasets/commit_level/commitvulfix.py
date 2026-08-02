@@ -4,6 +4,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import extract_and_normalize_from_commit_url
@@ -51,7 +52,7 @@ class CommitVulFixDataset(BaseDataset):
         rows: list[dict[str, Any]] = []
         for filename, is_vfc, checksum in _FILES:
             path = download_file(
-                f"{_BASE_URL}/{filename}", self._raw_dir / filename, checksum=checksum
+                f"{_BASE_URL}/{filename}", RAW_DATA_PATH / filename, checksum=checksum
             )
             with open(path) as f:
                 for line in f:

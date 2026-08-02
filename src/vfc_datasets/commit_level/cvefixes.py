@@ -9,6 +9,7 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_and_extract_zip
 from vfc_datasets.parsing_helpers import (
@@ -50,7 +51,7 @@ class CVEFixesDataset(BaseDataset):
     )
 
     def _get_database(self) -> Path:
-        sql_file_path = self._raw_dir / "cvefixes.db"
+        sql_file_path = RAW_DATA_PATH / "cvefixes.db"
 
         if not sql_file_path.exists():
             cve_fixes_url = f"https://zenodo.org/records/{self.ZENODO_RECORD_ID}/files/{self.VERSION}.zip?download=1"

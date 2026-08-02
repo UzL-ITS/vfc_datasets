@@ -8,6 +8,7 @@ from git.exc import BadName, GitCommandError
 from tqdm.auto import tqdm
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import normalize_commit_id
@@ -190,7 +191,7 @@ class SPIDBDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        raw_dataset_dir = self._raw_dir / "spi-db"
+        raw_dataset_dir = RAW_DATA_PATH / "spi-db"
         all_data = []
 
         for project_name, project_info in self.PROJECTS.items():

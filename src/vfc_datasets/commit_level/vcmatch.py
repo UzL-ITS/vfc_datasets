@@ -4,6 +4,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cve_ids
 
@@ -43,7 +44,7 @@ class VCMatchDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        raw_dataset_path = self._raw_dir / "vcmatch.csv"
+        raw_dataset_path = RAW_DATA_PATH / "vcmatch.csv"
 
         if not raw_dataset_path.exists():
             url = (

@@ -5,6 +5,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import extract_url_and_commit
@@ -53,7 +54,7 @@ class VUDEncDataset(BaseDataset):
         links = [f"{base_url}/{name}?download=1" for name in self.VULNERABILITY_FILES]
 
         logger.info("Downloading VUDEnc datasets...")
-        vudenc_dir = self._raw_dir / "vudenc"
+        vudenc_dir = RAW_DATA_PATH / "vudenc"
         vudenc_dir.mkdir(parents=True, exist_ok=True)
 
         for link in links:

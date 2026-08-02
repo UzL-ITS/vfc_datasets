@@ -7,6 +7,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_and_extract_zip
 from vfc_datasets.parsing_helpers import (
@@ -52,7 +53,7 @@ class CrossVulDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        raw_dataset_path = self._raw_dir / "cross_vul.csv"
+        raw_dataset_path = RAW_DATA_PATH / "cross_vul.csv"
 
         if not raw_dataset_path.exists():
             with tempfile.TemporaryDirectory() as tmp_dir:

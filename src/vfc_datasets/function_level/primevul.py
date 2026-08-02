@@ -6,6 +6,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
@@ -49,7 +50,7 @@ class PrimeVulDataset(BaseDataset):
     }
 
     def _download_if_missing(self) -> Path:
-        primevul_path = self._raw_dir / "primevul"
+        primevul_path = RAW_DATA_PATH / "primevul"
         primevul_path.mkdir(parents=True, exist_ok=True)
 
         # Skip if already downloaded
