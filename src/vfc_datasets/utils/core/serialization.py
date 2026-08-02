@@ -101,9 +101,11 @@ def load_cache(cache_key: str, dataset_path: Path = DATASET_PATH) -> list[Datase
     return load_entries(cache_path)
 
 
-def save_cache(entries: Iterable[DatasetEntry], cache_key: str) -> None:
+def save_cache(
+    entries: Iterable[DatasetEntry], cache_key: str, dataset_path: Path = DATASET_PATH
+) -> None:
     """Save entries to cache file as JSONL."""
-    cache_path = DATASET_PATH / "cache" / f"{cache_key.lower()}.jsonl"
+    cache_path = dataset_path / "cache" / f"{cache_key.lower()}.jsonl"
     save_entries(entries, cache_path)
 
 

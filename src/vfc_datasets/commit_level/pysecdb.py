@@ -243,8 +243,8 @@ class PySecDBDataset(BaseDataset):
         projects=351,
     )
 
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self._repo_map: dict[str, str] | None = None
 
     @staticmethod
