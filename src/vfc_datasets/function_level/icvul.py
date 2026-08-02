@@ -4,6 +4,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry, normalize_commit_timestamp
 from vfc_datasets.download_helper import download_and_extract_zip
 from vfc_datasets.parsing_helpers import (
@@ -42,7 +43,7 @@ class ICVulDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        dataset_dir = self._raw_dir / "icvul"
+        dataset_dir = RAW_DATA_PATH / "icvul"
         base_path = dataset_dir / "ICVul-Dataset"
 
         mapping_path = base_path / "cve_fc_vcc_mapping.csv"

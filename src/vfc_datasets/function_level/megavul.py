@@ -5,6 +5,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import normalize_cve_ids, normalize_cwe_ids
 from vfc_datasets.utils.git.url import GitURL, normalize_commit_id
@@ -39,7 +40,7 @@ class MegaVulDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        megavul_dir = self._raw_dir / "megavul"
+        megavul_dir = RAW_DATA_PATH / "megavul"
 
         cpp_json_path = megavul_dir / "megavul_simple_cpp.json"
         java_json_path = megavul_dir / "megavul_simple_java.json"

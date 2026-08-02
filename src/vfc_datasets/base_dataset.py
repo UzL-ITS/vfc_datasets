@@ -15,7 +15,7 @@ from tqdm.auto import tqdm
 import vfc_datasets.parsing_helpers as _parsing_helpers
 import vfc_datasets.utils.git.url as _git_url_module
 import vfc_datasets.utils.patterns as _patterns_module
-from vfc_datasets.config import DATASET_PATH, RAW_DATA_PATH
+from vfc_datasets.config import DATASET_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import load_cache, save_cache
 
@@ -82,11 +82,6 @@ class BaseDataset(ABC):
     def __init__(self, *, include_dataset_commit_data: bool = False) -> None:
         self._entries: list[DatasetEntry] | None = None
         self.include_dataset_commit_data = include_dataset_commit_data
-
-    @property
-    def _raw_dir(self) -> Path:
-        """Directory for raw dataset files."""
-        return RAW_DATA_PATH
 
     @property
     def _dataset_dir(self) -> Path:

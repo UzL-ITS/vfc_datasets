@@ -4,6 +4,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import extract_url_and_commit, normalize_cve_ids
@@ -53,7 +54,7 @@ class DIMVA2025Dataset(BaseDataset):
     def _load_data(self) -> pd.DataFrame:
         rows: list[dict[str, Any]] = []
         for url, filename, checksum in _FILES:
-            path = download_file(url, self._raw_dir / filename, checksum=checksum)
+            path = download_file(url, RAW_DATA_PATH / filename, checksum=checksum)
             df = pd.read_csv(path)
             for record in df.to_dict(orient="records"):
                 owner, repo = record.get("Owner"), record.get("Repo")

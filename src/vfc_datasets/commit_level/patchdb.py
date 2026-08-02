@@ -4,6 +4,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
@@ -42,7 +43,7 @@ class PatchDBDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        patch_db_dump = self._raw_dir / "patch_db.json"
+        patch_db_dump = RAW_DATA_PATH / "patch_db.json"
 
         if not patch_db_dump.exists():
             download_file(

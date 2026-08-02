@@ -3,6 +3,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import (
@@ -41,7 +42,7 @@ class BigVulDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        csv_path = self._raw_dir / "bigvul.csv"
+        csv_path = RAW_DATA_PATH / "bigvul.csv"
         download_file(
             "https://raw.githubusercontent.com/ZeoVan/MSR_20_Code_Vulnerability_CSV_Dataset/master/all_c_cpp_release2.0.csv",
             csv_path,

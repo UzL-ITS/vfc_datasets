@@ -4,6 +4,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import extract_and_normalize_from_commit_url
@@ -17,7 +18,7 @@ class _JavaVFCBase(BaseDataset):
     @override
     def _load_data(self) -> pd.DataFrame:
         file_name = f"{self.metadata.name}.jsonl"
-        raw_dataset_path = self._raw_dir / "javavfc" / file_name
+        raw_dataset_path = RAW_DATA_PATH / "javavfc" / file_name
         if not raw_dataset_path.exists():
             url = (
                 f"https://zenodo.org/records/{self._ZENODO_RECORD_ID}/files/{file_name}?download=1"
