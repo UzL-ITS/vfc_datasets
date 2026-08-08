@@ -3,6 +3,7 @@
 import hashlib
 import inspect
 import logging
+import sys
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
@@ -106,16 +107,16 @@ class BaseDataset(ABC):
         return CommitData()
 
     def _cache_key(self) -> str:
-        """Cache key over dataset name, entry-schema fingerprint, parser hash, shared
-        parsing helpers, and the include_dataset_commit_data flag.
+        """Cache key over dataset name, entry-schema fingerprint, the defining module's
+        source, shared parsing helpers, and the include_dataset_commit_data flag.
 
         A change to any of them yields a new key, so a stale cache can never shadow a fix
-        or serve shipped commit data to a stripped instance.
+        or serve shipped commit data to a stripped instance. The whole module goes into the
+        fingerprint rather than the parser bytecode, which misses both renamed source
+        columns (constants live outside `co_code`) and edits to module-level helpers.
         """
         parser_fingerprint = hashlib.blake2b(
-            type(self)._parse_row.__code__.co_code
-            + type(self)._shipped_commit_data.__code__.co_code,
-            digest_size=4,
+            inspect.getsource(sys.modules[type(self).__module__]).encode(), digest_size=4
         ).hexdigest()
         commit_data_flag = "d1" if self.include_dataset_commit_data else "d0"
         return (
