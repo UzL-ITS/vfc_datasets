@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.relationships import RepositoryRelationships
 from vfc_datasets.utils.split.split_group_stratified import (
@@ -366,7 +367,7 @@ def _make_entries_with_timestamps(
             project_url=project_url,
             commit_id=f"abc{i:04x}",
             src_datasets={"test"},
-            commit_timestamp_utc=start_date + timedelta(days=i),
+            commit=CommitData(committed_at=start_date + timedelta(days=i)),
         )
         for i in range(count)
     ]
@@ -407,9 +408,9 @@ def test_temporal_split_chronological_ordering():
 
     # All train timestamps should be < all val timestamps < all test timestamps
     # We know timestamps are not None since _make_entries_with_timestamps creates them
-    train_timestamps = [e.commit_timestamp_utc for e in train if e.commit_timestamp_utc is not None]
-    val_timestamps = [e.commit_timestamp_utc for e in val if e.commit_timestamp_utc is not None]
-    test_timestamps = [e.commit_timestamp_utc for e in test if e.commit_timestamp_utc is not None]
+    train_timestamps = [e.commit.committed_at for e in train if e.commit.committed_at is not None]
+    val_timestamps = [e.commit.committed_at for e in val if e.commit.committed_at is not None]
+    test_timestamps = [e.commit.committed_at for e in test if e.commit.committed_at is not None]
 
     assert len(train_timestamps) == len(train)  # Ensure all have timestamps
     assert len(val_timestamps) == len(val)
@@ -422,7 +423,7 @@ def test_temporal_split_chronological_ordering():
 def test_temporal_split_requires_timestamps():
     """Entries without timestamps should raise ValueError."""
     entries = _make_entries("https://github.com/test/a", 100)  # No timestamps
-    with pytest.raises(ValueError, match="All entries must have commit_timestamp_utc"):
+    with pytest.raises(ValueError, match=r"All entries must have commit\.committed_at"):
         train_val_test_split_temporal(entries)
 
 

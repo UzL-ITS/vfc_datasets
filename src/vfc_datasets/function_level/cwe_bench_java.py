@@ -95,5 +95,5 @@ class CWEBenchJavaDataset(BaseDataset):
             cwe_ids=normalize_cwe_ids(row.get("cwe_id")),
             ghsa_id=ghsa_id,
             function_name=function_name,
-            files_changed={file_path} if file_path else set(),
+            function_file=file_path,
         )

@@ -4,16 +4,12 @@ from datetime import UTC, datetime
 
 from git import Repo
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.config import MAX_DIFF_SIZE
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.commit import get_commit_diff
 
 from .batch_processing import process_commits_in_batches
-from .commit_data_common import (
-    CommitData,
-    apply_commit_data,
-    needs_enrichment,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -33,9 +29,10 @@ def _get_commit_info(repo: Repo, commit_id: str, max_diff_size: int) -> CommitDa
 
         return CommitData(
             message=str(commit.message),
-            timestamp=datetime.fromtimestamp(commit.committed_date, tz=UTC).isoformat(),
+            authored_at=datetime.fromtimestamp(commit.authored_date, tz=UTC),
+            committed_at=datetime.fromtimestamp(commit.committed_date, tz=UTC),
             diff=diff_data,
-            files_changed={str(f) for f in commit.stats.files},
+            files_changed=frozenset(str(f) for f in commit.stats.files),
         )
     except Exception as e:
         logger.debug("Failed to get commit %s: %s", commit_id, e)
@@ -54,6 +51,10 @@ def _process_commit_batch(args: tuple[str, list[str], int]) -> dict[str, CommitD
     return results
 
 
+def _apply(entry: DatasetEntry, data: CommitData) -> None:
+    entry.commit = entry.commit.merge(data)
+
+
 def add_commit_information_local(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Enrich DatasetEntry objects with commit information from local git repos."""
     logger.info("Add commit information [LOCAL]")
@@ -61,9 +62,9 @@ def add_commit_information_local(entries: Iterable[DatasetEntry]) -> list[Datase
 
     return process_commits_in_batches(
         list(entries),
-        filter_fn=needs_enrichment,
+        filter_fn=lambda e: not e.commit.is_complete(),
         batch_fn=_process_commit_batch,
-        apply_fn=apply_commit_data,
+        apply_fn=_apply,
         batch_extra_args=(MAX_DIFF_SIZE,),
         desc="Adding commit data (local)",
     )

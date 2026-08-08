@@ -3,9 +3,9 @@
 import logging
 import re
 from dataclasses import dataclass, field, fields
-from datetime import UTC, datetime
 from typing import Any, Self
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.utils.git.url import MIN_COMMIT_LENGTH, GitURL, normalize_commit_id
 from vfc_datasets.utils.owasp import OwaspCategory, cwes_to_owasp
 from vfc_datasets.utils.patterns import CVE_PATTERN, CWE_PATTERN
@@ -23,19 +23,15 @@ def _validate_ids(
     return valid
 
 
-def normalize_commit_timestamp(value: datetime | str | None) -> datetime | None:
-    """Coerce a timestamp to a tz-aware UTC datetime.
-
-    Accepts ISO-format strings, naive datetimes, and tz-aware datetimes.
-    """
-    if value is None:
-        return None
-    dt = datetime.fromisoformat(value) if isinstance(value, str) else value
-    return dt.replace(tzinfo=UTC) if dt.tzinfo is None else dt.astimezone(UTC)
-
-
 @dataclass(slots=True)
 class DatasetEntry:
+    """One labelled commit (or function within one).
+
+    Identity and labels live on the entry; everything known about the commit itself lives
+    in `commit`. `function_file` is the file a `function_name` was found in, which is entry
+    identity — distinct from `commit.files_changed`, the files the commit touched.
+    """
+
     project_url: str
     commit_id: str
     src_datasets: set[str]
@@ -43,12 +39,10 @@ class DatasetEntry:
     cve_ids: set[str] = field(default_factory=set[str])
     cwe_ids: set[str] = field(default_factory=set[str])
     function_name: str | None = None
+    function_file: str | None = None
     ghsa_id: str | None = None
     owasp_categories: set[OwaspCategory] | None = None
-    commit_message: str | None = None
-    commit_diff: str | None = None
-    files_changed: set[str] = field(default_factory=set[str])
-    commit_timestamp_utc: datetime | None = None
+    commit: CommitData = field(default_factory=CommitData)
 
     def __post_init__(self) -> None:
         # Validate commit_id
@@ -85,31 +79,28 @@ class DatasetEntry:
         if self.owasp_categories is None and self.cwe_ids:
             self.owasp_categories = cwes_to_owasp(self.cwe_ids)
 
-        # Normalize commit timestamp to tz-aware UTC
-        self.commit_timestamp_utc = normalize_commit_timestamp(self.commit_timestamp_utc)
-
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for JSON serialization."""
         d: dict[str, Any] = {}
         for f in fields(self):
             value: Any = getattr(self, f.name)
-            if isinstance(value, set):
+            if isinstance(value, CommitData):
+                value = value.to_dict()
+            elif isinstance(value, set):
                 value = sorted(value)
-            elif isinstance(value, datetime):
-                value = value.isoformat().replace("+00:00", "Z")
             d[f.name] = value
         return d
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
         """Create a DatasetEntry from a serialized dict (e.g. loaded from JSON)."""
-        set_fields = {"src_datasets", "cve_ids", "cwe_ids", "files_changed"}
+        set_fields = {"src_datasets", "cve_ids", "cwe_ids"}
         converted: dict[str, Any] = {
-            k: set(v or []) if k in set_fields else v
-            for k, v in data.items()
+            k: set(v or []) if k in set_fields else v for k, v in data.items() if k != "commit"
         }
         if converted.get("owasp_categories") is not None:
             converted["owasp_categories"] = {
                 OwaspCategory(v) for v in converted["owasp_categories"]
             }
+        converted["commit"] = CommitData.from_dict(data.get("commit"))
         return cls(**converted)

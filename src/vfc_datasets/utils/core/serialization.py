@@ -9,10 +9,14 @@ from typing import Any
 
 import pandas as pd
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.config import DATASET_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 
 logger = logging.getLogger(__name__)
+
+# Bump when the serialized entry shape changes meaning (not for additive fields).
+SCHEMA_VERSION = 2
 
 
 def load_entries(file_path: str | Path) -> list[DatasetEntry]:
@@ -37,6 +41,13 @@ def load_entries(file_path: str | Path) -> list[DatasetEntry]:
 
             if "_metadata" in data:
                 logger.info("Dataset metadata: %s", data["_metadata"])
+                if (schema := data["_metadata"].get("schema", 1)) != SCHEMA_VERSION:
+                    raise ValueError(
+                        f"{file_path} uses entry schema {schema}, this build reads "
+                        f"{SCHEMA_VERSION}. Commit fields moved under `commit` and the "
+                        "function's file moved out of `files_changed` into `function_file`, "
+                        "so the old shape would load with the wrong meaning. Re-export it."
+                    )
                 continue
 
             try:
@@ -78,6 +89,7 @@ def save_entries(entries: Iterable[DatasetEntry], file_path: str | Path) -> None
         metadata: dict[str, dict[str, Any]] = {
             "_metadata": {
                 "version": version("vfc_datasets"),
+                "schema": SCHEMA_VERSION,
                 "created": datetime.now(UTC).isoformat(),
                 "entry_count": len(entries),
             }
@@ -120,16 +132,25 @@ def save_entries_csv(
         raise ValueError(f"Cannot export empty entries to {file_path}. No entries to export.")
 
     if fields is None:
-        fields = ["project_url", "commit_id", "is_vfc", "commit_timestamp_utc"]
+        fields = ["project_url", "commit_id", "is_vfc", "commit.committed_at"]
 
-    valid_fields = {f.name for f in dc_fields(DatasetEntry)}
+    valid_fields = {f.name for f in dc_fields(DatasetEntry)} | {
+        f"commit.{f.name}" for f in dc_fields(CommitData)
+    }
     if invalid_fields := set(fields) - valid_fields:
         raise ValueError(f"Invalid field names: {invalid_fields}")
 
     output_path = Path(file_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    rows = [entry.to_dict() for entry in entries]
+    rows: list[dict[str, Any]] = []
+    for entry in entries:
+        row = entry.to_dict()
+        # Flatten `commit` so its fields are addressable as `commit.<name>` columns.
+        for key, value in row.pop("commit").items():
+            row[f"commit.{key}"] = value
+        rows.append(row)
+
     for row in rows:
         for key, value in row.items():
             if isinstance(value, list):

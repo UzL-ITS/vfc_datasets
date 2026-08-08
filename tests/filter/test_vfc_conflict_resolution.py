@@ -1,5 +1,6 @@
 from dataclasses import fields as dc_fields
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.transformations.filters.duplicates import (
     deduplicate_function_level,
@@ -12,11 +13,12 @@ from vfc_datasets.utils.owasp import OwaspCategory
 def test_merge_entry_group_covers_all_fields():
     """Every DatasetEntry field must be handled by merge_entry_group."""
     key_fields = {"project_url", "commit_id", "function_name", "is_vfc"}
-    set_union = {"cwe_ids", "cve_ids", "src_datasets", "files_changed", "owasp_categories"}
-    first_non_none = {"commit_timestamp_utc", "commit_message", "commit_diff", "ghsa_id"}
+    set_union = {"cwe_ids", "cve_ids", "src_datasets", "owasp_categories"}
+    first_non_none = {"ghsa_id", "function_file"}
+    merged = {"commit"}
 
     all_attrs = {f.name for f in dc_fields(DatasetEntry)}
-    covered = key_fields | set_union | first_non_none
+    covered = key_fields | set_union | first_non_none | merged
     assert covered == all_attrs, f"Uncovered: {all_attrs - covered}, Extra: {covered - all_attrs}"
 
 
@@ -133,21 +135,21 @@ def test_merge_unions_files_changed():
             commit_id="abc123",
             is_vfc=True,
             src_datasets={"dataset1"},
-            files_changed={"file1.py", "file2.py"},
+            commit=CommitData(files_changed=frozenset({"file1.py", "file2.py"})),
         ),
         DatasetEntry(
             project_url="https://github.com/test/repo",
             commit_id="abc123",
             is_vfc=True,
             src_datasets={"dataset2"},
-            files_changed={"file2.py", "file3.py"},
+            commit=CommitData(files_changed=frozenset({"file2.py", "file3.py"})),
         ),
     ]
 
     result = deduplicate_function_level(entries)
 
     assert len(result) == 1
-    assert result[0].files_changed == {"file1.py", "file2.py", "file3.py"}
+    assert result[0].commit.files_changed == {"file1.py", "file2.py", "file3.py"}
 
 
 def test_function_level_keeps_separate_functions():

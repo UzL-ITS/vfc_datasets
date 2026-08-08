@@ -7,15 +7,10 @@ from typing import Any
 
 from tqdm.asyncio import tqdm
 
+from vfc_datasets.commit_data import CommitData, normalize_commit_timestamp
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.git.github_client import AsyncGitHubClient
 from vfc_datasets.utils.git.url import GitURL
-
-from .commit_data_common import (
-    CommitData,
-    apply_commit_data,
-    needs_enrichment,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -47,14 +42,14 @@ def _apply_api_response(entry: DatasetEntry, data: dict[str, Any]) -> None:
 
     patches = [f["patch"] for f in files if f.get("patch")]
 
-    apply_commit_data(
-        entry,
+    entry.commit = entry.commit.merge(
         CommitData(
             message=commit.get("message"),
-            timestamp=commit.get("author", {}).get("date"),
+            authored_at=normalize_commit_timestamp(commit.get("author", {}).get("date")),
+            committed_at=normalize_commit_timestamp(commit.get("committer", {}).get("date")),
             diff="\n".join(patches) if patches else None,
-            files_changed={f["filename"] for f in files if f.get("filename")},
-        ),
+            files_changed=frozenset(f["filename"] for f in files if f.get("filename")),
+        )
     )
 
 
@@ -79,7 +74,7 @@ async def _enrich_entries_async(entries: list[DatasetEntry]) -> tuple[int, int]:
 def add_commit_information_api(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
     """Enrich entries with commit data from the GitHub API and return the modified list."""
     entries = list(entries)
-    entries_to_process = [e for e in entries if needs_enrichment(e)]
+    entries_to_process = [e for e in entries if not e.commit.is_complete()]
 
     if not entries_to_process:
         logger.info("No entries need API enrichment")

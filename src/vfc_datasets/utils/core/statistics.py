@@ -32,7 +32,7 @@ def compute_dataset_stats(entries: Iterable[DatasetEntry]) -> dict[str, DatasetS
         for src in entry.src_datasets:
             totals[src] += 1
             projects[src].add(entry.project_url)
-            if entry.commit_diff is not None:
+            if entry.commit.diff is not None:
                 with_diffs[src] += 1
 
     return {
@@ -63,7 +63,7 @@ def log_dataset_stats(entries: Iterable[DatasetEntry]) -> None:
 
     logger.info("-" * 65)
     total = len(entries)
-    with_diff = sum(1 for e in entries if e.commit_diff is not None)
+    with_diff = sum(1 for e in entries if e.commit.diff is not None)
     unique_projects = len({e.project_url for e in entries})
     pct = (with_diff / total * 100) if total > 0 else 0
     logger.info(

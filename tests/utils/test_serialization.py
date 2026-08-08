@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import load_entries, save_entries, save_entries_csv
 
@@ -18,8 +19,7 @@ def _entry(
         project_url="https://github.com/owner/repo",
         commit_id=commit,
         src_datasets={"test"},
-        commit_diff=diff,
-        files_changed=files if files is not None else set(),
+        commit=CommitData(diff=diff, files_changed=frozenset(files or ())),
     )
 
 
@@ -91,6 +91,6 @@ class TestSaveEntriesCsv:
     def test_set_field_semicolon_separated(self, tmp_path: Path) -> None:
         path = tmp_path / "test.csv"
         e = _entry(files={"src/a.py", "src/b.py"})
-        save_entries_csv([e], path, fields=["files_changed"])
+        save_entries_csv([e], path, fields=["commit.files_changed"])
         content = path.read_text()
         assert "src/a.py;src/b.py" in content

@@ -18,11 +18,11 @@ def train_val_test_split_temporal(
         return [], [], []
     validate_split_ratios(train_ratio, val_ratio, test_ratio)
 
-    if not all(e.commit_timestamp_utc is not None for e in entries):
-        raise ValueError("All entries must have commit_timestamp_utc for temporal split")
+    if not all(e.commit.committed_at is not None for e in entries):
+        raise ValueError("All entries must have commit.committed_at for temporal split")
 
     # Sort by timestamp
-    sorted_entries = sorted(entries, key=lambda e: e.commit_timestamp_utc)  # pyright: ignore[reportCallIssue,reportArgumentType]
+    sorted_entries = sorted(entries, key=lambda e: e.commit.committed_at)  # pyright: ignore[reportCallIssue,reportArgumentType]
 
     # Split the sorted entries
     train, val, test = split_by_ratio(sorted_entries, train_ratio, val_ratio, test_ratio)

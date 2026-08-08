@@ -3,6 +3,7 @@
 import hashlib
 import inspect
 import logging
+import sys
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass
@@ -12,9 +13,11 @@ from typing import Any, Literal, cast, override
 import pandas as pd
 from tqdm.auto import tqdm
 
+import vfc_datasets.commit_data as _commit_data_module
 import vfc_datasets.parsing_helpers as _parsing_helpers
 import vfc_datasets.utils.git.url as _git_url_module
 import vfc_datasets.utils.patterns as _patterns_module
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.config import DATASET_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.core.serialization import load_cache, save_cache
@@ -28,7 +31,8 @@ _ENTRY_SCHEMA_FINGERPRINT = hashlib.blake2b(
 # Fingerprint the shared parsing helpers too, since _parse_row's bytecode misses changes in them.
 _HELPERS_FINGERPRINT = hashlib.blake2b(
     b"".join(
-        inspect.getsource(m).encode() for m in (_parsing_helpers, _git_url_module, _patterns_module)
+        inspect.getsource(m).encode()
+        for m in (_parsing_helpers, _git_url_module, _patterns_module, _commit_data_module)
     ),
     digest_size=4,
 ).hexdigest()
@@ -66,9 +70,9 @@ class BaseDataset(ABC):
 
     Subclasses must define `metadata` and implement `_load_data()` and `_parse_row()`.
 
-    Shipped `commit_message`/`commit_diff`/`commit_timestamp_utc` are stripped by default
-    so they come uniformly from enrichment; pass `include_dataset_commit_data=True` to keep
-    them. `files_changed`/`function_name` are entry identity and are never stripped.
+    `_parse_row()` returns entry identity and labels. Commit data a dataset happens to ship
+    comes from the separate `_shipped_commit_data()` hook, applied only when
+    `include_dataset_commit_data=True` so it otherwise comes uniformly from enrichment.
     """
 
     metadata: DatasetMetadata
@@ -98,15 +102,21 @@ class BaseDataset(ABC):
         """Parse one row into DatasetEntry. Return None to skip."""
         ...
 
+    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
+        """Commit data shipped in this row, normalized. Override where a dataset has it."""
+        return CommitData()
+
     def _cache_key(self) -> str:
-        """Cache key over dataset name, entry-schema fingerprint, parser hash, shared
-        parsing helpers, and the include_dataset_commit_data flag.
+        """Cache key over dataset name, entry-schema fingerprint, the defining module's
+        source, shared parsing helpers, and the include_dataset_commit_data flag.
 
         A change to any of them yields a new key, so a stale cache can never shadow a fix
-        or serve shipped commit data to a stripped instance.
+        or serve shipped commit data to a stripped instance. The whole module goes into the
+        fingerprint rather than the parser bytecode, which misses both renamed source
+        columns (constants live outside `co_code`) and edits to module-level helpers.
         """
         parser_fingerprint = hashlib.blake2b(
-            type(self)._parse_row.__code__.co_code, digest_size=4
+            inspect.getsource(sys.modules[type(self).__module__]).encode(), digest_size=4
         ).hexdigest()
         commit_data_flag = "d1" if self.include_dataset_commit_data else "d0"
         return (
@@ -132,15 +142,12 @@ class BaseDataset(ABC):
         entries: list[DatasetEntry] = []
         records = cast(list[dict[str, Any]], df.to_dict(orient="records"))
         for row in tqdm(records, total=len(records), desc=f"Parsing {name}"):
-            entry = self._parse_row(
-                {k: None if isinstance(v, float) and v != v else v for k, v in row.items()}
-            )
+            row = {k: None if isinstance(v, float) and v != v else v for k, v in row.items()}
+            entry = self._parse_row(row)
             if not entry:
                 continue
-            if not self.include_dataset_commit_data:
-                entry.commit_message = None
-                entry.commit_diff = None
-                entry.commit_timestamp_utc = None
+            if self.include_dataset_commit_data:
+                entry.commit = entry.commit.merge(self._shipped_commit_data(row))
             entries.append(entry)
 
         if not entries:

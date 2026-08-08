@@ -3,6 +3,7 @@ import hashlib
 import logging
 from collections import Counter, defaultdict
 from collections.abc import Callable, Iterable
+from dataclasses import replace
 from typing import Any
 
 from tqdm.auto import tqdm
@@ -23,7 +24,6 @@ def merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
     base.cwe_ids = set(base.cwe_ids)
     base.cve_ids = set(base.cve_ids)
     base.src_datasets = set(base.src_datasets)
-    base.files_changed = set(base.files_changed)
     if base.owasp_categories is not None:
         base.owasp_categories = set(base.owasp_categories)
 
@@ -31,7 +31,6 @@ def merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
         base.cwe_ids |= other.cwe_ids
         base.cve_ids |= other.cve_ids
         base.src_datasets |= other.src_datasets
-        base.files_changed |= other.files_changed
 
         if base.owasp_categories is None:
             if other.owasp_categories is not None:
@@ -39,14 +38,15 @@ def merge_entry_group(entries: list[DatasetEntry]) -> DatasetEntry:
         elif other.owasp_categories:
             base.owasp_categories |= other.owasp_categories
 
-        if base.commit_timestamp_utc is None:
-            base.commit_timestamp_utc = other.commit_timestamp_utc
-        if base.commit_message is None:
-            base.commit_message = other.commit_message
-        if base.commit_diff is None:
-            base.commit_diff = other.commit_diff
+        # Merge fills gaps; file lists are unioned since each source may know only part.
+        base.commit = replace(
+            base.commit.merge(other.commit),
+            files_changed=base.commit.files_changed | other.commit.files_changed,
+        )
         if base.ghsa_id is None:
             base.ghsa_id = other.ghsa_id
+        if base.function_file is None:
+            base.function_file = other.function_file
 
     return base
 
@@ -110,11 +110,12 @@ def deduplicate_within_repository(entries: Iterable[DatasetEntry]) -> list[Datas
     )
     for entry in result:
         entry.function_name = None
+        entry.function_file = None
     return result
 
 
 def filter_by_has_unique_diff(entries: Iterable[DatasetEntry]) -> list[DatasetEntry]:
-    """Remove entries with duplicate (diff, files_changed) pairs. Entries without diff are kept."""
+    """Remove entries with duplicate (diff, files) pairs. Entries without diff are kept."""
     seen_by_hash: dict[tuple[str, tuple[str, ...] | None], DatasetEntry] = {}
     # Entries without diffs are kept separately - we can't determine if they're duplicates
     entries_without_diff: list[DatasetEntry] = []
@@ -123,19 +124,19 @@ def filter_by_has_unique_diff(entries: Iterable[DatasetEntry]) -> list[DatasetEn
     sorted_entries = sorted(entries, key=lambda entry: (entry.project_url, entry.commit_id))
 
     for entry in tqdm(sorted_entries, desc="Filtering duplicate diffs"):
-        if entry.commit_diff is None:
+        if entry.commit.diff is None:
             # Keep entries without diffs - we can't check for duplicates without diff content
             entries_without_diff.append(entry)
             continue
 
-        files_changed = entry.files_changed
+        files_changed = entry.commit.files_changed
         # Convert directly to sorted tuple for deterministic representation
         sorted_files = tuple(sorted(files_changed)) if files_changed else None
 
         # Hash the diff instead of using it directly as key
         # Use surrogatepass to handle diffs with invalid UTF-8 sequences (e.g., binary files)
         diff_hash = hashlib.sha256(
-            entry.commit_diff.encode("utf-8", errors="surrogatepass")
+            entry.commit.diff.encode("utf-8", errors="surrogatepass")
         ).hexdigest()
         key = (diff_hash, sorted_files)
 

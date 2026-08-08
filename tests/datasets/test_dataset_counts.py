@@ -57,14 +57,12 @@ def test_function_counts(dataset_class: type[BaseDataset]):
     # Basic integrity check: all entries must specify a function name
     assert all(e.function_name for e in entries), f"{metadata.name}: missing function_name"
 
-    # Count unique functions by (URL, Commit, Name, Files)
+    # Identity uses `function_file`; `commit.files_changed` is empty without commit data.
     vulnerable_functions = {
-        (e.project_url, e.commit_id, e.function_name, frozenset(e.files_changed))
-        for e in entries
-        if e.is_vfc
+        (e.project_url, e.commit_id, e.function_name, e.function_file) for e in entries if e.is_vfc
     }
     benign_functions = {
-        (e.project_url, e.commit_id, e.function_name, frozenset(e.files_changed))
+        (e.project_url, e.commit_id, e.function_name, e.function_file)
         for e in entries
         if not e.is_vfc
     }

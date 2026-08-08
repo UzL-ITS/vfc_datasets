@@ -8,6 +8,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.commit_data import CommitData, from_unified_diff
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -141,3 +142,7 @@ class RepoSPDDataset(BaseDataset):
             cve_ids=normalize_cve_ids(row.get("CVE_ID")),
             cwe_ids=normalize_cwe_ids(row.get("CWE_ID")),
         )
+
+    @override
+    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
+        return from_unified_diff(row.get("diff_code"))

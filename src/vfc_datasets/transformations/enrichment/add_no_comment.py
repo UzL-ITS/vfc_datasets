@@ -2,6 +2,7 @@ import logging
 import os
 import tempfile
 from collections.abc import Iterable
+from dataclasses import replace
 from pathlib import PurePosixPath
 from typing import Any
 
@@ -287,7 +288,7 @@ def _process_batch(args: tuple[str, list[str], int, bool]) -> dict[str, str]:
 
 
 def _apply_diff(entry: DatasetEntry, diff: str) -> None:
-    entry.commit_diff = diff
+    entry.commit = replace(entry.commit, diff=diff)
 
 
 def strip_diff_comments(
@@ -304,11 +305,11 @@ def strip_diff_comments(
     logger.info("Max diff size: %dK chars", MAX_DIFF_SIZE // 1000)
 
     entries = list(entries)
-    needs_processing = [e for e in entries if e.commit_diff]
+    needs_processing = [e for e in entries if e.commit.diff]
     skipped = sum(
         1
         for e in needs_processing
-        if e.commit_diff is not None and len(e.commit_diff) > MAX_DIFF_SIZE
+        if e.commit.diff is not None and len(e.commit.diff) > MAX_DIFF_SIZE
     )
     if skipped:
         logger.info("Skipped %d entries exceeding size limit", skipped)
@@ -316,9 +317,9 @@ def strip_diff_comments(
     return process_commits_in_batches(
         entries,
         filter_fn=lambda e: (
-            e.commit_diff is not None
-            and len(e.commit_diff) > 0
-            and len(e.commit_diff) <= MAX_DIFF_SIZE
+            e.commit.diff is not None
+            and len(e.commit.diff) > 0
+            and len(e.commit.diff) <= MAX_DIFF_SIZE
         ),
         batch_fn=_process_batch,
         apply_fn=_apply_diff,

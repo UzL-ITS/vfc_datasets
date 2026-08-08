@@ -5,6 +5,7 @@ import pandas as pd
 
 from datasets import load_dataset
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import (
     extract_url_and_commit,
@@ -64,6 +65,9 @@ class SecVulEvalDataset(BaseDataset):
             cve_ids=normalize_cve_ids(row.get("cve_list")),
             cwe_ids=normalize_cwe_ids(row.get("cwe_list")),
             function_name=function_name,
-            files_changed={file_path} if file_path else set(),
-            commit_message=row.get("commit_message"),
+            function_file=file_path,
         )
+
+    @override
+    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
+        return CommitData(message=row.get("commit_message"))

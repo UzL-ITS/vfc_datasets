@@ -64,7 +64,7 @@ def apply_transformations(entries: list[DatasetEntry]) -> list[DatasetEntry]:
     for transform in TRANSFORMATION_PIPELINE:
         entries = transform(entries)
     # Drop entries where diff couldn't be retrieved.
-    return [e for e in entries if e.commit_diff is not None]
+    return [e for e in entries if e.commit.diff is not None]
 
 
 def build_dataset_variants(all_entries: list[DatasetEntry]) -> dict[str, list[DatasetEntry]]:

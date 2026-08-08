@@ -5,12 +5,12 @@ from datetime import UTC, datetime
 import pytest
 from git import Repo
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.transformations.enrichment.add_commit_data_local import (
     _get_commit_info,
     add_commit_information_local,
 )
-from vfc_datasets.transformations.enrichment.commit_data_common import CommitData, apply_commit_data
 from vfc_datasets.utils.git.repository import clone_repository
 
 
@@ -25,81 +25,83 @@ class TestApplyCommitData:
         )
         data = CommitData(
             message="Fix bug",
-            timestamp="2024-01-15T10:30:00+00:00",
+            committed_at=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
             diff="diff --git a/file.py",
-            files_changed={"file.py", "test.py"},
+            files_changed=frozenset({"file.py", "test.py"}),
         )
 
-        apply_commit_data(entry, data)
+        entry.commit = entry.commit.merge(data)
 
-        assert entry.commit_message == "Fix bug"
-        assert entry.commit_timestamp_utc == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
-        assert entry.commit_diff == "diff --git a/file.py"
-        assert entry.files_changed == {"file.py", "test.py"}
+        assert entry.commit.message == "Fix bug"
+        assert entry.commit.committed_at == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
+        assert entry.commit.diff == "diff --git a/file.py"
+        assert entry.commit.files_changed == {"file.py", "test.py"}
 
     def test_does_not_overwrite_existing_fields(self):
         entry = DatasetEntry(
             project_url="https://github.com/test/repo",
             commit_id="abc1234",
             src_datasets={"test"},
-            commit_message="Original message",
-            commit_timestamp_utc=datetime(2023, 6, 1, 12, 0, 0, tzinfo=UTC),
-            commit_diff="original diff",
-            files_changed={"original.py"},
+            commit=CommitData(
+                message="Original message",
+                committed_at=datetime(2023, 6, 1, 12, 0, 0, tzinfo=UTC),
+                diff="original diff",
+                files_changed=frozenset({"original.py"}),
+            ),
         )
         data = CommitData(
             message="New message",
-            timestamp="2024-01-15T10:30:00+00:00",
+            committed_at=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
             diff="new diff",
-            files_changed={"new.py"},
+            files_changed=frozenset({"new.py"}),
         )
 
-        apply_commit_data(entry, data)
+        entry.commit = entry.commit.merge(data)
 
-        assert entry.commit_message == "Original message"
-        assert entry.commit_timestamp_utc == datetime(2023, 6, 1, 12, 0, 0, tzinfo=UTC)
-        assert entry.commit_diff == "original diff"
-        assert entry.files_changed == {"original.py"}
+        assert entry.commit.message == "Original message"
+        assert entry.commit.committed_at == datetime(2023, 6, 1, 12, 0, 0, tzinfo=UTC)
+        assert entry.commit.diff == "original diff"
+        assert entry.commit.files_changed == {"original.py"}
 
     def test_partial_update_message_exists(self):
         entry = DatasetEntry(
             project_url="https://github.com/test/repo",
             commit_id="abc1234",
             src_datasets={"test"},
-            commit_message="Existing message",
+            commit=CommitData(message="Existing message"),
         )
         data = CommitData(
             message="New message",
-            timestamp="2024-01-15T10:30:00+00:00",
+            committed_at=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
             diff="new diff",
-            files_changed={"new.py"},
+            files_changed=frozenset({"new.py"}),
         )
 
-        apply_commit_data(entry, data)
+        entry.commit = entry.commit.merge(data)
 
-        assert entry.commit_message == "Existing message"  # Not overwritten
-        assert entry.commit_timestamp_utc == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
-        assert entry.commit_diff == "new diff"
-        assert entry.files_changed == {"new.py"}
+        assert entry.commit.message == "Existing message"  # Not overwritten
+        assert entry.commit.committed_at == datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
+        assert entry.commit.diff == "new diff"
+        assert entry.commit.files_changed == {"new.py"}
 
     def test_partial_update_diff_exists(self):
         entry = DatasetEntry(
             project_url="https://github.com/test/repo",
             commit_id="abc1234",
             src_datasets={"test"},
-            commit_diff="Existing diff",
+            commit=CommitData(diff="Existing diff"),
         )
         data = CommitData(
             message="New message",
-            timestamp="2024-01-15T10:30:00+00:00",
+            committed_at=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
             diff="new diff",
-            files_changed={"new.py"},
+            files_changed=frozenset({"new.py"}),
         )
 
-        apply_commit_data(entry, data)
+        entry.commit = entry.commit.merge(data)
 
-        assert entry.commit_message == "New message"
-        assert entry.commit_diff == "Existing diff"  # Not overwritten
+        assert entry.commit.message == "New message"
+        assert entry.commit.diff == "Existing diff"  # Not overwritten
 
     def test_empty_files_changed_is_updated(self):
         """Empty set for files_changed should be treated as needing update."""
@@ -107,36 +109,36 @@ class TestApplyCommitData:
             project_url="https://github.com/test/repo",
             commit_id="abc1234",
             src_datasets={"test"},
-            files_changed=set(),  # Empty set
+            commit=CommitData(),  # Nothing known yet
         )
         data = CommitData(
             message="msg",
-            timestamp="2024-01-15T10:30:00+00:00",
+            committed_at=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
             diff="diff",
-            files_changed={"file.py"},
+            files_changed=frozenset({"file.py"}),
         )
 
-        apply_commit_data(entry, data)
+        entry.commit = entry.commit.merge(data)
 
-        assert entry.files_changed == {"file.py"}
+        assert entry.commit.files_changed == {"file.py"}
 
     def test_non_empty_files_changed_not_overwritten(self):
         entry = DatasetEntry(
             project_url="https://github.com/test/repo",
             commit_id="abc1234",
             src_datasets={"test"},
-            files_changed={"existing.py"},
+            commit=CommitData(files_changed=frozenset({"existing.py"})),
         )
         data = CommitData(
             message="msg",
-            timestamp="2024-01-15T10:30:00+00:00",
+            committed_at=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
             diff="diff",
-            files_changed={"new.py"},
+            files_changed=frozenset({"new.py"}),
         )
 
-        apply_commit_data(entry, data)
+        entry.commit = entry.commit.merge(data)
 
-        assert entry.files_changed == {"existing.py"}  # Not overwritten
+        assert entry.commit.files_changed == {"existing.py"}  # Not overwritten
 
 
 class TestAddCommitInformationLocal:
@@ -148,10 +150,12 @@ class TestAddCommitInformationLocal:
                 project_url="https://github.com/test/repo",
                 commit_id="abc1234",
                 src_datasets={"test"},
-                commit_message="msg",
-                commit_diff="diff",
-                commit_timestamp_utc=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
-                files_changed={"file.py"},
+                commit=CommitData(
+                    message="msg",
+                    diff="diff",
+                    committed_at=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
+                    files_changed=frozenset({"file.py"}),
+                ),
             ),
         ]
 
@@ -160,8 +164,8 @@ class TestAddCommitInformationLocal:
         assert result == entries
         assert len(result) == 1
         # Verify nothing changed
-        assert result[0].commit_message == "msg"
-        assert result[0].commit_diff == "diff"
+        assert result[0].commit.message == "msg"
+        assert result[0].commit.diff == "diff"
 
     def test_returns_empty_list_unchanged(self):
         entries: list[DatasetEntry] = []
@@ -189,7 +193,7 @@ class TestGetCommitInfo:
         )
 
         assert result is not None
-        assert result.get("files_changed")
+        assert result.files_changed
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -199,7 +203,7 @@ class TestGetCommitInfo:
         result = _get_commit_info(curl_repo, root_commit, max_diff_size=256 * 1024)
 
         assert result is not None
-        assert result.get("files_changed")
+        assert result.files_changed
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -211,10 +215,11 @@ class TestGetCommitInfo:
         )
 
         assert result is not None
-        assert result.get("message")
-        assert result.get("timestamp")
-        assert result.get("files_changed")
-        assert result.get("diff") is None
+        assert result.message
+        assert result.authored_at
+        assert result.committed_at
+        assert result.files_changed
+        assert result.diff is None
 
 
 class TestAddCommitInformationLocalIntegration:
@@ -240,10 +245,10 @@ class TestAddCommitInformationLocalIntegration:
         result = add_commit_information_local([entry])
 
         assert len(result) == 1
-        assert result[0].commit_message is not None
-        assert self.CURL_EXPECTED_MESSAGE in result[0].commit_message
-        assert result[0].commit_timestamp_utc == self.CURL_EXPECTED_DATE
-        assert result[0].files_changed  # Should have files
+        assert result[0].commit.message is not None
+        assert self.CURL_EXPECTED_MESSAGE in result[0].commit.message
+        assert result[0].commit.committed_at == self.CURL_EXPECTED_DATE
+        assert result[0].commit.files_changed  # Should have files
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -266,8 +271,8 @@ class TestAddCommitInformationLocalIntegration:
 
         assert len(result) == 2
         for entry in result:
-            assert entry.commit_message is not None
-            assert entry.commit_timestamp_utc is not None
+            assert entry.commit.message is not None
+            assert entry.commit.committed_at is not None
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -278,14 +283,14 @@ class TestAddCommitInformationLocalIntegration:
             project_url=self.CURL_PROJECT_URL,
             commit_id=self.CURL_COMMIT,
             src_datasets={"test"},
-            commit_message=original_message,
+            commit=CommitData(message=original_message),
         )
 
         result = add_commit_information_local([entry])
 
         assert len(result) == 1
-        assert result[0].commit_message == original_message  # Preserved
-        assert result[0].commit_timestamp_utc is not None  # Still enriched
+        assert result[0].commit.message == original_message  # Preserved
+        assert result[0].commit.committed_at is not None  # Still enriched
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -308,9 +313,9 @@ class TestAddCommitInformationLocalIntegration:
 
         assert len(result) == 2
         # Valid commit should be enriched
-        assert result[0].commit_message is not None
+        assert result[0].commit.message is not None
         # Invalid commit should not crash, just not be enriched
-        assert result[1].commit_message is None
+        assert result[1].commit.message is None
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -333,5 +338,5 @@ class TestAddCommitInformationLocalIntegration:
 
         assert len(result) == 2
         # Both entries should have the same commit data
-        assert result[0].commit_message == result[1].commit_message
-        assert result[0].commit_timestamp_utc == result[1].commit_timestamp_utc
+        assert result[0].commit.message == result[1].commit.message
+        assert result[0].commit.committed_at == result[1].commit.committed_at
