@@ -1,5 +1,4 @@
 from dataclasses import fields as dc_fields
-from datetime import UTC, datetime
 
 from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -21,23 +20,6 @@ def test_merge_entry_group_covers_all_fields():
     all_attrs = {f.name for f in dc_fields(DatasetEntry)}
     covered = key_fields | set_union | first_non_none | merged
     assert covered == all_attrs, f"Uncovered: {all_attrs - covered}, Extra: {covered - all_attrs}"
-
-
-def test_commit_data_merge_covers_all_fields():
-    """Every CommitData field must be handled by CommitData.merge."""
-    full = CommitData(
-        message="m",
-        diff="d",
-        files_changed=frozenset({"a"}),
-        authored_at=datetime(2024, 1, 1, tzinfo=UTC),
-        committed_at=datetime(2024, 1, 2, tzinfo=UTC),
-    )
-    empty = CommitData()
-    # Without this, a field added but left at its default would make the merges below vacuous.
-    assert all(getattr(full, f.name) != getattr(empty, f.name) for f in dc_fields(CommitData))
-
-    assert empty.merge(full) == full, "merge must fill every field from the other side"
-    assert full.merge(empty) == full, "merge must keep every field already set"
 
 
 def test_vfc_conflict_excludes_entries():

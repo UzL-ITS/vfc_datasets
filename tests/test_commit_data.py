@@ -1,11 +1,15 @@
-"""Tests for commit-data format parsers."""
+"""Tests for the CommitData value object and the commit-data format parsers."""
 
-from datetime import UTC, datetime
+from dataclasses import fields as dc_fields
+from dataclasses import replace
+from datetime import UTC, datetime, timedelta, timezone
 
 from vfc_datasets.commit_data import (
+    CommitData,
     files_changed_from_diff,
     from_git_show,
     from_unified_diff,
+    normalize_commit_timestamp,
 )
 
 DIFF = (
@@ -17,6 +21,116 @@ DIFF = (
     "-old\n"
     "+new\n"
 )
+
+
+FULL = CommitData(
+    message="m",
+    diff="d",
+    files_changed=frozenset({"a"}),
+    authored_at=datetime(2024, 1, 1, tzinfo=UTC),
+    committed_at=datetime(2024, 1, 2, tzinfo=UTC),
+)
+
+PLUS5 = timezone(timedelta(hours=5))
+
+
+class TestDefaults:
+    def test_everything_empty(self):
+        data = CommitData()
+        assert data.message is None
+        assert data.diff is None
+        assert data.files_changed == frozenset()
+        assert data.authored_at is None
+        assert data.committed_at is None
+
+
+class TestTimestampNormalization:
+    """`__post_init__` coerces both timestamps to tz-aware UTC."""
+
+    def test_none_stays_none(self):
+        assert CommitData(committed_at=None).committed_at is None
+
+    def test_naive_datetime_gets_utc(self):
+        data = CommitData(committed_at=datetime(2024, 1, 1, 12, 0, 0))
+        assert data.committed_at is not None
+        assert data.committed_at.tzinfo == UTC
+
+    def test_non_utc_tz_converted_to_utc(self):
+        data = CommitData(authored_at=datetime(2024, 1, 1, 15, 0, 0, tzinfo=PLUS5))
+        assert data.authored_at is not None
+        assert data.authored_at.tzinfo == UTC
+        assert data.authored_at.hour == 10
+
+
+class TestNormalizeCommitTimestamp:
+    def test_none(self):
+        assert normalize_commit_timestamp(None) is None
+
+    def test_iso_string_parsed(self):
+        result = normalize_commit_timestamp("2024-01-15T10:30:00+00:00")
+        assert result is not None
+        assert result.year == 2024
+        assert result.tzinfo == UTC
+
+    def test_naive_datetime_gets_utc(self):
+        result = normalize_commit_timestamp(datetime(2024, 1, 1, 12, 0, 0))
+        assert result is not None
+        assert result.tzinfo == UTC
+
+    def test_non_utc_tz_converted_to_utc(self):
+        result = normalize_commit_timestamp(datetime(2024, 1, 1, 15, 0, 0, tzinfo=PLUS5))
+        assert result is not None
+        assert result.tzinfo == UTC
+        assert result.hour == 10
+
+
+class TestMerge:
+    def test_merge_covers_all_fields(self):
+        """Every CommitData field must be handled by CommitData.merge."""
+        empty = CommitData()
+        # Without this, a field added but left at its default would make the merges below vacuous.
+        assert all(getattr(FULL, f.name) != getattr(empty, f.name) for f in dc_fields(CommitData))
+
+        assert empty.merge(FULL) == FULL, "merge must fill every field from the other side"
+        assert FULL.merge(empty) == FULL, "merge must keep every field already set"
+
+    def test_values_already_set_win(self):
+        other = CommitData(message="theirs", diff="theirs")
+        assert CommitData(message="mine").merge(other).message == "mine"
+        assert CommitData(message="mine").merge(other).diff == "theirs"
+
+
+class TestIsComplete:
+    def test_empty_is_incomplete(self):
+        assert not CommitData().is_complete()
+
+    def test_full_is_complete(self):
+        assert FULL.is_complete()
+
+    def test_any_single_field_missing_is_incomplete(self):
+        """Exhaustive, so a field added later cannot silently drop out of the check."""
+        default = CommitData()
+        for f in dc_fields(CommitData):
+            degraded = replace(FULL, **{f.name: getattr(default, f.name)})
+            assert not degraded.is_complete(), f"missing {f.name} must not count as complete"
+
+
+class TestRoundTrip:
+    def test_to_dict_from_dict(self):
+        assert CommitData.from_dict(FULL.to_dict()) == FULL
+
+    def test_files_changed_serialized_sorted(self):
+        assert CommitData(files_changed=frozenset({"b", "a"})).to_dict()["files_changed"] == [
+            "a",
+            "b",
+        ]
+
+    def test_timestamps_serialized_as_iso_z(self):
+        assert FULL.to_dict()["authored_at"] == "2024-01-01T00:00:00Z"
+
+    def test_from_dict_missing_input_is_empty(self):
+        assert CommitData.from_dict(None) == CommitData()
+        assert CommitData.from_dict({}) == CommitData()
 
 
 class TestFilesChangedFromDiff:

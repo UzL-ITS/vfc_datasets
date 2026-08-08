@@ -1,11 +1,11 @@
 """Tests for DatasetEntry core model."""
 
-from datetime import UTC, datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import pytest
 
-from vfc_datasets.commit_data import CommitData, normalize_commit_timestamp
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.owasp import OwaspCategory
 
@@ -74,53 +74,6 @@ class TestDatasetEntryInit:
     def test_owasp_none_when_no_cwes(self):
         e = DatasetEntry(**VALID_KWARGS)
         assert e.owasp_categories is None
-
-    def test_files_changed_defaults_to_empty_set(self):
-        e = DatasetEntry(**VALID_KWARGS)
-        assert e.commit.files_changed == set()
-
-
-class TestCommitTimestamp:
-    def test_none(self):
-        e = DatasetEntry(**VALID_KWARGS, commit=CommitData(committed_at=None))
-        assert e.commit.committed_at is None
-
-    def test_naive_datetime_gets_utc(self):
-        dt = datetime(2024, 1, 1, 12, 0, 0)
-        e = DatasetEntry(**VALID_KWARGS, commit=CommitData(committed_at=dt))
-        assert e.commit.committed_at is not None
-        assert e.commit.committed_at.tzinfo == UTC
-
-    def test_non_utc_tz_converted_to_utc(self):
-        plus5 = timezone(offset=__import__("datetime").timedelta(hours=5))
-        dt = datetime(2024, 1, 1, 15, 0, 0, tzinfo=plus5)
-        e = DatasetEntry(**VALID_KWARGS, commit=CommitData(committed_at=dt))
-        assert e.commit.committed_at is not None
-        assert e.commit.committed_at.tzinfo == UTC
-        assert e.commit.committed_at.hour == 10
-
-
-class TestNormalizeCommitTimestamp:
-    def test_none(self):
-        assert normalize_commit_timestamp(None) is None
-
-    def test_iso_string_parsed(self):
-        result = normalize_commit_timestamp("2024-01-15T10:30:00+00:00")
-        assert result is not None
-        assert result.year == 2024
-        assert result.tzinfo == UTC
-
-    def test_naive_datetime_gets_utc(self):
-        result = normalize_commit_timestamp(datetime(2024, 1, 1, 12, 0, 0))
-        assert result is not None
-        assert result.tzinfo == UTC
-
-    def test_non_utc_tz_converted_to_utc(self):
-        plus5 = timezone(offset=__import__("datetime").timedelta(hours=5))
-        result = normalize_commit_timestamp(datetime(2024, 1, 1, 15, 0, 0, tzinfo=plus5))
-        assert result is not None
-        assert result.tzinfo == UTC
-        assert result.hour == 10
 
 
 class TestToDict:
