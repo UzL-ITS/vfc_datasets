@@ -4,8 +4,9 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.commit_data import CommitData, normalize_commit_timestamp
 from vfc_datasets.config import RAW_DATA_PATH
-from vfc_datasets.dataset_entry import DatasetEntry, normalize_commit_timestamp
+from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_and_extract_zip
 from vfc_datasets.parsing_helpers import (
     extract_url_and_commit,
@@ -103,7 +104,12 @@ class ICVulDataset(BaseDataset):
             cve_ids=normalize_cve_ids(row.get("cve_id")),
             cwe_ids=normalize_cwe_ids(row.get("cwe_id")),
             function_name=function_name,
-            files_changed={file_name} if file_name else set(),
-            commit_message=row.get("msg"),
-            commit_timestamp_utc=normalize_commit_timestamp(row.get("author_date")),
+            function_file=file_name,
+        )
+
+    @override
+    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
+        return CommitData(
+            message=row.get("msg"),
+            authored_at=normalize_commit_timestamp(row.get("author_date")),
         )

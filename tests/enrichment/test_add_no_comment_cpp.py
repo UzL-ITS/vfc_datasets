@@ -31,7 +31,7 @@ class TestCppRealCommitIntegration:
         )
         entries = add_commit_information_local([entry])
         assert len(entries) == 1
-        assert entries[0].commit_diff is not None
+        assert entries[0].commit.diff is not None
         return entries[0]
 
     @pytest.mark.integration
@@ -45,20 +45,20 @@ class TestCppRealCommitIntegration:
         - lib/cf-socket.c, lib/curlx/inet_ntop.c, lib/if2ip.h, lib/md4.c,
           lib/md5.c, lib/sha256.c, lib/vtls/openssl.c (C files)
         """
-        original_diff = entry_with_diff.commit_diff
+        original_diff = entry_with_diff.commit.diff
         assert "THANKS" in original_diff
 
         result = strip_diff_comments([entry_with_diff], include_unsupported=True)
 
         assert len(result) == 1
-        assert result[0].commit_diff is not None
+        assert result[0].commit.diff is not None
 
         # Should include the unsupported markdown file
-        assert "THANKS" in result[0].commit_diff
+        assert "THANKS" in result[0].commit.diff
 
         # C file comments should be stripped - the diff should be smaller
         # (this commit mainly touched comments)
-        assert len(result[0].commit_diff) < len(original_diff)
+        assert len(result[0].commit.diff) < len(original_diff)
 
     @pytest.mark.integration
     @pytest.mark.slow
@@ -67,13 +67,13 @@ class TestCppRealCommitIntegration:
         result = strip_diff_comments([entry_with_diff], include_unsupported=False)
 
         assert len(result) == 1
-        assert result[0].commit_diff is not None
+        assert result[0].commit.diff is not None
 
         # Should NOT include the unsupported markdown file
-        assert "THANKS" not in result[0].commit_diff
+        assert "THANKS" not in result[0].commit.diff
 
         # Should still have the C files (but with comments stripped)
-        assert "lib/" in result[0].commit_diff or ".c" in result[0].commit_diff
+        assert "lib/" in result[0].commit.diff or ".c" in result[0].commit.diff
 
 
 class TestDeepNesting:

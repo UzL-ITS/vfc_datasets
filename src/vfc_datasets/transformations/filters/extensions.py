@@ -21,10 +21,12 @@ def filter_by_extension(
     skipped_no_files = 0
 
     for entry in tqdm(entries, desc="Filtering by extension"):
-        if not entry.files_changed:
+        # Function-level entries may only know the file their function lives in.
+        paths = entry.commit.files_changed or {entry.function_file} - {None}
+        if not paths:
             skipped_no_files += 1
             continue
-        if any(PurePosixPath(f).suffix.lower() in normalized for f in entry.files_changed):
+        if any(PurePosixPath(f).suffix.lower() in normalized for f in paths if f):
             filtered.append(entry)
 
     logger.info(

@@ -7,6 +7,7 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -108,8 +109,11 @@ class DiverseVulDataset(BaseDataset):
             src_datasets={self.metadata.name},
             is_vfc=row.get("target") == 1,
             cwe_ids=normalize_cwe_ids(row.get("cwe", [])),
-            commit_message=row.get("message"),
         )
+
+    @override
+    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
+        return CommitData(message=row.get("message"))
 
     def _get_project_url(self, project_name: str, commit_id: str) -> str | None:
         # Special cases

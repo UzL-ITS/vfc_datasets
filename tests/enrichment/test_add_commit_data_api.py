@@ -2,6 +2,7 @@
 
 import pytest
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.transformations.enrichment.add_commit_data_api import (
     _apply_api_response,
@@ -22,6 +23,7 @@ class TestApplyApiResponse:
             "commit": {
                 "message": "Fix security vulnerability\n\nDetailed description.",
                 "author": {"date": "2024-01-15T10:30:00Z"},
+                "committer": {"date": "2024-01-16T11:00:00Z"},
             },
             "files": [
                 {"filename": "src/auth.py", "patch": "@@ -1,3 +1,5 @@\n+new line"},
@@ -31,12 +33,15 @@ class TestApplyApiResponse:
 
         _apply_api_response(entry, api_data)
 
-        assert entry.commit_message == "Fix security vulnerability\n\nDetailed description."
-        assert entry.commit_timestamp_utc is not None
-        assert entry.files_changed == {"src/auth.py", "tests/test_auth.py"}
-        assert entry.commit_diff is not None
-        assert "@@ -1,3 +1,5 @@" in entry.commit_diff
-        assert "@@ -10,2 +10,4 @@" in entry.commit_diff
+        assert entry.commit.message == "Fix security vulnerability\n\nDetailed description."
+        assert entry.commit.authored_at is not None
+        assert entry.commit.authored_at.isoformat() == "2024-01-15T10:30:00+00:00"
+        assert entry.commit.committed_at is not None
+        assert entry.commit.committed_at.isoformat() == "2024-01-16T11:00:00+00:00"
+        assert entry.commit.files_changed == {"src/auth.py", "tests/test_auth.py"}
+        assert entry.commit.diff is not None
+        assert "@@ -1,3 +1,5 @@" in entry.commit.diff
+        assert "@@ -10,2 +10,4 @@" in entry.commit.diff
 
     def test_handles_empty_files_list(self):
         entry = DatasetEntry(
@@ -54,9 +59,9 @@ class TestApplyApiResponse:
 
         _apply_api_response(entry, api_data)
 
-        assert entry.commit_message == "Merge commit"
-        assert entry.files_changed == set()
-        assert entry.commit_diff is None
+        assert entry.commit.message == "Merge commit"
+        assert entry.commit.files_changed == set()
+        assert entry.commit.diff is None
 
     def test_handles_files_without_patches(self):
         """Binary files may not have patches."""
@@ -78,10 +83,10 @@ class TestApplyApiResponse:
 
         _apply_api_response(entry, api_data)
 
-        assert entry.files_changed == {"image.png", "src/main.py"}
-        assert entry.commit_diff == "@@ -1 +1 @@\n-old\n+new"
+        assert entry.commit.files_changed == {"image.png", "src/main.py"}
+        assert entry.commit.diff == "@@ -1 +1 @@\n-old\n+new"
 
-    def test_handles_missing_author_date(self):
+    def test_handles_missing_dates(self):
         entry = DatasetEntry(
             project_url="https://github.com/test/repo",
             commit_id="abc1234",
@@ -97,8 +102,9 @@ class TestApplyApiResponse:
 
         _apply_api_response(entry, api_data)
 
-        assert entry.commit_message == "Commit"
-        assert entry.commit_timestamp_utc is None
+        assert entry.commit.message == "Commit"
+        assert entry.commit.authored_at is None
+        assert entry.commit.committed_at is None
 
     def test_handles_missing_commit_section(self):
         entry = DatasetEntry(
@@ -110,8 +116,8 @@ class TestApplyApiResponse:
 
         _apply_api_response(entry, api_data)
 
-        assert entry.commit_message is None
-        assert entry.commit_timestamp_utc is None
+        assert entry.commit.message is None
+        assert entry.commit.committed_at is None
 
     def test_handles_no_files_key(self):
         entry = DatasetEntry(
@@ -128,8 +134,8 @@ class TestApplyApiResponse:
 
         _apply_api_response(entry, api_data)
 
-        assert entry.commit_message == "No files"
-        assert entry.files_changed == set()
+        assert entry.commit.message == "No files"
+        assert entry.commit.files_changed == set()
 
     def test_multiple_patches_joined_with_newline(self):
         entry = DatasetEntry(
@@ -148,7 +154,7 @@ class TestApplyApiResponse:
 
         _apply_api_response(entry, api_data)
 
-        assert entry.commit_diff == "patch1\npatch2\npatch3"
+        assert entry.commit.diff == "patch1\npatch2\npatch3"
 
     def test_files_without_filename_ignored(self):
         entry = DatasetEntry(
@@ -167,7 +173,7 @@ class TestApplyApiResponse:
 
         _apply_api_response(entry, api_data)
 
-        assert entry.files_changed == {"valid.py"}
+        assert entry.commit.files_changed == {"valid.py"}
 
 
 class TestAddCommitInformationApi:
@@ -180,16 +186,15 @@ class TestAddCommitInformationApi:
                 project_url="https://github.com/test/repo",
                 commit_id="abc1234",
                 src_datasets={"test"},
-                commit_message="Already has message",
-                commit_diff="Already has diff",
+                commit=CommitData(message="Already has message", diff="Already has diff"),
             ),
         ]
 
         result = add_commit_information_api(entries)
 
         assert result == entries
-        assert result[0].commit_message == "Already has message"
-        assert result[0].commit_diff == "Already has diff"
+        assert result[0].commit.message == "Already has message"
+        assert result[0].commit.diff == "Already has diff"
 
     def test_returns_empty_list_unchanged(self):
         entries: list[DatasetEntry] = []
@@ -203,15 +208,13 @@ class TestAddCommitInformationApi:
                 project_url="https://github.com/test/repo1",
                 commit_id="abc1234",
                 src_datasets={"test"},
-                commit_message="msg1",
-                commit_diff="diff1",
+                commit=CommitData(message="msg1", diff="diff1"),
             ),
             DatasetEntry(
                 project_url="https://github.com/test/repo2",
                 commit_id="def5678",
                 src_datasets={"test"},
-                commit_message="msg2",
-                commit_diff="diff2",
+                commit=CommitData(message="msg2", diff="diff2"),
             ),
         ]
 
@@ -241,9 +244,9 @@ class TestAddCommitInformationApiIntegration:
         result = add_commit_information_api([entry])
 
         assert len(result) == 1
-        assert result[0].commit_message is not None
-        assert len(result[0].commit_message) > 0
-        assert result[0].commit_timestamp_utc is not None
+        assert result[0].commit.message is not None
+        assert len(result[0].commit.message) > 0
+        assert result[0].commit.committed_at is not None
 
     @pytest.mark.integration
     def test_handles_nonexistent_commit(self):
@@ -258,7 +261,7 @@ class TestAddCommitInformationApiIntegration:
 
         assert len(result) == 1
         # Entry should still exist but not be enriched
-        assert result[0].commit_message is None
+        assert result[0].commit.message is None
 
     @pytest.mark.integration
     def test_skips_non_github_urls(self):
@@ -272,7 +275,7 @@ class TestAddCommitInformationApiIntegration:
         result = add_commit_information_api([entry])
 
         assert len(result) == 1
-        assert result[0].commit_message is None
+        assert result[0].commit.message is None
 
     @pytest.mark.integration
     def test_mixed_github_and_non_github(self):
@@ -293,8 +296,8 @@ class TestAddCommitInformationApiIntegration:
         result = add_commit_information_api(entries)
 
         assert len(result) == 2
-        assert result[0].commit_message is not None  # GitHub - enriched
-        assert result[1].commit_message is None  # GitLab - skipped
+        assert result[0].commit.message is not None  # GitHub - enriched
+        assert result[1].commit.message is None  # GitLab - skipped
 
     @pytest.mark.integration
     def test_preserves_existing_data(self):
@@ -310,8 +313,8 @@ class TestAddCommitInformationApiIntegration:
         result = add_commit_information_api([entry])
 
         assert len(result) == 1
-        assert result[0].commit_message is not None
-        assert result[0].files_changed  # Should have files
+        assert result[0].commit.message is not None
+        assert result[0].commit.files_changed  # Should have files
 
     @pytest.mark.integration
     def test_multiple_entries_same_repo(self):
@@ -333,5 +336,5 @@ class TestAddCommitInformationApiIntegration:
 
         assert len(result) == 2
         for entry in result:
-            assert entry.commit_message is not None
-            assert entry.commit_timestamp_utc is not None
+            assert entry.commit.message is not None
+            assert entry.commit.committed_at is not None

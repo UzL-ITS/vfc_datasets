@@ -104,6 +104,6 @@ class SVENDataset(BaseDataset):
             commit_id=commit_id,
             src_datasets={self.metadata.name},
             is_vfc=True,
-            files_changed={file_name} if file_name else set(),
+            function_file=file_name,
             cwe_ids=normalize_cwe_ids(row.get("vul_type")),
         )

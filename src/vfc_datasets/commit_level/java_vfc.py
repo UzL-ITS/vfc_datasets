@@ -1,15 +1,28 @@
 import logging
+from dataclasses import replace
+from datetime import UTC, datetime
 from typing import Any, override
 
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.commit_data import CommitData, from_git_show
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
 from vfc_datasets.parsing_helpers import extract_and_normalize_from_commit_url
 
 logger = logging.getLogger(__name__)
+
+
+def _committer_timestamp(value: object) -> datetime | None:
+    """Committer-date epoch seconds; `read_json` may pre-parse it."""
+    if isinstance(value, datetime):
+        return value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+    try:
+        return datetime.fromtimestamp(int(value), UTC)  # pyright: ignore[reportArgumentType]
+    except (TypeError, ValueError):
+        return None
 
 
 class _JavaVFCBase(BaseDataset):
@@ -40,6 +53,15 @@ class _JavaVFCBase(BaseDataset):
             commit_id=commit_id,
             src_datasets={self.metadata.name},
             is_vfc=True,
+        )
+
+    @override
+    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
+        # `diff_raw` is `git show` output; its header carries the message the flattened
+        # `message` column has lost the line breaks from.
+        return replace(
+            from_git_show(row.get("diff_raw")),
+            committed_at=_committer_timestamp(row.get("date")),
         )
 
 

@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 
+from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.transformations.filters import collapse_to_commit_level
 from vfc_datasets.utils.owasp import OwaspCategory
@@ -68,7 +69,7 @@ class TestCollapseToCommitLevel:
                     OwaspCategory.BROKEN_ACCESS_CONTROL,
                     OwaspCategory.CRYPTOGRAPHIC_FAILURES,
                 },
-                files_changed={"file1.py"},
+                commit=CommitData(files_changed=frozenset({"file1.py"})),
             ),
             DatasetEntry(
                 project_url="https://github.com/test/repo",
@@ -77,7 +78,7 @@ class TestCollapseToCommitLevel:
                 cve_ids={"CVE-2021-2222"},
                 cwe_ids={"CWE-89"},
                 owasp_categories={OwaspCategory.INJECTION},
-                files_changed={"file2.py"},
+                commit=CommitData(files_changed=frozenset({"file2.py"})),
             ),
         ]
 
@@ -92,7 +93,7 @@ class TestCollapseToCommitLevel:
             OwaspCategory.CRYPTOGRAPHIC_FAILURES,
             OwaspCategory.INJECTION,
         }
-        assert result[0].files_changed == {"file1.py", "file2.py"}
+        assert result[0].commit.files_changed == {"file1.py", "file2.py"}
 
     def test_takes_first_non_none_for_scalar_fields(self):
         ts = datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
@@ -102,38 +103,38 @@ class TestCollapseToCommitLevel:
                 project_url="https://github.com/test/repo",
                 commit_id="abc123def456",
                 src_datasets={"ds1"},
-                commit_message=None,
-                commit_diff=None,
                 ghsa_id=None,
-                commit_timestamp_utc=None,
+                commit=CommitData(message=None, diff=None, committed_at=None),
             ),
             DatasetEntry(
                 project_url="https://github.com/test/repo",
                 commit_id="abc123def456",
                 src_datasets={"ds2"},
-                commit_message="Fix vulnerability",
-                commit_diff="diff --git...",
                 ghsa_id="GHSA-xxxx-yyyy",
-                commit_timestamp_utc=ts,
+                commit=CommitData(
+                    message="Fix vulnerability", diff="diff --git...", committed_at=ts
+                ),
             ),
             DatasetEntry(
                 project_url="https://github.com/test/repo",
                 commit_id="abc123def456",
                 src_datasets={"ds3"},
-                commit_message="ignored message",
-                commit_diff="ignored diff",
                 ghsa_id="GHSA-ignored",
-                commit_timestamp_utc=datetime(2025, 1, 1, tzinfo=UTC),
+                commit=CommitData(
+                    message="ignored message",
+                    diff="ignored diff",
+                    committed_at=datetime(2025, 1, 1, tzinfo=UTC),
+                ),
             ),
         ]
 
         result = collapse_to_commit_level(entries)
 
         assert len(result) == 1
-        assert result[0].commit_message == "Fix vulnerability"
-        assert result[0].commit_diff == "diff --git..."
+        assert result[0].commit.message == "Fix vulnerability"
+        assert result[0].commit.diff == "diff --git..."
         assert result[0].ghsa_id == "GHSA-xxxx-yyyy"
-        assert result[0].commit_timestamp_utc == ts
+        assert result[0].commit.committed_at == ts
 
     def test_different_commits_stay_separate(self):
         entries = [
@@ -241,4 +242,4 @@ class TestCollapseToCommitLevel:
         result = collapse_to_commit_level([entry])
 
         assert len(result) == 1
-        assert result[0].files_changed == set()
+        assert result[0].commit.files_changed == set()

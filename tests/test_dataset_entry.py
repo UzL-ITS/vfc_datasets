@@ -5,7 +5,8 @@ from typing import Any
 
 import pytest
 
-from vfc_datasets.dataset_entry import DatasetEntry, normalize_commit_timestamp
+from vfc_datasets.commit_data import CommitData, normalize_commit_timestamp
+from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.utils.owasp import OwaspCategory
 
 VALID_KWARGS: dict[str, Any] = {
@@ -76,27 +77,27 @@ class TestDatasetEntryInit:
 
     def test_files_changed_defaults_to_empty_set(self):
         e = DatasetEntry(**VALID_KWARGS)
-        assert e.files_changed == set()
+        assert e.commit.files_changed == set()
 
 
 class TestCommitTimestamp:
     def test_none(self):
-        e = DatasetEntry(**VALID_KWARGS, commit_timestamp_utc=None)
-        assert e.commit_timestamp_utc is None
+        e = DatasetEntry(**VALID_KWARGS, commit=CommitData(committed_at=None))
+        assert e.commit.committed_at is None
 
     def test_naive_datetime_gets_utc(self):
         dt = datetime(2024, 1, 1, 12, 0, 0)
-        e = DatasetEntry(**VALID_KWARGS, commit_timestamp_utc=dt)
-        assert e.commit_timestamp_utc is not None
-        assert e.commit_timestamp_utc.tzinfo == UTC
+        e = DatasetEntry(**VALID_KWARGS, commit=CommitData(committed_at=dt))
+        assert e.commit.committed_at is not None
+        assert e.commit.committed_at.tzinfo == UTC
 
     def test_non_utc_tz_converted_to_utc(self):
         plus5 = timezone(offset=__import__("datetime").timedelta(hours=5))
         dt = datetime(2024, 1, 1, 15, 0, 0, tzinfo=plus5)
-        e = DatasetEntry(**VALID_KWARGS, commit_timestamp_utc=dt)
-        assert e.commit_timestamp_utc is not None
-        assert e.commit_timestamp_utc.tzinfo == UTC
-        assert e.commit_timestamp_utc.hour == 10
+        e = DatasetEntry(**VALID_KWARGS, commit=CommitData(committed_at=dt))
+        assert e.commit.committed_at is not None
+        assert e.commit.committed_at.tzinfo == UTC
+        assert e.commit.committed_at.hour == 10
 
 
 class TestNormalizeCommitTimestamp:
@@ -133,14 +134,20 @@ class TestToDict:
     def test_timestamp_serialized_as_iso(self):
         e = DatasetEntry(
             **VALID_KWARGS,
-            commit_timestamp_utc=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
+            commit=CommitData(committed_at=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)),
         )
         d = e.to_dict()
-        assert d["commit_timestamp_utc"].endswith("Z")
+        assert d["commit"]["committed_at"].endswith("Z")
 
-    def test_key_is_commit_timestamp_utc(self):
+    def test_commit_is_nested(self):
         d = DatasetEntry(**VALID_KWARGS).to_dict()
-        assert "commit_timestamp_utc" in d
+        assert set(d["commit"]) == {
+            "message",
+            "diff",
+            "files_changed",
+            "authored_at",
+            "committed_at",
+        }
 
 
 class TestFromDict:
@@ -151,12 +158,12 @@ class TestFromDict:
             "src_datasets": ["ds1", "ds2"],
             "cve_ids": ["CVE-2021-0001"],
             "cwe_ids": ["CWE-79"],
-            "files_changed": ["src/a.py", "src/b.py"],
+            "commit": {"files_changed": ["src/a.py", "src/b.py"]},
         }
         e = DatasetEntry.from_dict(data)
         assert isinstance(e.src_datasets, set)
         assert isinstance(e.cve_ids, set)
-        assert isinstance(e.files_changed, set)
+        assert isinstance(e.commit.files_changed, frozenset)
 
     def test_null_set_fields_treated_as_empty(self):
         data = {
@@ -165,12 +172,12 @@ class TestFromDict:
             "src_datasets": ["ds"],
             "cve_ids": None,
             "cwe_ids": None,
-            "files_changed": None,
+            "commit": {"files_changed": None},
         }
         e = DatasetEntry.from_dict(data)
         assert e.cve_ids == set()
         assert e.cwe_ids == set()
-        assert e.files_changed == set()
+        assert e.commit.files_changed == set()
 
     def test_owasp_categories_converted_to_owasp_category_set(self):
         data = {
@@ -190,8 +197,8 @@ class TestFromDict:
             "project_url": "https://github.com/owner/repo",
             "commit_id": "abcdef12345",
             "src_datasets": ["ds"],
-            "commit_timestamp_utc": "2024-01-15T10:30:00Z",
+            "commit": {"committed_at": "2024-01-15T10:30:00Z"},
         }
         e = DatasetEntry.from_dict(data)
-        assert e.commit_timestamp_utc is not None
-        assert e.commit_timestamp_utc.year == 2024
+        assert e.commit.committed_at is not None
+        assert e.commit.committed_at.year == 2024

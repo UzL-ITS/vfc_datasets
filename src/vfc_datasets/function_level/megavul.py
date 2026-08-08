@@ -117,7 +117,7 @@ class MegaVulDataset(BaseDataset):
             project_url=project_url,
             commit_id=commit_id,
             src_datasets={self.metadata.name},
-            files_changed={file_path} if file_path else set(),
+            function_file=file_path,
             is_vfc=bool(row.get("is_vul")),
             cve_ids=normalize_cve_ids(row.get("cve_id")),
             cwe_ids=normalize_cwe_ids(row.get("cwe_ids")),
