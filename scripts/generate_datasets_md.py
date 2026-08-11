@@ -102,7 +102,7 @@ def _variant_note(rows: list[tuple[type[BaseDataset], str]], total: int) -> str:
     """Footnote for collapsed rows; empty when nothing collapsed."""
     if len(rows) == total:
         return ""
-    return "\n> Datasets shipping several variants are listed once, showing one variant.\n"
+    return "\n> Datasets shipping several variants are listed once.\n"
 
 
 def _render_collapsed(title: str, count: int, table: str, note: str = "") -> str:

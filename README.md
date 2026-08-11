@@ -53,7 +53,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 | 2025 | [FixSeeker](https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link) | 9,885 | 10,979 | 2,094 | [link](https://doi.org/10.48550/arXiv.2503.20265) |
 | 2025 | [PatchEval](https://github.com/bytedance/PatchEval) | 1,173 | 0 | 694 | [link](https://doi.org/10.48550/arXiv.2511.11019) |
 
-> Datasets shipping several variants are listed once, showing one variant.
+> Datasets shipping several variants are listed once.
 
 </details>
 <!-- COMMIT_DATASETS:END -->
