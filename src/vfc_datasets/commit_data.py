@@ -16,6 +16,7 @@ __all__ = [
     "from_git_show",
     "from_unified_diff",
     "normalize_commit_timestamp",
+    "same_commit",
 ]
 
 # `diff --git a/old b/new`; paths may be quoted and either side may be /dev/null.
@@ -24,9 +25,16 @@ _DIFF_HEADER = re.compile(r'^diff --git ("?a/.*?"?) ("?b/.*?"?)\r?$', re.MULTILI
 _DIFF_START = re.compile(r"^diff --git ", re.MULTILINE)
 _SHOW_DATE = re.compile(r"^Date:\s+(.+)$", re.MULTILINE)
 
+_MIN_ABBREV = 7  # shortest agreeing prefix that still identifies a commit
+
 
 def _iso(value: datetime | None) -> str | None:
     return value.isoformat().replace("+00:00", "Z") if value else None
+
+
+def _trimmed(value: str | None, *, strip: str | None = None) -> str | None:
+    """Text without surrounding whitespace (or `strip` characters), or None if nothing is left."""
+    return (value.strip(strip) or None) if isinstance(value, str) else value
 
 
 def normalize_commit_timestamp(value: datetime | str | None) -> datetime | None:
@@ -54,6 +62,10 @@ class CommitData:
     def __post_init__(self) -> None:
         object.__setattr__(self, "authored_at", normalize_commit_timestamp(self.authored_at))
         object.__setattr__(self, "committed_at", normalize_commit_timestamp(self.committed_at))
+        # Sources disagree on surrounding whitespace; git alone keeps the trailing newline.
+        # The diff loses only line endings: a trailing blank can be diff content.
+        object.__setattr__(self, "message", _trimmed(self.message))
+        object.__setattr__(self, "diff", _trimmed(self.diff, strip="\n\r"))
 
     def is_complete(self) -> bool:
         """Whether every field enrichment could supply is already present."""
@@ -138,6 +150,13 @@ def from_git_show(text: object) -> CommitData:
         files_changed=files_changed_from_diff(diff),
         authored_at=_git_show_date(head),
     )
+
+
+def same_commit(left: str, right: str) -> bool:
+    """Whether two commit ids name the same commit, allowing either to be abbreviated."""
+    left, right = left.strip().lower(), right.strip().lower()
+    shared = min(len(left), len(right))
+    return shared >= _MIN_ABBREV and left[:shared] == right[:shared]
 
 
 def _git_show_date(head: str) -> datetime | None:

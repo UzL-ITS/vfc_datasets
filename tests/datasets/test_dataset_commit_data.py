@@ -1,13 +1,20 @@
-"""Tests for the include_dataset_commit_data flag on BaseDataset."""
+"""Tests for the include_dataset_commit_data flag and the datasets that ship commit data."""
 
+import inspect
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, override
 
 import pandas as pd
+import pytest
 
+import vfc_datasets
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
 from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
+
+from ..test_commit_data import DIFF, SHA
 
 
 class StubShippedDataDataset(BaseDataset):
@@ -148,3 +155,148 @@ def test_flag_survives_a_cache_round_trip(tmp_path: Path):
     # Opting in must not be served the stripped cache above.
     assert first_message(include=True) == "fix overflow"
     assert first_message(include=True) == "fix overflow"
+
+
+MESSAGE = "Fix the overflow"
+FILES = frozenset({"src/app.c"})
+AUTHORED_AT = datetime(2023, 8, 4, 13, 26, 15, tzinfo=UTC)
+COMMITTED_AT = datetime(2023, 8, 4, 13, 30, 0, tzinfo=UTC)
+
+GIT_SHOW = (
+    f"commit {SHA}\n"
+    "Author: A B <a@b.c>\n"
+    "Date:   Fri Aug 4 15:26:15 2023 +0200\n"
+    "\n"
+    f"    {MESSAGE}\n"
+    "\n" + DIFF
+)
+
+
+@dataclass(frozen=True)
+class ShippedCase:
+    """One real dataset's `_shipped_commit_data`, the raw row it reads, and what it yields."""
+
+    dataset: type[BaseDataset]
+    row: dict[str, Any] = field(default_factory=dict)
+    expected: CommitData = field(default_factory=CommitData)
+
+
+SHIPPED_CASES = [
+    ShippedCase(
+        vfc_datasets.CC900Dataset,
+        {"message": MESSAGE, "diff": DIFF},
+        CommitData(message=MESSAGE, diff=DIFF, files_changed=FILES),
+    ),
+    ShippedCase(
+        vfc_datasets.DiverseVulDataset,
+        {"message": MESSAGE},
+        CommitData(message=MESSAGE),
+    ),
+    ShippedCase(
+        vfc_datasets.ICVulDataset,
+        {"msg": MESSAGE, "author_date": AUTHORED_AT.isoformat()},
+        CommitData(message=MESSAGE, authored_at=AUTHORED_AT),
+    ),
+    ShippedCase(
+        vfc_datasets.JavaVFCDataset,
+        {"diff_raw": GIT_SHOW, "date": int(COMMITTED_AT.timestamp())},
+        CommitData(
+            message=MESSAGE,
+            diff=DIFF,
+            files_changed=FILES,
+            authored_at=AUTHORED_AT,
+            committed_at=COMMITTED_AT,
+        ),
+    ),
+    ShippedCase(
+        vfc_datasets.JavaVFCDatasetExtended,
+        {"diff_raw": GIT_SHOW, "date": int(COMMITTED_AT.timestamp())},
+        CommitData(
+            message=MESSAGE,
+            diff=DIFF,
+            files_changed=FILES,
+            authored_at=AUTHORED_AT,
+            committed_at=COMMITTED_AT,
+        ),
+    ),
+    ShippedCase(
+        vfc_datasets.PatchDBDataset,
+        {"diff_code": DIFF},
+        CommitData(diff=DIFF, files_changed=FILES),
+    ),
+    ShippedCase(
+        vfc_datasets.RepoSPDDataset,
+        {"diff_code": DIFF},
+        CommitData(diff=DIFF, files_changed=FILES),
+    ),
+    ShippedCase(
+        vfc_datasets.SecVulEvalDataset,
+        {"commit_id": SHA, "commit_message": MESSAGE},
+        CommitData(message=MESSAGE),
+    ),
+    ShippedCase(
+        # `commit_msg` deliberately unused; see `spidb.py`.
+        vfc_datasets.SPIDBDataset,
+        {"patch": DIFF, "commit_msg": f" {MESSAGE}&&&&&&&&Longer body explaining why.&&&& "},
+        CommitData(diff=DIFF, files_changed=FILES),
+    ),
+]
+
+
+@pytest.mark.parametrize("case", SHIPPED_CASES, ids=lambda case: case.dataset.metadata.name)
+def test_shipped_commit_data_of_real_datasets(case: ShippedCase):
+    """Each hook reads its own columns and yields exactly the fields it has."""
+    assert case.dataset()._shipped_commit_data(case.row) == case.expected
+
+
+OTHER_SHA = "e2b7d0e5c9dbb1f0a3f4c5d6e7a8b9c0d1e2f3a4"
+BACKPORT_LINES = [
+    f"commit {SHA} upstream.",
+    f"[ Upstream commit {SHA} ]",
+    f"(cherry picked from commit {SHA})",
+]
+
+
+@pytest.mark.parametrize("line", BACKPORT_LINES, ids=["upstream", "bracketed", "cherry-picked"])
+def test_secvuleval_drops_a_backports_message(line: str):
+    """Naming this row's own commit as the source marks the text as the backport's."""
+    dataset = vfc_datasets.SecVulEvalDataset()
+    backport = f"{MESSAGE}\n\n{line}\n\nLonger body explaining why."
+
+    assert (
+        dataset._shipped_commit_data({"commit_id": SHA, "commit_message": backport}) == CommitData()
+    )
+    # A different sha means the row is the backport itself, so its message stays.
+    other = backport.replace(SHA, OTHER_SHA)
+    assert (
+        dataset._shipped_commit_data({"commit_id": SHA, "commit_message": other}).message == other
+    )
+
+
+def test_secvuleval_reads_past_a_backport_line_naming_another_commit():
+    """`finditer`, not `search`: the first idiom in a message need not be the telling one."""
+    dataset = vfc_datasets.SecVulEvalDataset()
+    message = f"{MESSAGE}\n\n(cherry picked from commit {OTHER_SHA})\n\ncommit {SHA} upstream."
+
+    assert (
+        dataset._shipped_commit_data({"commit_id": SHA, "commit_message": message}) == CommitData()
+    )
+
+
+def test_missing_columns_yield_no_commit_data():
+    """A row without the expected columns is empty, never a crash or a half-built value."""
+    for case in SHIPPED_CASES:
+        assert case.dataset()._shipped_commit_data({}) == CommitData(), case.dataset.metadata.name
+
+
+def test_every_dataset_shipping_commit_data_is_covered():
+    """A new `_shipped_commit_data` override needs a row above, or nothing tests it."""
+    overriding = {
+        cls
+        for name in vfc_datasets.__all__
+        if inspect.isclass(cls := getattr(vfc_datasets, name))
+        and issubclass(cls, BaseDataset)
+        and cls._shipped_commit_data is not BaseDataset._shipped_commit_data
+    }
+
+    assert overriding == {case.dataset for case in SHIPPED_CASES}

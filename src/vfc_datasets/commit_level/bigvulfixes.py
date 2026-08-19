@@ -4,7 +4,6 @@ from typing import Any, override
 import pandas as pd
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.commit_data import CommitData, normalize_commit_timestamp
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -73,12 +72,4 @@ class BigVulFixesDataset(BaseDataset):
             cve_ids=normalize_cve_ids(row.get("vuln_id")),
         )
 
-    @override
-    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
-        # FIXME: `patch` is a format-patch mbox, not a plain diff, so it needs parsing before
-        # it means the same thing as every other diff. `patch_date_dt` is off by >90s from
-        # both real dates for ~12% of rows.
-        return CommitData(
-            diff=row.get("patch"),
-            authored_at=normalize_commit_timestamp(row.get("patch_date_dt")),
-        )
+    # No `_shipped_commit_data` since `patch` is a format-patch mbox.

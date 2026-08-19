@@ -20,6 +20,7 @@ import vfc_datasets.utils.patterns as _patterns_module
 from vfc_datasets.commit_data import CommitData
 from vfc_datasets.config import DATASET_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
+from vfc_datasets.parsing_helpers import scrub_missing
 from vfc_datasets.utils.core.serialization import load_cache, save_cache
 
 logger = logging.getLogger(__name__)
@@ -103,7 +104,11 @@ class BaseDataset(ABC):
         ...
 
     def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
-        """Commit data shipped in this row, normalized. Override where a dataset has it."""
+        """Commit data shipped in this row, normalized. Override where a dataset has it.
+
+        Only what is verifiably this commit's own; the rest is enrichment's job.
+        `test_shipped_matches_repository` holds datasets to that (diff text excepted).
+        """
         return CommitData()
 
     def _cache_key(self) -> str:
@@ -142,7 +147,7 @@ class BaseDataset(ABC):
         entries: list[DatasetEntry] = []
         records = cast(list[dict[str, Any]], df.to_dict(orient="records"))
         for row in tqdm(records, total=len(records), desc=f"Parsing {name}"):
-            row = {k: None if isinstance(v, float) and v != v else v for k, v in row.items()}
+            row = scrub_missing(row)
             entry = self._parse_row(row)
             if not entry:
                 continue
