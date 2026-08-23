@@ -6,7 +6,6 @@ import pandas as pd
 
 from datasets import load_dataset
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.commit_data import CommitData
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import (
     extract_and_normalize_from_commit_url,
@@ -71,7 +70,3 @@ class CleanVulDataset(BaseDataset):
             cve_ids=normalize_cve_ids(row.get("cve_id")),
             cwe_ids=normalize_cwe_ids(row.get("cwe_id")),
         )
-
-    @override
-    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
-        return CommitData(message=row.get("commit_msg"))

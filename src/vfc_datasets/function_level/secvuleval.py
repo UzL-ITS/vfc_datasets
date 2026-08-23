@@ -1,11 +1,12 @@
 import logging
+import re
 from typing import Any, override
 
 import pandas as pd
 
 from datasets import load_dataset
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
-from vfc_datasets.commit_data import CommitData
+from vfc_datasets.commit_data import CommitData, same_commit
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import (
     extract_url_and_commit,
@@ -14,6 +15,14 @@ from vfc_datasets.parsing_helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+# The three forms a backport's message takes to name the commit it was taken from.
+_DERIVED_FROM = re.compile(
+    r"^commit ([0-9a-f]{7,40}) upstream\.?\s*$"
+    r"|\[\s*Upstream commit ([0-9a-f]{7,40})\s*\]"
+    r"|\(cherry picked from commit ([0-9a-f]{7,40})\)",
+    re.MULTILINE | re.IGNORECASE,
+)
 
 
 class SecVulEvalDataset(BaseDataset):
@@ -70,4 +79,23 @@ class SecVulEvalDataset(BaseDataset):
 
     @override
     def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
-        return CommitData(message=row.get("commit_message"))
+        message = row.get("commit_message")
+        if not isinstance(message, str) or self._is_backport_of(message, row.get("commit_id")):
+            return CommitData()
+        return CommitData(message=message)
+
+    @staticmethod
+    def _is_backport_of(message: str, commit_id: object) -> bool:
+        """Whether the message is a backport's, naming `commit_id` itself as its source.
+
+        No commit's own message can say it was taken from itself, so such a row holds the
+        original commit paired with the backport's text. 40 rows across the three idioms.
+        """
+        if not isinstance(commit_id, str):
+            return False
+        return any(
+            same_commit(sha, commit_id)
+            for found in _DERIVED_FROM.finditer(message)
+            for sha in found.groups()
+            if sha
+        )

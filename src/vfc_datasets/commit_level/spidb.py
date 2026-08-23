@@ -8,6 +8,7 @@ from git.exc import BadName, GitCommandError
 from tqdm.auto import tqdm
 
 from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.commit_data import CommitData, from_unified_diff
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -244,3 +245,9 @@ class SPIDBDataset(BaseDataset):
             src_datasets={self.metadata.name},
             is_vfc=is_vfc,
         )
+
+    @override
+    def _shipped_commit_data(self, row: dict[str, Any]) -> CommitData:
+        # `commit_msg` is left to enrichment: SPI-DB flattened the message into one CSV field
+        # without writing its `&&&&` delimiter at every break.
+        return from_unified_diff(row.get("patch"))

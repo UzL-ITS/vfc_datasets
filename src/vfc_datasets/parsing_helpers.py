@@ -1,4 +1,5 @@
 import logging
+import math
 from collections.abc import Iterable
 from typing import Any
 
@@ -16,6 +17,7 @@ __all__ = [
     "normalize_cve_ids",
     "normalize_cwe_ids",
     "pinned_commit",
+    "scrub_missing",
 ]
 
 # Irregular refs (tags/rev-expressions) pinned to canonical SHAs, resolved once, so
@@ -183,3 +185,12 @@ def normalize_cwe_ids(cwe_input: object) -> set[str]:
             normalized_cwe_ids.add(f"CWE-{int(suffix)}")
 
     return normalized_cwe_ids
+
+
+def scrub_missing(row: dict[str, Any]) -> dict[str, Any]:
+    """Row with pandas' NaN filler replaced by None, which is what the parsers read as absent.
+
+    Not `pd.isna`: it maps over a list-valued cell (SecVulEval's `cve_list`) and the
+    resulting array raises on truthiness.
+    """
+    return {k: None if isinstance(v, float) and math.isnan(v) else v for k, v in row.items()}

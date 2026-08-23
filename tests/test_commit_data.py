@@ -12,6 +12,7 @@ from vfc_datasets.commit_data import (
     normalize_commit_timestamp,
 )
 
+# No trailing newline: parsing strips it, whatever the source ends with.
 DIFF = (
     "diff --git a/src/app.c b/src/app.c\n"
     "index 1111111..2222222 100644\n"
@@ -19,9 +20,10 @@ DIFF = (
     "+++ b/src/app.c\n"
     "@@ -1,3 +1,3 @@\n"
     "-old\n"
-    "+new\n"
+    "+new"
 )
 
+SHA = "15d0d6a94be0098a8227b6b95bdf2daed105ec41"
 
 FULL = CommitData(
     message="m",
@@ -42,6 +44,31 @@ class TestDefaults:
         assert data.files_changed == frozenset()
         assert data.authored_at is None
         assert data.committed_at is None
+
+
+class TestTextNormalization:
+    """Surrounding whitespace is trimmed, so one commit reads the same from every source."""
+
+    def test_message_trailing_newline_dropped(self):
+        # git keeps it, the GitHub API and the shipped formats do not.
+        assert CommitData(message="Fix the overflow\n").message == "Fix the overflow"
+
+    def test_message_padding_dropped(self):
+        assert CommitData(message="  Fix the overflow  ").message == "Fix the overflow"
+
+    def test_diff_trailing_newline_dropped(self):
+        assert CommitData(diff=DIFF + "\n").diff == DIFF
+
+    def test_crlf_source_lands_where_an_lf_one_does(self):
+        assert CommitData(message="Fix the overflow\r\n") == CommitData(message="Fix the overflow")
+        assert CommitData(diff=DIFF + "\r\n").diff == DIFF
+
+    def test_interior_line_endings_survive(self):
+        crlf = DIFF.replace("\n", "\r\n")
+        assert CommitData(diff=crlf + "\r\n").diff == crlf
+
+    def test_nothing_left_means_nothing_known(self):
+        assert CommitData(message="  \r\n", diff="\n") == CommitData()
 
 
 class TestTimestampNormalization:
@@ -141,7 +168,7 @@ class TestFilesChangedFromDiff:
         assert files_changed_from_diff(DIFF.replace("\n", "\r\n")) == {"src/app.c"}
 
     def test_multiple_files(self):
-        diff = DIFF + DIFF.replace("src/app.c", "src/other.c")
+        diff = DIFF + "\n" + DIFF.replace("src/app.c", "src/other.c")
         assert files_changed_from_diff(diff) == {"src/app.c", "src/other.c"}
 
     def test_quoted_path(self):
