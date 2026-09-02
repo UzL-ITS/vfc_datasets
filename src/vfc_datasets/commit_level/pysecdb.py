@@ -285,7 +285,7 @@ class PySecDBDataset(BaseDataset):
         repo_map = self._load_repo_map(repo_map_path)
 
         commits_by_id = _index_commits_by_id(records)
-        unresolved = [meta for meta in commits_by_id.values() if meta.commit_id not in repo_map]
+        unresolved = [m for m in commits_by_id.values() if not repo_map.get(m.commit_id)]
         if unresolved:
             logger.info(
                 "[%s] Resolving %d/%d commit repository URLs (cache hit: %d)",
