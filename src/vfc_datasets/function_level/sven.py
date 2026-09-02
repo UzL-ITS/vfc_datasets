@@ -6,13 +6,16 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import normalize_cwe_ids
 from vfc_datasets.utils.git.repository import clone_repository
 from vfc_datasets.utils.git.url import GitURL, normalize_commit_id, url_to_pathname
 
 logger = logging.getLogger(__name__)
+
+# Pinned so counts stay reproducible.
+_REVISION = "e8449a0d54a5ae0bbdc6bb236330b8c7ec71df57"
 
 
 class SVENDataset(BaseDataset):
@@ -32,8 +35,12 @@ class SVENDataset(BaseDataset):
             "Our data construction relies on manual effort and deliberately excludes samples that do not meet "
             "our quality criteria, thus prioritizing quality over quantity.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=559,
         non_vfcs=0,
+        projects=269,
         vulnerable_functions=800,
         benign_functions=0,
     )
@@ -45,7 +52,7 @@ class SVENDataset(BaseDataset):
     @override
     def _load_data(self) -> pd.DataFrame:
         self.sven_repo_path = url_to_pathname(self.metadata.source_url)
-        clone_repository(self.metadata.source_url, branch="master")
+        clone_repository(self.metadata.source_url, branch=_REVISION)
 
         if not os.path.exists(self.sven_repo_path):
             logger.error("Failed to clone repository: %s", self.metadata.source_url)

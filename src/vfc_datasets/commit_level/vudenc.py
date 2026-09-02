@@ -4,7 +4,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -33,8 +33,12 @@ class VUDEncDataset(BaseDataset):
             "Labeled training datasets are obtained in a fully automated fashion by crawling for security-related "
             "fixes in the commit history of a software repository.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=1009,
         non_vfcs=0,
+        projects=784,
     )
 
     # File names for the 7 vulnerability types in the dataset

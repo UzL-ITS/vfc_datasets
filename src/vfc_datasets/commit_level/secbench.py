@@ -3,7 +3,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -29,10 +29,14 @@ class SecBenchDataset(BaseDataset):
             "We mined 248 projects - accounting to almost 2M commits - for 16 different vulnerability patterns, "
             "yielding a Database with 682 real security vulnerabilities.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=676,  # "Dataset of 676 security vulnerabilities patches." https://tqrg.github.io/secbench
         non_vfcs=0,
-        projects=248,
+        projects=113,
     )
+
 
     @override
     def _load_data(self) -> pd.DataFrame:

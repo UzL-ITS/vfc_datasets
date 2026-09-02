@@ -238,10 +238,11 @@ class PySecDBDataset(BaseDataset):
             "covering 119 more CWEs.",
             # Page 6 (Table II): Base 729 + Pilot 400 + Augmented 129 = 1,258 security commits
         ),
-        vfcs=1142,  # 1258 NOTE: not all available yet
-        non_vfcs=2721,  # 2791, NOTE: not all available yet
-        projects=351,
     )
+
+    # URLs from a live GitHub search.
+    parsed_counts = None
+
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)

@@ -5,7 +5,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -34,13 +34,17 @@ class PrimeVulDataset(BaseDataset):
             "Our pipeline results in a collection of 6,968 vulnerable and 228,800 benign functions "
             "across 755 projects and 6,827 commits.",
         ),
-        # NOTE: Currently used version (v0.1 from GDrive) has 224,533 total functions.
+    )
+
+    # NOTE: Currently used version (v0.1 from GDrive) has 224,533 total functions.
+    parsed_counts = DatasetCounts(
         vfcs=5657,
         non_vfcs=0,
-        projects=755,
+        projects=782,
         vulnerable_functions=6003,
         benign_functions=218474,
     )
+
 
     # Special project name mappings for entries missing proper URLs
     PROJECT_URLS = {

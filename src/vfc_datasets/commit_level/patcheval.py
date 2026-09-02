@@ -4,7 +4,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -40,6 +40,9 @@ class PatchEvalDataset(BaseDataset):
             "dataset of 1,000 vulnerabilities drawn from CVEs reported between 2015 and 2025, "
             "covering 65 distinct CWEs.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=1173,
         non_vfcs=0,
         projects=694,

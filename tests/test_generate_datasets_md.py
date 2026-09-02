@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT_PATH = REPO_ROOT / "scripts" / "generate_datasets_md.py"
@@ -35,8 +35,8 @@ def _stub(cls_name: str, module: str, vfcs: int) -> type[BaseDataset]:
                 source_url="https://example.invalid",
                 granularity="commit",
                 publication_year=2026,
-                vfcs=vfcs,
             ),
+            "parsed_counts": DatasetCounts(vfcs=vfcs),
             "__module__": module,
             "_load_data": lambda self: None,
             "_parse_row": lambda self, row: None,

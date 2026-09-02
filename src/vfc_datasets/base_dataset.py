@@ -53,17 +53,24 @@ class DatasetMetadata:
     programming_languages: tuple[str, ...] = ()
     license: str | None = None
 
-    # Stats from paper
+    # Paper reference
+    paper_title: str | None = None
+    paper_url: str | None = None
+    paper_quotes: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class DatasetCounts:
+    """What our parser gets out of a dataset, not what the paper claims.
+
+    `projects` counts distinct `project_url` at parse time, before transformations.
+    """
+
     vfcs: int | None = None
     non_vfcs: int | None = None
     projects: int | None = None
     vulnerable_functions: int | None = None
     benign_functions: int | None = None
-
-    # Paper reference
-    paper_title: str | None = None
-    paper_url: str | None = None
-    paper_quotes: tuple[str, ...] = ()
 
 
 class BaseDataset(ABC):
@@ -77,6 +84,9 @@ class BaseDataset(ABC):
     """
 
     metadata: DatasetMetadata
+
+    # Asserted by test_dataset_counts. None where parsing is not reproducible.
+    parsed_counts: DatasetCounts | None = DatasetCounts()
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         super().__init_subclass__(**kwargs)

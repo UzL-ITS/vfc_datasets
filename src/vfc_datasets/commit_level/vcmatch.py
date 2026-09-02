@@ -3,7 +3,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import normalize_commit_id, normalize_cve_ids
@@ -24,10 +24,14 @@ class VCMatchDataset(BaseDataset):
             "We build a dataset containing 1,669 vulnerabilities and their corresponding fixing "
             "commits from 10 popular OSS projects.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=1669,
         non_vfcs=0,
         projects=10,
     )
+
 
     PROJECT_URLS = {
         "FFmpeg": "https://github.com/FFmpeg/FFmpeg",

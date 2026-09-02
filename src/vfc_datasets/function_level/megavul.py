@@ -4,7 +4,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import normalize_cve_ids, normalize_cwe_ids
@@ -30,13 +30,17 @@ class MegaVulDataset(BaseDataset):
             "In conclusion, MegaVul has gathered high-quality functions from 9,019 commits, including "
             "17,380 vulnerable and 322,168 non-vulnerable functions.",
         ),
-        # NOTE: Paper has C/CPP and Java dataset
+    )
+
+    # NOTE: Paper has C/CPP and Java dataset
+    parsed_counts = DatasetCounts(
         vfcs=10182,
         non_vfcs=0,
-        projects=992,
+        projects=1495,
         vulnerable_functions=20267,
         benign_functions=367147,
     )
+
 
     @override
     def _load_data(self) -> pd.DataFrame:

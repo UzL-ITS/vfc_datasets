@@ -3,7 +3,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -29,10 +29,14 @@ class MSR2019Dataset(BaseDataset):
             # Page 2 (Section III - Dataset Description)
             # 205 projects | 1282 commits | 624 vulnerabilities | 29 without CVE | 46 not in NVD
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=1282,
         non_vfcs=0,
         projects=205,
     )
+
 
     @override
     def _load_data(self) -> pd.DataFrame:

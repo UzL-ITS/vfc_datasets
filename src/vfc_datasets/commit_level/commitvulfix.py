@@ -3,7 +3,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -42,6 +42,9 @@ class CommitVulFixDataset(BaseDataset):
             "This dataset comprises 681 C/C++ vulnerability fix commits and 1,118 C/C++ "
             "non-vulnerability fix commits.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=681,
         non_vfcs=1118,
         projects=233,

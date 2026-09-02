@@ -8,7 +8,7 @@ from typing import Any, override
 import pandas as pd
 from tqdm.auto import tqdm
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_and_extract_zip
@@ -44,10 +44,13 @@ class CVEFixesDataset(BaseDataset):
             # Page 6 (Table 1 - Summary statistics)
             # CVEs: 5,365 | CWEs: 180 | projects: 1,754 | commits: 5,495 | files: 18,249 | methods: 50,322
         ),
-        # NOTE: vfcs and projects reflect the Zenodo v1.0.8 dataset content without deduplication.
+    )
+
+    # NOTE: vfcs and projects reflect the Zenodo v1.0.8 dataset content without deduplication.
+    parsed_counts = DatasetCounts(
         vfcs=13297,
         non_vfcs=0,
-        projects=4249,
+        projects=4207,
     )
 
     def _get_database(self) -> Path:
