@@ -6,7 +6,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.commit_data import CommitData
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -31,12 +31,16 @@ class DiverseVulDataset(BaseDataset):
             "In total, we have collected 7,514 commits from 797 projects, which result in 18,945 "
             "vulnerable functions and 330,492 non-vulnerable functions, covering 150 CWEs.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=7514,
         non_vfcs=0,
-        projects=797,
+        projects=780,
         vulnerable_functions=18945,
         benign_functions=311547,
     )
+
 
     @staticmethod
     @cache

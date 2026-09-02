@@ -3,7 +3,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.commit_data import CommitData, from_unified_diff
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -34,10 +34,14 @@ class CC900Dataset(BaseDataset):
             "The result is a dataset with 3,765 positive samples and roughly 6,300 negative samples "
             "that we refer to as 900Repo.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=3762,
         non_vfcs=6347,
-        projects=910,
+        projects=917,
     )
+
 
     @override
     def _load_data(self) -> pd.DataFrame:

@@ -7,7 +7,7 @@ from git import Repo
 from git.exc import BadName, GitCommandError
 from tqdm.auto import tqdm
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.commit_data import CommitData, from_unified_diff
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -49,20 +49,25 @@ class SPIDBDataset(BaseDataset):
             "We use four popular and diversified open source libraries, i.e., Linux, FFmpeg, Qemu, "
             "and Wireshark. They are popular OSS from different applications.",
         ),
-        projects=2,  # NOTE: 2 of 4 projects were released
-        # Data from the released files:
-        vfcs=10894,
-        non_vfcs=14979,
     )
 
+    parsed_counts = DatasetCounts(
+        vfcs=10894,
+        non_vfcs=14979,
+        projects=2,  # NOTE: 2 of 4 projects were released
+    )
+
+    # `rev` pins the walk: commit ids come from message matching, so HEAD must not move.
     PROJECTS = {
         "ffmpeg": {
             "url": "https://github.com/FFmpeg/FFmpeg",
+            "rev": "d5fc7323591fc121ccd948f2155150d334e048a9",
             "file_id": "1duvUGvkdsCue7vbBmfCk2lMU4oVUIIpO",
             "checksum": "41b493273a011492583742bb28ce20a792bad530d0a30166624f9744ce77c723",
         },
         "qemu": {
             "url": "https://github.com/qemu/qemu",
+            "rev": "985062e2319e6bf4a4be9c216ede6d34379e5777",
             "file_id": "1Y9aADriLx0_e8YioZiteD7cvdON0carn",
             "checksum": "9c5ef634e1be936eb9131ff494f586957b6ab235b1a8f80d365b73583469dc8c",
         },
@@ -77,9 +82,9 @@ class SPIDBDataset(BaseDataset):
     def _read_clean_csv(self, path: Path) -> pd.DataFrame:
         return self._drop_unnamed_columns(pd.read_csv(path))
 
-    def _load_all_commit_messages(self, repo: Repo) -> dict[str, list[str]]:
+    def _load_all_commit_messages(self, repo: Repo, rev: str) -> dict[str, list[str]]:
         repo_dict: dict[str, list[str]] = {}
-        for commit in repo.iter_commits():
+        for commit in repo.iter_commits(rev):
             message = str(commit.message)
             c_key = message.replace("\n", "").replace(" ", "").strip()
             if c_key not in repo_dict:
@@ -167,6 +172,7 @@ class SPIDBDataset(BaseDataset):
         self,
         file_id: str,
         project_url: str,
+        rev: str,
         raw_dataset_dir: Path,
         checksum: str | None = None,
     ) -> pd.DataFrame:
@@ -183,7 +189,7 @@ class SPIDBDataset(BaseDataset):
             logger.warning("[spidb] Unable to clone %s", project_url)
             return project_data
         with Repo(path) as repo:
-            commit_dict = self._load_all_commit_messages(repo)
+            commit_dict = self._load_all_commit_messages(repo, rev)
             return self._add_commit_id(
                 project_dataframe=project_data,
                 commit_dict=commit_dict,
@@ -210,6 +216,7 @@ class SPIDBDataset(BaseDataset):
                 dataframe = self._add_project_data(
                     file_id=project_info["file_id"],
                     project_url=project_info["url"],
+                    rev=project_info["rev"],
                     raw_dataset_dir=raw_dataset_dir,
                     checksum=project_info.get("checksum"),
                 )

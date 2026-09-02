@@ -3,7 +3,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -39,6 +39,9 @@ class BigVulFixesDataset(BaseDataset):
             "we limit ourselves to vulnerabilities from 7 programming languages, namely "
             "Java, C, C++, Rust, JavaScript, Python, and Go.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=1745,
         non_vfcs=27211,
         projects=713,

@@ -5,7 +5,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_and_extract_zip
@@ -73,10 +73,14 @@ class FixSeekerBalancedDataset(_FixSeekerBase):
             "Our datasets cover four programming languages: C/C++, Java, Python, and PHP, "
             "with a total of 10,258 VFCs across 2,094 open-source projects.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=9885,
         non_vfcs=10979,
-        projects=2094,
+        projects=2011,
     )
+
 
     _file_glob = "*_balance.json"
 
@@ -94,9 +98,13 @@ class FixSeekerImbalancedDataset(_FixSeekerBase):
             "Our datasets cover four programming languages: C/C++, Java, Python, and PHP, "
             "with a total of 10,258 VFCs across 2,094 open-source projects.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=9884,
         non_vfcs=499150,
-        projects=2094,
+        projects=2036,
     )
+
 
     _file_glob = "*_imbalance.json"

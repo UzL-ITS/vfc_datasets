@@ -238,10 +238,11 @@ class PySecDBDataset(BaseDataset):
             "covering 119 more CWEs.",
             # Page 6 (Table II): Base 729 + Pilot 400 + Augmented 129 = 1,258 security commits
         ),
-        vfcs=1142,  # 1258 NOTE: not all available yet
-        non_vfcs=2721,  # 2791, NOTE: not all available yet
-        projects=351,
     )
+
+    # URLs from a live GitHub search.
+    parsed_counts = None
+
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)
@@ -285,7 +286,7 @@ class PySecDBDataset(BaseDataset):
         repo_map = self._load_repo_map(repo_map_path)
 
         commits_by_id = _index_commits_by_id(records)
-        unresolved = [meta for meta in commits_by_id.values() if meta.commit_id not in repo_map]
+        unresolved = [m for m in commits_by_id.values() if not repo_map.get(m.commit_id)]
         if unresolved:
             logger.info(
                 "[%s] Resolving %d/%d commit repository URLs (cache hit: %d)",

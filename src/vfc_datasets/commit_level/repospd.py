@@ -7,7 +7,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.commit_data import CommitData, from_unified_diff
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -41,10 +41,12 @@ class RepoSPDDataset(BaseDataset):
             "repositories, containing over 36k code snippets, approximately 12k identified as security patches.",
             # Table I: SPI-DB* 20,482 patches (20,238 repo versions) | PatchDB* 29,042 patches (28,781 repo versions)
         ),
-        projects=348,
-        # NOTE: Data from the released RepoSPD dataset files:
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=18127,
         non_vfcs=31397,
+        projects=364,  # the paper's 348 counts PatchDB, not RepoSPD
     )
 
     SUBSETS = ("spi_db", "patch_db")

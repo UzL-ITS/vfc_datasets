@@ -3,7 +3,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.commit_data import CommitData, normalize_commit_timestamp
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -30,15 +30,19 @@ class ICVulDataset(BaseDataset):
             # Table I (Dataset Comparison) - ICVul row:
             # Repos: 807 | CWEs: 146 | VFCs: 4,327 | Files: 6,862 | Functions: 15,396 | Vul Funcs: 6,276 | Ratio: 41%
         ),
-        # NOTE: The paper reports 4,327 VFCs (4,605 unique fc_hash in mapping, 4,327 with
-        # commit metadata). Of those, only 3,916 have function data in function_info.csv,
-        # and only 2,723 have at least one vulnerable function.
+    )
+
+    # NOTE: The paper reports 4,327 VFCs (4,605 unique fc_hash in mapping, 4,327 with
+    # commit metadata). Of those, only 3,916 have function data in function_info.csv,
+    # and only 2,723 have at least one vulnerable function.
+    parsed_counts = DatasetCounts(
         vfcs=2723,
         non_vfcs=0,
-        projects=807,
+        projects=675,
         vulnerable_functions=6276,
         benign_functions=9120,
     )
+
 
     GDRIVE_FILE_ID = "1Bnnb7kJa8GEfyESIAuGXj2z0g8FvXgRk"
 

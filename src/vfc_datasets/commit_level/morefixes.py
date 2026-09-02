@@ -36,10 +36,11 @@ class MorefixesDataset(BaseDataset):
             "vulnerabilities.",
             # Table 5: MoreFixes | 26,617 CVEs | 6,945 Projects | 31,883 Commits | CVE Years 1999-2024
         ),
-        vfcs=35130,  # NOTE: Zenodo reports 35,276
-        non_vfcs=0,
-        projects=6945,
     )
+
+    # Postgres dump version not pinned.
+    parsed_counts = None
+
 
     @override
     def _load_data(self) -> pd.DataFrame:

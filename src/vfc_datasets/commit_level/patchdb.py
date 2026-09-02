@@ -3,7 +3,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.commit_data import CommitData, from_unified_diff
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -37,10 +37,14 @@ class PatchDBDataset(BaseDataset):
             "of 23,742 instances.",
             # Page 3 (Section III-A): 313 GitHub repositories, C/C++ patches from NVD (1999-2019)
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=10691,  # --> 12073, NOTE: Many commits without project url. Try to find the missing URLs using the CVE ID and verify them using the commit message or diff.
         non_vfcs=23742,
-        projects=313,
+        projects=406,
     )
+
 
     @override
     def _load_data(self) -> pd.DataFrame:

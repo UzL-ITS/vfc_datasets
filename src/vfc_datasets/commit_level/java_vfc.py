@@ -5,7 +5,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.commit_data import CommitData, from_git_show
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
@@ -77,10 +77,14 @@ class JavaVFCDataset(_JavaVFCBase):
         paper_quotes=(
             "The JAVAVFC dataset, which was manually curated, includes data from 263 projects with a total of 784 unique code commits",
         ),
-        projects=263,
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=784,
         non_vfcs=0,
+        projects=263,
     )
+
 
 
 class JavaVFCDatasetExtended(_JavaVFCBase):
@@ -95,7 +99,11 @@ class JavaVFCDatasetExtended(_JavaVFCBase):
         paper_quotes=(
             "In contrast, the JAVAVFC-EXTENDED dataset was generated using an automated approach, resulting in a much larger collection of 16,837 code commits across 2,532 projects.",
         ),
-        projects=2532,
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=16837,
         non_vfcs=0,
+        projects=2532,
     )
+

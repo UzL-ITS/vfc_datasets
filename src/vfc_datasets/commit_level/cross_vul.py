@@ -6,7 +6,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_and_extract_zip
@@ -46,10 +46,14 @@ class CrossVulDataset(BaseDataset):
             # Commits: 5877, Unique CWEs: 168, Unique CVEs: 5131
             # All files: 27476, Vulnerable files: 13738, Non-vulnerable files: 13738
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=5877,
         non_vfcs=0,
-        projects=1675,
+        projects=1662,
     )
+
 
     @override
     def _load_data(self) -> pd.DataFrame:

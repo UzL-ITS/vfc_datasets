@@ -28,31 +28,33 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 <details>
 <summary>Commit-level (22 datasets)</summary>
 
-| Year | Dataset | VFCs | Non-VFCs | Projects | Paper |
-|------|---------|------|----------|----------|-------|
-| 2017 | [SecBench](https://tqrg.github.io/secbench/) | 676 | 0 | 248 | [link](https://ceur-ws.org/Vol-1977/paper6.pdf) |
+| Year | Dataset | VFCs* | Non-VFCs* | Projects* | Paper |
+|------|---------|-------|-----------|-----------|-------|
+| 2017 | [SecBench](https://tqrg.github.io/secbench/) | 676 | 0 | 113 | [link](https://ceur-ws.org/Vol-1977/paper6.pdf) |
 | 2019 | [Devign](https://sites.google.com/view/devign) | 10,894 | 14,978 | 2 | [link](https://doi.org/10.48550/arXiv.1909.03496) |
 | 2019 | [MSR2019](https://github.com/SAP/project-kb/tree/main/MSR2019) | 1,282 | 0 | 205 | [link](https://doi.org/10.1109/MSR.2019.00064) |
-| 2020 | [BigVul](https://github.com/ZeoVan/MSR_20_Code_vulnerability_CSV_Dataset) | 4,428 | 0 | 348 | [link](https://doi.org/10.1145/3379597.3387501) |
-| 2021 | [CC900](https://github.com/davidleejy/wnut21-cotrain/tree/main) | 3,762 | 6,347 | 910 | [link](https://doi.org/10.18653/v1/2021.wnut-1.43) |
-| 2021 | [CVEFixes](https://doi.org/10.5281/zenodo.4476563) | 13,297 | 0 | 4,249 | [link](https://doi.org/10.1145/3475960.3475985) |
-| 2021 | [CrossVul](https://doi.org/10.5281/zenodo.4734049) | 5,877 | 0 | 1,675 | [link](https://doi.org/10.1145/3468264.3473122) |
-| 2021 | [PatchDB](https://huggingface.co/datasets/sunlab/patch_db) | 10,691 | 23,742 | 313 | [link](https://doi.org/10.1109/DSN48987.2021.00030) |
+| 2020 | [BigVul](https://github.com/ZeoVan/MSR_20_Code_vulnerability_CSV_Dataset) | 4,428 | 0 | 425 | [link](https://doi.org/10.1145/3379597.3387501) |
+| 2021 | [CC900](https://github.com/davidleejy/wnut21-cotrain/tree/main) | 3,762 | 6,347 | 917 | [link](https://doi.org/10.18653/v1/2021.wnut-1.43) |
+| 2021 | [CVEFixes](https://doi.org/10.5281/zenodo.4476563) | 13,297 | 0 | 4,207 | [link](https://doi.org/10.1145/3475960.3475985) |
+| 2021 | [CrossVul](https://doi.org/10.5281/zenodo.4734049) | 5,877 | 0 | 1,662 | [link](https://doi.org/10.1145/3468264.3473122) |
+| 2021 | [PatchDB](https://huggingface.co/datasets/sunlab/patch_db) | 10,691 | 23,742 | 406 | [link](https://doi.org/10.1109/DSN48987.2021.00030) |
 | 2021 | [SPIDB](https://sites.google.com/view/du-commits/home) | 10,894 | 14,979 | 2 | [link](https://doi.org/10.1145/3468854) |
-| 2021 | [TQRG](https://github.com/TQRG/security-patches-dataset/tree/main) | 8,053 | 110,161 | 1,339 | [link](https://doi.org/10.48550/arXiv.2110.09635) |
-| 2022 | [Tracer](https://github.com/patch-tracer/patch-tracer.github.io) | 3,017 | 0 | — | [link](https://doi.org/10.48550/arXiv.2112.02240) |
+| 2021 | [TQRG](https://github.com/TQRG/security-patches-dataset/tree/main) | 8,053 | 110,161 | 1,334 | [link](https://doi.org/10.48550/arXiv.2110.09635) |
+| 2022 | [Tracer](https://github.com/patch-tracer/patch-tracer.github.io) | 3,017 | 0 | 767 | [link](https://doi.org/10.48550/arXiv.2112.02240) |
 | 2022 | [VCMatch](https://figshare.com/s/0f3ed11f9348e2f3a9f8) | 1,669 | 0 | 10 | [link](https://doi.org/10.1109/SANER53432.2022.00076) |
-| 2022 | [VUDEnc](https://doi.org/10.5281/zenodo.3559840) | 1,009 | 0 | — | [link](https://doi.org/10.1016/j.infsof.2021.106809) |
-| 2023 | [PySecDB](https://huggingface.co/datasets/sunlab/PySecDB) | 1,142 | 2,721 | 351 | [link](https://doi.org/10.48550/arXiv.2307.11853) |
+| 2022 | [VUDEnc](https://doi.org/10.5281/zenodo.3559840) | 1,009 | 0 | 784 | [link](https://doi.org/10.1016/j.infsof.2021.106809) |
+| 2023 | [PySecDB](https://huggingface.co/datasets/sunlab/PySecDB) | — | — | — | [link](https://doi.org/10.48550/arXiv.2307.11853) |
 | 2024 | [JavaVFC](https://doi.org/10.5281/zenodo.13731781) | 784 | 0 | 263 | [link](https://doi.org/10.48550/arXiv.2409.05576) |
-| 2024 | [Morefixes](https://github.com/JafarAkhondali/Morefixes) | 35,130 | 0 | 6,945 | [link](https://doi.org/10.1145/3663533.3664036) |
-| 2024 | [RepoSPD](https://github.com/Xin-Cheng-Wen/RepoSPD) | 18,127 | 31,397 | 348 | [link](https://doi.org/10.48550/arXiv.2412.08068) |
+| 2024 | [Morefixes](https://github.com/JafarAkhondali/Morefixes) | — | — | — | [link](https://doi.org/10.1145/3663533.3664036) |
+| 2024 | [RepoSPD](https://github.com/Xin-Cheng-Wen/RepoSPD) | 18,127 | 31,397 | 364 | [link](https://doi.org/10.48550/arXiv.2412.08068) |
 | 2025 | [BigVulFixes](https://doi.org/10.5281/zenodo.13776994) | 1,745 | 27,211 | 713 | [link](https://doi.org/10.48550/arXiv.2501.14983) |
 | 2025 | [CommitVulFix](https://github.com/security-pride/CommitShield) | 681 | 1,118 | 233 | [link](https://doi.org/10.48550/arXiv.2501.03626) |
 | 2025 | [DIMVA2025](https://doi.org/10.6084/m9.figshare.28447463) | 2,798 | 0 | 1,246 | [link](https://doi.org/10.1007/978-3-031-97623-0_8) |
-| 2025 | [FixSeeker](https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link) | 9,885 | 10,979 | 2,094 | [link](https://doi.org/10.48550/arXiv.2503.20265) |
+| 2025 | [FixSeeker](https://drive.google.com/file/d/1TUsX9KQ6mm42VeAMZ4A8arThtm8FLW9Y/view?usp=drive_link) | 9,885 | 10,979 | 2,011 | [link](https://doi.org/10.48550/arXiv.2503.20265) |
 | 2025 | [PatchEval](https://github.com/bytedance/PatchEval) | 1,173 | 0 | 694 | [link](https://doi.org/10.48550/arXiv.2511.11019) |
 
+> `*` Generated by this toolkit.
+>
 > Datasets shipping several variants are listed once.
 
 </details>
@@ -62,16 +64,18 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 <details>
 <summary>Function-level (8 datasets)</summary>
 
-| Year | Dataset | Vuln. Fns | Benign Fns | Projects | Paper |
-|------|---------|-----------|------------|----------|-------|
-| 2023 | [DiverseVul](https://github.com/wagner-group/diversevul) | 18,945 | 311,547 | 797 | [link](https://doi.org/10.1145/3607199.3607242) |
-| 2023 | [SVEN](https://github.com/eth-sri/sven) | 800 | 0 | — | [link](https://doi.org/10.1145/3576915.3623175) |
+| Year | Dataset | Vuln. Fns* | Benign Fns* | Projects* | Paper |
+|------|---------|------------|-------------|-----------|-------|
+| 2023 | [DiverseVul](https://github.com/wagner-group/diversevul) | 18,945 | 311,547 | 780 | [link](https://doi.org/10.1145/3607199.3607242) |
+| 2023 | [SVEN](https://github.com/eth-sri/sven) | 800 | 0 | 269 | [link](https://doi.org/10.1145/3576915.3623175) |
 | 2024 | [CWEBenchJava](https://github.com/iris-sast/cwe-bench-java) | 1,119 | 0 | 88 | [link](https://doi.org/10.48550/arXiv.2405.17238) |
-| 2024 | [CleanVul](https://huggingface.co/datasets/yikun-li/CleanVul) | 8,198 | 0 | — | [link](https://doi.org/10.48550/arXiv.2411.17274) |
-| 2024 | [MegaVul](https://github.com/Icyrockton/MegaVul) | 20,267 | 367,147 | 992 | [link](https://doi.org/10.1145/3643991.3644886) |
-| 2024 | [PrimeVul](https://github.com/DLVulDet/PrimeVul) | 6,003 | 218,474 | 755 | [link](https://doi.org/10.48550/arXiv.2403.18624) |
-| 2025 | [ICVul](https://github.com/Chaomeng-Lu/ICVul) | 6,276 | 9,120 | 807 | [link](https://doi.org/10.48550/arXiv.2505.08503) |
+| 2024 | [CleanVul](https://huggingface.co/datasets/yikun-li/CleanVul) | 8,198 | 0 | 1,905 | [link](https://doi.org/10.48550/arXiv.2411.17274) |
+| 2024 | [MegaVul](https://github.com/Icyrockton/MegaVul) | 20,267 | 367,147 | 1,495 | [link](https://doi.org/10.1145/3643991.3644886) |
+| 2024 | [PrimeVul](https://github.com/DLVulDet/PrimeVul) | 6,003 | 218,474 | 782 | [link](https://doi.org/10.48550/arXiv.2403.18624) |
+| 2025 | [ICVul](https://github.com/Chaomeng-Lu/ICVul) | 6,276 | 9,120 | 675 | [link](https://doi.org/10.48550/arXiv.2505.08503) |
 | 2025 | [SecVulEval](https://huggingface.co/datasets/arag0rn/SecVulEval) | 10,992 | 14,435 | 736 | [link](https://doi.org/10.48550/arXiv.2505.19828) |
+
+> `*` Generated by this toolkit.
 
 </details>
 <!-- FUNCTION_DATASETS:END -->

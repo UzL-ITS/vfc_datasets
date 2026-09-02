@@ -5,7 +5,7 @@ from typing import Any, override
 import pandas as pd
 
 from datasets import load_dataset
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import (
     extract_and_normalize_from_commit_url,
@@ -14,6 +14,9 @@ from vfc_datasets.parsing_helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Pinned so counts stay reproducible.
+_REVISION = "74b2fda1c51eea0f99987df6924ca60c6e9f92d2"
 
 
 class CleanVulDataset(BaseDataset):
@@ -31,15 +34,19 @@ class CleanVulDataset(BaseDataset):
             "We developed CleanVul, a high-quality dataset comprising 8,198 functions using our LLM heuristic enhancement approach (...)",
             "Increasing the threshold to 4 results in 6,368 vulnerability-fixing changes (...)",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=4500,
         non_vfcs=0,
+        projects=1905,
         vulnerable_functions=8198,
         benign_functions=0,
     )
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        ds = load_dataset("yikun-li/CleanVul")
+        ds = load_dataset("yikun-li/CleanVul", revision=_REVISION)
         df = ds["train"].to_pandas()
         # Filter for Threshold 3
         return df[df["vulnerability_score"] >= 3].copy()  # pyright: ignore[reportIndexIssue, reportReturnType]

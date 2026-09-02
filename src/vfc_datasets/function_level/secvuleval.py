@@ -5,7 +5,7 @@ from typing import Any, override
 import pandas as pd
 
 from datasets import load_dataset
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.commit_data import CommitData, same_commit
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import (
@@ -15,6 +15,9 @@ from vfc_datasets.parsing_helpers import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Pinned so counts stay reproducible.
+_REVISION = "bde3e7c3225cc61c9ad727133737255428a2ea3d"
 
 # The three forms a backport's message takes to name the commit it was taken from.
 _DERIVED_FROM = re.compile(
@@ -41,6 +44,9 @@ class SecVulEvalDataset(BaseDataset):
             "SecVulEval (...) comprises 25,440 function samples (5,867 CVEs) with "
             "10,998 vulnerable and 14,442 non-vulnerable functions from 1999 to 2024.",
         ),
+    )
+
+    parsed_counts = DatasetCounts(
         vfcs=4637,
         non_vfcs=0,
         projects=736,
@@ -50,7 +56,9 @@ class SecVulEvalDataset(BaseDataset):
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        return load_dataset("arag0rn/SecVulEval", split="train").to_pandas()  # pyright: ignore[reportReturnType]
+        return load_dataset(
+            "arag0rn/SecVulEval", split="train", revision=_REVISION
+        ).to_pandas()  # pyright: ignore[reportReturnType]
 
     @override
     def _parse_row(self, row: dict[str, Any]) -> DatasetEntry | None:

@@ -2,7 +2,7 @@ from typing import Any, override
 
 import pandas as pd
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.config import RAW_DATA_PATH
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.download_helper import download_file
@@ -33,11 +33,15 @@ class TQRGDataset(BaseDataset):
             "We augmented this data with other 3 datasets that also contain vulnerabilities and the URL links to "
             "security patches: Secbench, Pontas et al. and Big-Vul.",
         ),
-        # NOTE: 8057 = security-relevant commits, 5942 = unique security patches (some vulnerabilities need multiple commits)
+    )
+
+    # NOTE: 8057 = security-relevant commits, 5942 = unique security patches (some vulnerabilities need multiple commits)
+    parsed_counts = DatasetCounts(
         vfcs=8053,
         non_vfcs=110161,
-        projects=1339,
+        projects=1334,
     )
+
 
     @override
     def _load_data(self) -> pd.DataFrame:
