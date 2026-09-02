@@ -6,7 +6,7 @@ import pandas as pd
 import psycopg2
 from tqdm.auto import tqdm
 
-from vfc_datasets.base_dataset import BaseDataset, DatasetMetadata
+from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 from vfc_datasets.dataset_entry import DatasetEntry
 from vfc_datasets.parsing_helpers import (
     normalize_commit_id,
@@ -38,19 +38,20 @@ class MorefixesDataset(BaseDataset):
         ),
     )
 
-    # Postgres dump version not pinned.
-    parsed_counts = None
+    DUMP_URL = "https://zenodo.org/records/20776007"
 
+    parsed_counts = DatasetCounts(
+        vfcs=47616,
+        non_vfcs=0,
+        projects=9883,
+    )
 
     @override
     def _load_data(self) -> pd.DataFrame:
-        """
-        Extract VFC data from MoreFixes PostgreSQL dump.
+        """Requires a local PostgreSQL instance with the dump at `DUMP_URL` imported.
 
-        Requires a local PostgreSQL instance with the MoreFixes dump imported.
-        See: https://github.com/JafarAkhondali/Morefixes
+        The credentials below are the public ones shipped with that dump.
         """
-        # Default credentials from the public MoreFixes DB dump
         connection_params: dict[str, Any] = {
             "dbname": "postgrescvedumper",
             "user": "postgrescvedumper",

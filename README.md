@@ -45,7 +45,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 | 2022 | [VUDEnc](https://doi.org/10.5281/zenodo.3559840) | 1,009 | 0 | 784 | [link](https://doi.org/10.1016/j.infsof.2021.106809) |
 | 2023 | [PySecDB](https://huggingface.co/datasets/sunlab/PySecDB) | — | — | — | [link](https://doi.org/10.48550/arXiv.2307.11853) |
 | 2024 | [JavaVFC](https://doi.org/10.5281/zenodo.13731781) | 784 | 0 | 263 | [link](https://doi.org/10.48550/arXiv.2409.05576) |
-| 2024 | [Morefixes](https://github.com/JafarAkhondali/Morefixes) | — | — | — | [link](https://doi.org/10.1145/3663533.3664036) |
+| 2024 | [Morefixes](https://github.com/JafarAkhondali/Morefixes) | 47,616 | 0 | 9,883 | [link](https://doi.org/10.1145/3663533.3664036) |
 | 2024 | [RepoSPD](https://github.com/Xin-Cheng-Wen/RepoSPD) | 18,127 | 31,397 | 364 | [link](https://doi.org/10.48550/arXiv.2412.08068) |
 | 2025 | [BigVulFixes](https://doi.org/10.5281/zenodo.13776994) | 1,745 | 27,211 | 713 | [link](https://doi.org/10.48550/arXiv.2501.14983) |
 | 2025 | [CommitVulFix](https://github.com/security-pride/CommitShield) | 681 | 1,118 | 233 | [link](https://doi.org/10.48550/arXiv.2501.03626) |
