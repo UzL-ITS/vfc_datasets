@@ -14,6 +14,7 @@ from .morefixes import MorefixesDataset
 from .msr2019 import MSR2019Dataset
 from .patchdb import PatchDBDataset
 from .patcheval import PatchEvalDataset
+from .patchfinder import PatchFinderDataset
 from .pysecdb import PySecDBDataset
 from .repospd import RepoSPDDataset
 from .secbench import SecBenchDataset
@@ -40,6 +41,7 @@ __all__ = [
     "MSR2019Dataset",
     "PatchDBDataset",
     "PatchEvalDataset",
+    "PatchFinderDataset",
     "PySecDBDataset",
     "RepoSPDDataset",
     "SecBenchDataset",
