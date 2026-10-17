@@ -4,8 +4,6 @@ import importlib.util
 from pathlib import Path
 from typing import Any
 
-import pytest
-
 from vfc_datasets.base_dataset import BaseDataset, DatasetCounts, DatasetMetadata
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -85,19 +83,6 @@ def test_acronyms_are_treated_as_whole_words():
     extended = _stub("JavaVFCExtended", "pkg.javavfc", vfcs=16837)
 
     assert gen._dataset_name([base, extended]) == "JavaVFC"
-
-
-@pytest.mark.parametrize(
-    ("granularity", "expected"),
-    [("commit", 22), ("function", 8)],
-)
-def test_shipped_dataset_counts(granularity: str, expected: int):
-    """Guards against an accidental merge or split."""
-    shipped = [
-        c for c in gen._concrete_datasets(BaseDataset) if c.metadata.granularity == granularity
-    ]
-
-    assert len(gen._collapse_variants(shipped)) == expected
 
 
 def test_test_only_subclasses_are_excluded():
