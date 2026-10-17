@@ -17,6 +17,7 @@ from .patchdb import PatchDBDataset
 from .patcheval import PatchEvalDataset
 from .patchfinder import PatchFinderDataset
 from .pysecdb import PySecDBDataset
+from .pyvul import PyVulDataset
 from .repospd import RepoSPDDataset
 from .secbench import SecBenchDataset
 from .spidb import SPIDBDataset
@@ -45,6 +46,7 @@ __all__ = [
     "PatchEvalDataset",
     "PatchFinderDataset",
     "PySecDBDataset",
+    "PyVulDataset",
     "RepoSPDDataset",
     "SecBenchDataset",
     "SPIDBDataset",
