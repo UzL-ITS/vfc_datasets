@@ -11,8 +11,8 @@ from .dimva2025 import DIMVA2025Dataset
 from .fixseeker import FixSeekerBalancedDataset, FixSeekerImbalancedDataset
 from .java_vfc import JavaVFCDataset, JavaVFCDatasetExtended
 from .morefixes import MorefixesDataset
-from .multipatch import MultiPatchDataset
 from .msr2019 import MSR2019Dataset
+from .multipatch import MultiPatchDataset
 from .patchdb import PatchDBDataset
 from .patcheval import PatchEvalDataset
 from .patchfinder import PatchFinderDataset
@@ -39,8 +39,8 @@ __all__ = [
     "JavaVFCDataset",
     "JavaVFCDatasetExtended",
     "MorefixesDataset",
-    "MultiPatchDataset",
     "MSR2019Dataset",
+    "MultiPatchDataset",
     "PatchDBDataset",
     "PatchEvalDataset",
     "PatchFinderDataset",
