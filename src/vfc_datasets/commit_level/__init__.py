@@ -7,6 +7,7 @@ from .cc900 import CC900Dataset
 from .commitvulfix import CommitVulFixDataset
 from .cross_vul import CrossVulDataset
 from .cvefixes import CVEFixesDataset
+from .cvevc import CVEVCDataset
 from .devign import DevignDataset
 from .dimva2025 import DIMVA2025Dataset
 from .fixseeker import FixSeekerBalancedDataset, FixSeekerImbalancedDataset
@@ -35,6 +36,7 @@ __all__ = [
     "CommitVulFixDataset",
     "CrossVulDataset",
     "CVEFixesDataset",
+    "CVEVCDataset",
     "DevignDataset",
     "DIMVA2025Dataset",
     "FixSeekerBalancedDataset",
