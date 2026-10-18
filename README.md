@@ -26,7 +26,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 
 <!-- COMMIT_DATASETS:START -->
 <details>
-<summary>Commit-level (27 datasets)</summary>
+<summary>Commit-level (28 datasets)</summary>
 
 | Year | Dataset | VFCs* | Non-VFCs* | Projects* | Paper |
 |------|---------|-------|-----------|-----------|-------|
@@ -48,6 +48,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 | 2024 | [Morefixes](https://github.com/JafarAkhondali/Morefixes) | 47,616 | 0 | 9,883 | [link](https://doi.org/10.1145/3663533.3664036) |
 | 2024 | [PatchFinder](https://github.com/MarkLee131/PatchFinder) | 4,870 | 0 | 530 | [link](https://doi.org/10.48550/arXiv.2407.17065) |
 | 2024 | [RepoSPD](https://github.com/Xin-Cheng-Wen/RepoSPD) | 18,127 | 31,397 | 364 | [link](https://doi.org/10.48550/arXiv.2412.08068) |
+| 2024 | [ReposVul](https://github.com/Eshe0922/ReposVul) | 6,000 | 0 | 1,494 | [link](https://doi.org/10.48550/arXiv.2401.13169) |
 | 2025 | [BigVulFixes](https://doi.org/10.5281/zenodo.13776994) | 1,745 | 27,211 | 713 | [link](https://doi.org/10.48550/arXiv.2501.14983) |
 | 2025 | [CommitVulFix](https://github.com/security-pride/CommitShield) | 681 | 1,118 | 233 | [link](https://doi.org/10.48550/arXiv.2501.03626) |
 | 2025 | [DIMVA2025](https://doi.org/10.6084/m9.figshare.28447463) | 2,798 | 0 | 1,246 | [link](https://doi.org/10.1007/978-3-031-97623-0_8) |
