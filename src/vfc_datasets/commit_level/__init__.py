@@ -1,5 +1,6 @@
 """Commit-level VFC datasets."""
 
+from .arvo import ARVODataset
 from .bigvul import BigVulDataset
 from .bigvulfixes import BigVulFixesDataset
 from .cc900 import CC900Dataset
@@ -27,6 +28,7 @@ from .vcmatch import VCMatchDataset
 from .vudenc import VUDEncDataset
 
 __all__ = [
+    "ARVODataset",
     "BigVulDataset",
     "BigVulFixesDataset",
     "CC900Dataset",
