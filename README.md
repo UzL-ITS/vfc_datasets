@@ -26,7 +26,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 
 <!-- COMMIT_DATASETS:START -->
 <details>
-<summary>Commit-level (28 datasets)</summary>
+<summary>Commit-level (29 datasets)</summary>
 
 | Year | Dataset | VFCs* | Non-VFCs* | Projects* | Paper |
 |------|---------|-------|-----------|-----------|-------|
@@ -44,6 +44,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 | 2022 | [VCMatch](https://figshare.com/s/0f3ed11f9348e2f3a9f8) | 1,669 | 0 | 10 | [link](https://doi.org/10.1109/SANER53432.2022.00076) |
 | 2022 | [VUDEnc](https://doi.org/10.5281/zenodo.3559840) | 1,009 | 0 | 784 | [link](https://doi.org/10.1016/j.infsof.2021.106809) |
 | 2023 | [PySecDB](https://huggingface.co/datasets/sunlab/PySecDB) | — | — | — | [link](https://doi.org/10.48550/arXiv.2307.11853) |
+| 2023 | [REEF](https://github.com/ASE-REEF/REEF-data) | 4,466 | 0 | 1,686 | [link](https://doi.org/10.48550/arXiv.2309.08115) |
 | 2024 | [JavaVFC](https://doi.org/10.5281/zenodo.13731781) | 784 | 0 | 263 | [link](https://doi.org/10.48550/arXiv.2409.05576) |
 | 2024 | [Morefixes](https://github.com/JafarAkhondali/Morefixes) | 47,616 | 0 | 9,883 | [link](https://doi.org/10.1145/3663533.3664036) |
 | 2024 | [PatchFinder](https://github.com/MarkLee131/PatchFinder) | 4,870 | 0 | 530 | [link](https://doi.org/10.48550/arXiv.2407.17065) |
