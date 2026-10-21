@@ -14,6 +14,7 @@ from .fixseeker import FixSeekerBalancedDataset, FixSeekerImbalancedDataset
 from .java_vfc import JavaVFCDataset, JavaVFCDatasetExtended
 from .morefixes import MorefixesDataset
 from .msr2019 import MSR2019Dataset
+from .multi_sp import MultiSPDataset, MultiSPVerifiedDataset
 from .multipatch import MultiPatchDataset
 from .patchdb import PatchDBDataset
 from .patcheval import PatchEvalDataset
@@ -48,6 +49,8 @@ __all__ = [
     "MorefixesDataset",
     "MSR2019Dataset",
     "MultiPatchDataset",
+    "MultiSPDataset",
+    "MultiSPVerifiedDataset",
     "PatchDBDataset",
     "PatchEvalDataset",
     "PatchFinderDataset",

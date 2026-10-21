@@ -26,7 +26,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 
 <!-- COMMIT_DATASETS:START -->
 <details>
-<summary>Commit-level (29 datasets)</summary>
+<summary>Commit-level (30 datasets)</summary>
 
 | Year | Dataset | VFCs* | Non-VFCs* | Projects* | Paper |
 |------|---------|-------|-----------|-----------|-------|
@@ -59,6 +59,7 @@ See [`examples/`](examples/) for scripts covering loading, combining, transformi
 | 2026 | [ARVO](https://github.com/n132/ARVO-Meta) | 5,742 | 0 | 310 | [link](https://doi.org/10.48550/arXiv.2408.02153) |
 | 2026 | [CVEVC](https://huggingface.co/datasets/andstor/cvevc_commits) | 14,526 | 0 | 3,536 | [link](https://doi.org/10.48550/arXiv.2602.12500) |
 | 2026 | [MultiPatch](https://huggingface.co/datasets/XSec-Lab/MultiPatch) | 4,045 | 0 | 823 | [link](https://doi.org/10.48550/arXiv.2607.13206) |
+| 2026 | [MultiSP](https://doi.org/10.5281/zenodo.21410721) | 16,253 | 0 | 2,696 | [link](https://doi.org/10.48550/arXiv.2609.07224) |
 
 > `*` Parsed counts, may differ from paper.
 >
